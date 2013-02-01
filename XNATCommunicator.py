@@ -273,6 +273,7 @@ class PyXNAT(XNATCommunicator):
 
     
     def delete(self, selStr):
+        print "DELETING: " + selStr
         self.XNAT.select(self.cleanSelectString(selStr)).delete()
     
     def getSize(self, selStr):

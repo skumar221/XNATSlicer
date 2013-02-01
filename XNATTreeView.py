@@ -157,9 +157,10 @@ class XNATTreeView(XNATView.XNATView):
         if button and button.text.lower().find('ok') > -1:         
             fileParent = self.viewWidget.currentItem().parent()
             delStr = self.getXNATDir(self.getParents(self.viewWidget.currentItem()))
-            
-            if ((not ('files' in self.viewWidget.currentItem().text(self.column_category))) or 
-                (not (self.utils.slicerDirName in self.viewWidget.currentItem().text(self.column_category)))):
+            if (('files' in self.viewWidget.currentItem().text(self.column_category))
+                or (self.utils.slicerDirName in self.viewWidget.currentItem().text(self.column_category))):
+                delStr = delStr
+            else:
                 delStr = os.path.dirname(delStr)
                 
             self.XNATCommunicator.delete(delStr)   
