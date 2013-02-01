@@ -282,6 +282,7 @@ class XNATTreeView(XNATView.XNATView):
                     loader = FileLoader(self.browser)
             else:
                 loader = DICOMLoader(self.browser)
+            #return
             #===================================================================
             # populate args
             #===================================================================

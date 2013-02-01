@@ -397,7 +397,7 @@ class FileLoader(XNATLoadWorkflow):
         #=======================================================================
         # GET THE FILE
         #=======================================================================
-        self.XNATCommunicator.getFiles({self.xnatSrc: self.localDst})
+        self.XNATCommunicator.getFile({self.xnatSrc: self.localDst})
         #slicer.app.processEvents()
         #=======================================================================
         # OPEN FILE
@@ -408,10 +408,17 @@ class FileLoader(XNATLoadWorkflow):
         #=======================================================================
         # UPDATE STATUS BAR
         #=======================================================================
+        sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = self.xnatSrc)
+        sessionArgs['sharable'] = self.isSharable
+        sessionArgs['sessionType'] = "scene download"
+        self.browser.XNATView.startNewSession(sessionArgs)
+        
         if nodeOpener: 
             self.browser.updateStatus(["", "'%s' successfully loaded."%(os.path.basename(self.localDst)),""]) 
         else: 
-            self.browser.updateStatus(["", "Could not load '%s'!"%(os.path.basename(self.localDst)),""]) 
+            errStr = "Could not load '%s'!"%(os.path.basename(self.localDst))
+            self.browser.updateStatus(["", errStr,""])
+            qt.QMessageBox.warning( None, "Load Failed", errStr) 
         return nodeOpener
     
 class DICOMLoader(XNATLoadWorkflow):
