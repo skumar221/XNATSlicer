@@ -161,6 +161,14 @@ class XNATCommunicator(object):
         response = urllib2.urlopen(XNATSrc)
         
         self.browser.generalProgressBar.setVisible(True)
+        
+        """
+        mainWindow = slicer.util.mainWindow()
+        screenMainPos = mainWindow.pos
+        x = screenMainPos.x() + mainWindow.width/2 - self.browser.generalProgressBar.width/2
+        y = screenMainPos.y() + mainWindow.height/2 - self.browser.generalProgressBar.height/2
+        self.browser.generalProgressBar.move(qt.QPoint(x,y))
+        """
         self.browser.XNATView.setEnabled(False)
         
         a = self.buffer_read(response = response, fileToWrite = XNATFile, 

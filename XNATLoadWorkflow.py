@@ -588,7 +588,7 @@ class DICOMLoader(XNATLoadWorkflow):
                 self.terminateLoad(['DICOM load', 'It doesn\'t look like your DICOM database directory is setup. Please set it up in the DICOM module and try your download again.'])
                 m.moduleSelector().selectModule('DICOM')     
             else: 
-                self.terminateLoad(['DICOM load', 'Indexing the downloaded DICOMS.  Please be patient.  When finished, a \'DICOM Details\' window will appear pertaining only to the images downloaded (Your previous DICOM database is still intact.)'])    
+                self.terminateLoad(['DICOM load', 'Indexing the downloaded DICOMS.  Please be patient.  When finished, a \'DICOM Details\' window will appear pertaining only to the images downloaded (your previous DICOM database is still intact.)'])    
             #slicer.app.processEvents()
             #===================================================================
             # STORE EXISTING SLICER.DICOMDATABASE CONTENTS TO FILE
