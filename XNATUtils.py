@@ -32,8 +32,8 @@ MODULEPATHS    =               {"home" : MASTERPATH,
                                 "temp" : os.path.join(MASTERPATH, "temp"),
                                 "tempUpload" : os.path.join(os.path.join(MASTERPATH, "temp"), "upload"),  
                                  "icons" : os.path.join(os.path.dirname(os.path.abspath( __file__ )), "icons"), 
-                                 "pythonMods" : os.path.join(os.path.dirname(os.path.abspath( __file__ )), 
-                                                             "python_mod" + os.sep + osType),
+                                 "pythonMods_Win64" : os.path.join(os.path.dirname(os.path.abspath( __file__ )), 
+                                                             "python_mod" + os.sep + "win64"),
                                   "pyXNATCache" : os.path.join(MASTERPATH, "temp/pyxnatcache"),                        
                                 }
 
@@ -201,8 +201,8 @@ class XNATUtils(object):
         return slicerHelperFolders
     
     @property
-    def pythonMods(self):
-        return MODULEPATHS["pythonMods"]
+    def pythonMods_Win64(self):
+        return MODULEPATHS["pythonMods_Win64"]
     
     @property
     def osType(self):

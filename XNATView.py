@@ -96,9 +96,6 @@ class XNATView(object):
     
     def saveButtonClicked(self):
         pass
-    
-    def navigateTo(self):
-        pass
 
     def addProjClicked(self):
         self.addProjEditor = XNATAddProjEditor(self, self.browser, self.XNATCommunicator)
