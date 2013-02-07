@@ -7,17 +7,18 @@ import platform
 from XNATUtils import *
 
 from XNATUtils import textStatusBar
-#########################################################
-#
-# 
-comment = """
-  XNATInstallWizard
-  
-# TODO : 
-"""
-#
-#########################################################
 
+
+  #=============================================================================
+  # XNATInstallWizard takes the user through the external libraries 
+  # install process.  For now this is for Win64.  The wizard 
+  # fetches the external libraries using setuptools and 
+  # injects the runtime ssl files.
+  # 
+  # External libraries include: PyXNAT, lxml, httplib2
+  # 
+  # TODO : 
+  #=============================================================================
 
 class XNATInstallWizard(object):
     def __init__(self):
@@ -51,18 +52,18 @@ class XNATInstallWizard(object):
         self.checkPermissionsDialog.setText(self.permissionsText)
         self.checkPermissionsDialog.connect('buttonClicked(QAbstractButton*)', 
                                             self.checkPermissionsDialog_next)
-        # install Status dialog dialog
+
         self.installStatusDialog = textStatusBar(slicer.qMRMLWidget())
         self.installStatusDialog.textField.setFixedSize(400, 600)
         self.restartDialog = qt.QMessageBox()
         self.restartDialog.setStandardButtons(qt.QMessageBox.Ok | 
                                               qt.QMessageBox.Cancel)
+        
         self.restartDialog.setDefaultButton(qt.QMessageBox.Ok)
         self.restartDialog.setText("Slicer must restart in order " + 
                                    "for the new libraries to be recognized.")
         self.restartDialog.connect('buttonClicked(QAbstractButton*)', 
                                    self.restartDialog_next)
-        
         
         self.fileDialog = qt.QFileDialog()
         self.fileDialog.setFileMode(4)
@@ -72,7 +73,6 @@ class XNATInstallWizard(object):
 
         for i  in range(0, self.installMessageLen):
             self.installMessages.append("")
-
     
         self.installDir = None  
         self.isInstalled = True        
@@ -80,16 +80,21 @@ class XNATInstallWizard(object):
         self.modPaths = {}
         
         self.copyFiles = []
-        files = os.listdir(self.utils.pythonMods)
+        files = os.listdir(self.utils.pythonMods_Win64)
         for fileN in files:
             if fileN.find(".") > -1:
-                self.copyFiles.append(os.path.join(self.utils.pythonMods, 
+                self.copyFiles.append(os.path.join(self.utils.pythonMods_Win64, 
                                                    fileN))
 
-
     def pyXNATInstalled(self):
-        pyRoot = os.path.join(slicer.app.slicerHome, 
-                              'lib/Python')
+        
+        slicerRoot = slicer.app.slicerHome
+        if slicerRoot.lower().endswith('slicer-build'):
+            pyRoot = os.path.join(os.path.dirname(slicer.app.slicerHome), 'python-build')
+        else:
+            pyRoot = os.path.join(slicer.app.slicerHome, 'lib/Python')
+            
+        pyRoot = self.utils.adjustPathSlashes(pyRoot)
         self.installPaths = {
             "pyRoot": pyRoot ,     
             "pyDLLs": os.path.join(pyRoot, 
@@ -108,44 +113,44 @@ class XNATInstallWizard(object):
         }
         
         self.modPaths = {
-                         "pyDLLs": os.path.join(self.utils.pythonMods, 
+                         "pyDLLs": os.path.join(self.utils.pythonMods_Win64, 
                                                 "DLLs"),
-                         "pylibs": os.path.join(self.utils.pythonMods, 
+                         "pylibs": os.path.join(self.utils.pythonMods_Win64, 
                                                 "libs"),
-                         "pyDistUtils": os.path.join(self.utils.pythonMods, 
+                         "pyDistUtils": os.path.join(self.utils.pythonMods_Win64, 
                                                      "Lib/distutils"),
-                         "pyDistUtils_Cmd": os.path.join(self.utils.pythonMods, 
+                         "pyDistUtils_Cmd": os.path.join(self.utils.pythonMods_Win64, 
                                                          "Lib/distutils/command"),
-                         "pyDistUtils_Tests": os.path.join(self.utils.pythonMods, 
+                         "pyDistUtils_Tests": os.path.join(self.utils.pythonMods_Win64, 
                                                            "Lib/distutils/tests"),
                          }
-        #
+        #=======================================================================
         # STEP 1: See if directories even exist
-        #
+        #=======================================================================
         for val in self.installPaths:
             if not os.path.exists(self.installPaths[val]): 
                 return False
-        #
-        # STEP 2: Make sure the distutils directory has the correct files.
-        #
+        #=======================================================================
+        # STEP 2: Make sure the distutils directory has the correct files
+        #=======================================================================
         dirList = os.listdir(self.modPaths["pyDistUtils"])
         for fileN in dirList:
             if not os.path.exists(os.path.join(self.installPaths["pyDistUtils"], 
                                                os.path.basename(fileN))):
                 print ("DISTUTIL CHECK")
-                return False
-        #    
-        # STEP 3: Make sure the libs directory has the correct files.
-        #
+                return False   
+        #=======================================================================
+        # STEP 3: Make sure the libs directory has the correct files
+        #=======================================================================
         dirList = os.listdir(self.modPaths["pylibs"])
         for fileN in dirList:
             if not os.path.exists(os.path.join(self.installPaths["pylibs"], 
                                                os.path.basename(fileN))):
                 print ("FILE CHECK")
-                return False
-        #    
-        # STEP 4: Make sure the libs directory has the correct files.
-        #
+                return False    
+        #=======================================================================
+        # STEP 4: Make sure the libs directory has the correct files
+        #===============================================================+=======
         dirList = os.listdir(self.modPaths["pyDLLs"])
         for fileN in dirList:
             if not os.path.exists(os.path.join(self.installPaths["pyDLLs"], 
@@ -158,14 +163,15 @@ class XNATInstallWizard(object):
         self.introDialog.show()
         
     def moveAndInstallLibs_win64(self):
-        #
-        # STEP 1: Create directories.
-        #
+        #=======================================================================
+        # STEP 1: Create directories
+        #=======================================================================
         for val in self.installPaths:
             if not os.path.exists(self.installPaths[val]):
                 try: 
-                    os.mkdir(self.installPaths[val])
-                except:
+                    os.mkdir(self.utils.adjustPathSlashes(self.installPaths[val]))
+                except Exception, e:
+                    print ("makdDir error in XNATSlicer install: " + str(e))
                     self.installStatusDialog.textField.close()
                     s = "It looks like you didn't set your permissions correctly.  "
                     newText = "<font color=\"red\"><b>" + s + "</b></font>" + self.permissionsText
@@ -174,9 +180,9 @@ class XNATInstallWizard(object):
                     return
                 self.installStatusDialog.showMessage("Creating directory: '%s'"%
                                                      (self.installPaths[val]))
-        #
-        # STEP 2: Move files.
-        #
+        #=======================================================================
+        # STEP 2: Move installer files to appropriate folders
+        #=======================================================================
         import shutil
         for val in self.installPaths:
             try: 
@@ -196,7 +202,10 @@ class XNATInstallWizard(object):
                                    (fileN, os.path.join(self.installPaths[val], 
                                                         os.path.basename(fileN))))
             except Exception, e:
-                print "Warning: " + str(e) + "\n"        
+                print "Warning: " + str(e) + "\n"  
+        #=======================================================================
+        # STEP 3: Move copy only files to their appropriate locations      
+        #=======================================================================
         for fileN in self.copyFiles:
             if fileN.find("ez_setup.py") > -1:
                 shutil.copy(fileN, os.path.join(self.installPaths["ez_setup_loc"], 
@@ -209,16 +218,19 @@ class XNATInstallWizard(object):
                 self.installStatusDialog.showMessage("Copying file '%s' to '%s' "%
                                                      (fileN, os.path.join(self.installPaths[val], 
                                                                           os.path.basename(fileN))))
+        #=======================================================================
+        # STEP 4: Initiate subprocess calls
+        #=======================================================================
         fileN = os.path.join(self.installPaths["pyRoot"], "ez_setup.py")
         self.installStatusDialog.showMessage("Running '%s' "%(fileN))
         import subprocess
         import ez_setup
-        
         print ez_setup.main("")        
         slicer.app.processEvents()
-        
         easyInst = os.path.join(self.installPaths["pyRoot"], "Scripts/easy_install")
-
+        #=======================================================================
+        # STEP 5: Construct and run command
+        #=======================================================================
         command = "\"" + os.path.normpath(easyInst) + "\"" + " httplib2"      
         self.beginProcess(command, "httplib2")
         slicer.app.processEvents()
@@ -233,11 +245,12 @@ class XNATInstallWizard(object):
         command = "\"" + os.path.normpath(easyInst) + "\"" +  " pyxnat"
         self.beginProcess(command, "pyxnat")
         slicer.app.processEvents()
-        
         self.restartDialog.show()
 
 
     def beginProcess(self, command, desc = ""):
+        """"Utilizes qt.QProcess to execute commands.
+        """
         process = qt.QProcess()
         self.installStatusDialog.showMessage("Installing '%s'..."%(desc))
         print "Calling '%s'."%(command)

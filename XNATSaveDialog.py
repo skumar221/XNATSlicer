@@ -169,7 +169,7 @@ class SaveUnlinkedDialog(XNATSaveDialog):
          #======================================================================
          self.dialogs[0].addButton(qt.QMessageBox.Yes)
          self.dialogs[0].addButton(qt.QMessageBox.Cancel)
-         self.viewer.viewWidget.setCurrentItem(self.viewer.getItem_byPath(self.sessionArgs['saveLevel']))
+         self.viewer.selectItem_byPath((self.sessionArgs['saveLevel']))
              
      def buttonClicked(self,button):
         #=======================================================================
@@ -265,7 +265,7 @@ class FileSaveDialog(XNATSaveDialog):
         # BUTTON CONNECT
         #=======================================================================
         buttonRow.connect('clicked(QAbstractButton*)', self.buttonClicked)
-        self.viewer.viewWidget.setCurrentItem(self.viewer.getItem_byPath(self.sessionArgs['saveLevel']))
+        self.viewer.selectItem_byPath((self.sessionArgs['saveLevel']))
  
     def buttonClicked(self,button):
         slicer.app.processEvents()
