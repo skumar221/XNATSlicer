@@ -49,7 +49,6 @@ class SettingsPopup:
         self.windowLayout.addRow(self.doneButton)#, 5, 5)
         self.doneButton.connect('clicked()', self.donePressed)
         
-
         self.window.show()
         if position:
             self.window.show()
@@ -65,13 +64,10 @@ class SettingsPopup:
     def donePressed(self):
         self.setWindow()
         self.window.hide()
-        
-        
 
-            
 class HostManager:
   """
-  Popup for managing xnat hosts
+  Embedded within the settings popup.  Manages hosts.
   """
 
   def __init__(self, browser, settings, parent = None):
@@ -80,7 +76,7 @@ class HostManager:
     self.browser = browser
     self.settings = settings
     self.utils = XNATUtils()
-    #########################################
+
 
     self.urlLine = qt.QLineEdit()
     self.nameLine = qt.QLineEdit()
@@ -93,7 +89,6 @@ class HostManager:
     self.hostDropdown = qt.QComboBox()
     self.hostDropdown.setFont(self.utils.labelFont)
     self.hostDropdown.connect('currentIndexChanged(const QString&)',self.hostDropdownClicked)   
-    
     
     self.usernameLine = qt.QLineEdit()
     self.usernameLine.setFont(self.utils.labelFontItalic)
@@ -120,7 +115,6 @@ class HostManager:
     topRow = qt.QHBoxLayout()
     topRow.addWidget(self.mhLabel)
        
-    
     self.hostLayout = qt.QFormLayout()    
     self.hostLayout.addRow(topRow)
     self.hostLayout.addRow(self.hostList)
@@ -130,16 +124,7 @@ class HostManager:
     buttonLayout.addWidget(self.editButton)
     buttonLayout.addWidget(self.deleteButton)   
     self.hostLayout.addRow(buttonLayout)
-    
-#    self.hostLayout.addRow(self.usrLabel)
-#    userLayout = qt.QHBoxLayout()
-#    userLayout.addWidget(self.hostDropdown)
-#    userLayout.addWidget(self.usernameLine)    
-#    self.hostLayout.addRow(userLayout)
 
-    #self.hostLayout.addRow(self.defaultDropdown)
-        
-    #   Have to do this for the background color    
     self.frame = qt.QFrame()
     self.frame.setStyleSheet("QWidget { background: rgb(255,255,255)}")
     self.frame.setLayout(self.hostLayout)
@@ -154,7 +139,6 @@ class HostManager:
       self.usernameLine.setText(self.settings.getCurrUsername(self.hostDropdown.currentText))
       
   def enableStuff(self, state):   
-#    if self.hostList.selectedText
     str = self.hostList.selectedText()
     list = str.split("\t")
     
@@ -165,8 +149,7 @@ class HostManager:
         self.deleteButton.setEnabled(False)
         self.editButton.setEnabled(True)
     
-  def loadHosts(self):
-      
+  def loadHosts(self):     
     hostDictionary= self.settings.hostNameAddressDictionary()   
     self.hostList.setText("")
     
@@ -183,8 +166,7 @@ class HostManager:
             self.hostList.setFontItalic(True)
             self.hostList.setTextColor(qt.QColor(0,0,225))
             self.hostList.insertPlainText("default")
-        #else:  self.hostList.insertPlainText("\n" ) 
-        
+
         currName = self.settings.getCurrUsername(name)
         if ( currName != ""):
             self.hostList.setFontItalic(True)
@@ -198,9 +180,7 @@ class HostManager:
 
         
     
-  def addButtonClicked(self):
- 
-    
+  def addButtonClicked(self):   
     cancelButton = qt.QPushButton("Cancel")
     self.nameLine.clear()
     self.urlLine.clear()
@@ -212,7 +192,6 @@ class HostManager:
     currLayout.addRow("Name:", self.nameLine)
     currLayout.addRow("URL:", self.urlLine)
     currLayout.addRow(self.setDefault)
-    #currLayout.addRow("", self.addWindowErrorMessage)
     
     buttonLayout = qt.QHBoxLayout()
     buttonLayout.addStretch(1)
@@ -234,15 +213,12 @@ class HostManager:
     
     self.prevName = None
 
-
   def rewriteHost(self):
     self.settings.deleteHost(self.prevName)
     self.prevName = None
     self.writeHost()
-    
 
   def writeHost(self):
-
     modifiable = True
     try: 
         self.settings.defaultHosts[self.nameLine.text.strip("")]
@@ -251,7 +227,6 @@ class HostManager:
     except:   
         modStr = str(modifiable)
         checkStr = str(self.setDefault.isChecked())
-        #print "SETTINGS: %s, %s, %s, %s"%(self.nameLine.text, self.urlLine.text, modStr, checkStr)
     
     self.settings.saveHost(self.nameLine.text, self.urlLine.text, isModifiable = modifiable, isDefault = self.setDefault.isChecked())
     if self.setDefault.isChecked():
@@ -267,9 +242,7 @@ class HostManager:
     self.nameLine.clear()
     self.urlLine.clear()
     self.usernameLine.clear()
-    self.parent.show()
-
-     
+    self.parent.show()    
         
   def editButtonClicked(self):
     str = self.hostList.selectedText()
@@ -279,7 +252,6 @@ class HostManager:
     self.nameLine.setText(list[0])
     self.urlLine.setText(list[1])
 
-    #print self.settings.defaultHosts
     try:
         self.settings.defaultHosts[list[0].strip("")]
         self.nameLine.setReadOnly(True)
@@ -364,7 +336,6 @@ class HostManager:
     hostLabel = qt.QLabel()
        
     okButton = qt.QPushButton("OK")
-   
         
     currLayout = qt.QVBoxLayout()
     currLayout.addWidget(messageLabel)
@@ -406,47 +377,33 @@ class HostManager:
     self.browser.addHosts()
 
 class XNATSettings:
-    
+  """ Manager for handing the settings file.  Stored in QSettings standard through
+      a file ('XNATSettings.ini')
+  """
   def __init__(self, parent=None, rootDir=None, browser = None):    
     if not parent:
       self.parent = slicer.qMRMLWidget()
     else:
-      self.parent = parent
-    
+      self.parent = parent   
     self.browser = browser
     self.filepath = os.path.join(rootDir, 'XNATSettings.ini')
-    
-    #self.database = qt.QSettings(self.filepath, qt.QSettings.NativeFormat)   
-    
-    #import sys
-    #if sys.platform.find("win") > -1:
-    #    self.database = qt.QSettings(self.filepath, qt.QSettings.IniFormat)
-    
     self.database = qt.QSettings(self.filepath, qt.QSettings.IniFormat)
     self.defaultHosts = {'Central': 'https://central.xnat.org', 
-                    'CNDA': 'https://cnda.wustl.edu'}
-    
-    
+                         'CNDA': 'https://cnda.wustl.edu'}  
     self.setup()
     self.currErrorMessage = ""
     
       
   def setup(self):
     if not os.path.exists(self.filepath): 
-        #f = open(self.filepath, "rw")
-        #f.close()
         print 'No Xnat settings found...creating new settings file: ' + self.filepath
-        #self.browser.updateStatus(['No Xnat settings found...creating new settings file: ', self.filepath, ""])
         self.createDefaultSettings()
       
-  def createDefaultSettings(self):
-    
+  def createDefaultSettings(self):  
     restPaths = ['']
-    
     for name in self.defaultHosts:
          setDefault = True if name == 'Central' else False
-         self.saveHost(name, self.defaultHosts[name], False, setDefault)
-    
+         self.saveHost(name, self.defaultHosts[name], False, setDefault)    
     self.savePaths(restPaths, "REST")
 
   
@@ -454,7 +411,6 @@ class XNATSettings:
     self.database.beginGroup(hostTag)
     hostDict = {}        
     for childName in self.database.childGroups():
-        #print "childName %s"%(childName)
         hostDict[self.database.value(childName +"/"+ hostNameTag)] = self.database.value(childName +"/"+ hostAddressTag)
     self.database.endGroup()
     return hostDict
@@ -481,22 +437,16 @@ class XNATSettings:
        qt.QMessageBox.warning( None, "Save Host", "Please leave no text field blank (%s)"%(blankTxt))
        return False    
     elif hostNameFound == True:
-       # Error Message
        qt.QMessageBox.warning( None, "Save Host", hostName + " is a name that's already in use.")
-       #self.currErrorMessage = hostName + " is a name that's already in use."
        hostFound = False
        return False
     else:
        self.database.setValue(hostTag + hostName + "/" + hostNameTag, hostName)
-       self.database.setValue(hostTag + hostName + "/" + hostAddressTag, hostAddress)
-       
+       self.database.setValue(hostTag + hostName + "/" + hostAddressTag, hostAddress)      
        for item in self.defaultHosts:
-           #print "WRITE HOST: %s %s" %(hostName.strip(""), item.strip(""))
            if hostName.strip("") == item.strip(""):
-               #print "NOT MODIFIABLE IN SAVE HOST"
                isModifiable = False
                break
-       
        self.database.setValue(hostTag + hostName + "/" + hostIsModifiableTag, isModifiable)
        self.database.setValue(hostTag + hostName + "/" + hostIsDefaultTag, isDefault)
        self.database.setValue(hostTag + hostName + "/" + hostCurrUserTag, "")
@@ -511,8 +461,7 @@ class XNATSettings:
   def getPath(self, pathType = "REST"):
       if pathType == "REST":
           currTag = RESTPathTag      
-      return self.database.value(pathTag + currTag, "")
-    
+      return self.database.value(pathTag + currTag, "")   
   
   def deleteHost(self, hostName): 
     if self.database.value(hostTag + hostName + "/" + hostIsModifiableTag, "")==0:
@@ -534,7 +483,6 @@ class XNATSettings:
     return False 
   
   def isModifiable(self, hostName):
-
     title = unicode(str(self.database.value(hostTag + hostName + "/" + hostIsModifiableTag, "")))
     import unicodedata
     return unicodedata.normalize('NFKD', title).encode('ascii','ignore')
@@ -550,7 +498,6 @@ class XNATSettings:
   def getCurrUsername(self, hostName):
     return self.database.value(hostTag + hostName + "/" + hostCurrUserTag, "")
 
-
 class HostLister(qt.QTextEdit):
     def __init__(self, parent=None): 
         qt.QTextEdit.__init__(self, parent)
@@ -558,7 +505,6 @@ class HostLister(qt.QTextEdit):
         # TODO: Ideally we'd create a custom signal here instead of linking it
         #       to the popup.  CustomSingals are not easy to do, however.
         self.linkedWidget = None
-
 
     def mouseReleaseEvent(self, event):
         cursor = qt.QTextCursor(self.textCursor())
