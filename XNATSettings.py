@@ -5,7 +5,6 @@ import glob
 import sys
 from XNATUtils import *
 
-
 hostTag = 'Hosts/'
 hostNameTag = 'FullName/'
 hostAddressTag =   'Address/'
@@ -16,21 +15,11 @@ hostCurrUserTag = 'CurrUser/'
 RESTPathTag = 'RESTPath/'
 pathTag = 'Paths/'
 
-
-
-#
-# Reporting decorator from: http://paulbutler.org/archives/python-debugging-with-decorators/
-#
-
-#########################################################
-#
-# 
-comment = """
-
-"""
-#
-#########################################################
-
+#=================================================================
+# XNATSettings is the class that manages storable settings for the
+# XNATSlicer module.  The class is activated by clicking the wrench
+# icon in the XNATSlicer browser.
+#=================================================================
 
 class SettingsPopup:
     def __init__(self, browser, settings):        
