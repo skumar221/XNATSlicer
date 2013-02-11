@@ -4,16 +4,10 @@ import datetime, time
 import os
 import sys
 
-#########################################################
-#
-# 
-comment = """
-  XNATTimer
-
-# TODO : 
-"""
-#
-#########################################################
+#=================================================================
+# XNATTimer manages time logging and performance testing.  In most
+# cases it's not needed.
+#=================================================================
                 
 class XNATTimer(object):
     def __init__(self, utils, writeFileName = None, fileOverWrite = False):
@@ -23,34 +17,27 @@ class XNATTimer(object):
         self.debugStr = None
         self.processName = None
         self.timerStrs = []
-        
         if not writeFileName: self.writeFileName = os.path.join(self.utils.homePath, 'timerLog.txt')
         else: self.writeFileName = os.path.join(self.utils.homePath, writeFileName)
-            
-        self.fileOverWrite = fileOverWrite
-        
+        self.fileOverWrite = fileOverWrite 
         self.startCalled = False
 
-    def start(self, processName = None, debugStr = None):
-        
+    def start(self, processName = None, debugStr = None):       
         self.startCalled = True
         currStr = ""
         self.debugStr = debugStr        
         self.prev = datetime.datetime.now() 
-        
         if processName:
             self.processName = processName
             self.timerStrs.append('\n' + processName + '\n') 
             print('\n' + processName)
         if self.debugStr: currStr = "before " + self.debugStr + "."
-        
         str  = ("%s <--Start timer %s"%(self.prev, currStr))
         self.timerStrs.append(str + '\n')
         print str
         
             
     def stop(self, fileWrite = True, printTimeDiff = True):
-        
         if self.startCalled:
             currStr = ""
             elapseStr = ""
@@ -64,7 +51,6 @@ class XNATTimer(object):
             self.timerStrs.append(str1 + '\n')
             print str1
 
-            
             if printTimeDiff:
                 str2 =  ("TOTAL TIME ELAPSED %s: \t\t%s"%(elapseStr, (self.curr-self.prev)))
                 self.timerStrs.append(str2 + '\n')
@@ -78,8 +64,7 @@ class XNATTimer(object):
             f = open(self.writeFileName, 'a')
             f.writelines(self.timerStrs)            
             f.close()
-
-        
+     
     def clear(self):
         self.curr = None
         self.prev = None

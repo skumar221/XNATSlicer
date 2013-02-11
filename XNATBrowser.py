@@ -1,11 +1,13 @@
+# SLICER INCLUDES
 from __main__ import vtk, qt, ctk, slicer
 import os
 import glob 
 import sys 
 import inspect
-
+# GLOBALS
 WIDGETPATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
 sys.path.append(WIDGETPATH)
+# MODULE INCLUDES
 from XNATFileInfo import *
 from XNATLoadWorkflow import *
 from XNATMRMLParser import *
@@ -18,19 +20,12 @@ from XNATSettings import *
 from XNATTreeView import *
 from XNATCommunicator import *
 import XNATView
-#########################################################
-#
-# 
-comment = """
-  XNATBrowser is the hook script/class that communicates with Slicer.  
-  All processes related to XNATSlicer begin here.
-  Layout information, browser type (in this case, the XNATTreeView), etc. 
-  is instantiated here. Github test - mac. 
-  
-# TODO : 
-"""
-#
-#########################################################
+
+#===============================================================================
+# XNATBrowser is the hook script/class that communicates with Slicer.  
+# All processes related to XNATSlicer begin here.
+# Layout information, browser type (in this case, the XNATTreeView), etc.  
+#===============================================================================
 
 class XNATBrowser:
     """ Initiates module intro data to slicer.  
@@ -40,7 +35,7 @@ class XNATBrowser:
         parent.categories = ["XNAT"]
         parent.contributors = ["Sunil Kumar"]
         parent.helpText = """
-        XNAT Tree View Widget 0.7
+        The XNATSlicer Browser 1.0
         """
         parent.acknowledgementText = """
         Sunil Kumar - NRG - kumars@mir.wustl.edu
@@ -48,8 +43,6 @@ class XNATBrowser:
         self.parent = parent
 
 class XNATBrowserWidget:
-    """ The widget itself.  
-    """
     def __init__(self, parent=None):
         if not parent:
             self.parent = slicer.qMRMLWidget()
@@ -241,7 +234,7 @@ class XNATBrowserWidget:
         self.loginLayout.addLayout(fullLoginLayout)
         self.browserLayout.addLayout(self.XNATViewLayout)
         self.statusLayout.addLayout(self.labelStatusBar.layout)
-        
+           
         self.generalProgressBar.setVisible(False)
         self.generalProgressBar.setFixedHeight(17)
         
