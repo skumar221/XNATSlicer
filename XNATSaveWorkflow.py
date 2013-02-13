@@ -7,7 +7,6 @@ import zipfile
 import urllib2
 
 from XNATFileInfo import *
-from XNATMRMLParser import *
 from XNATUtils import *
 from XNATScenePackager import *
 from XNATTimer import *

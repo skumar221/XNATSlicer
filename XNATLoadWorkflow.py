@@ -1,4 +1,3 @@
-# SLICER INCLUDES
 from __main__ import vtk, ctk, qt, slicer
 # PYTHON INCLUDES
 import os
@@ -13,6 +12,7 @@ from XNATUtils import *
 from XNATScenePackager import *
 from XNATTimer import *
 from XNATSessionManager import *
+from XNATMRMLParser import *
 
 def getLoader(loaderType, browser):
     if   loaderType == "scene": return SceneLoader(browser)
@@ -192,8 +192,13 @@ class SceneLoader(XNATLoadWorkflow):
         # STEP 6: Parse mrml, updating paths to relative
         #=======================================================================
         newMRMLFile = self.utils.appendFile(mrmlFiles[0], "-LOCALIZED")
-        #mrmlParser = XNATMRMLParser(self.browser)
-        #mrmlParser.changeValues(mrmlFiles[0], newMRMLFile,  {},  None, True)
+        
+        #
+        # NOTE: Parsing of the MRML is needed because node filePaths are absolute, not relative.
+        # TODO: Submit a change request for absolute path values to Slicer
+        #
+        mrmlParser = XNATMRMLParser(self.browser)
+        mrmlParser.changeValues(mrmlFiles[0], newMRMLFile,  {},  None, True)
         return newMRMLFile
 
 

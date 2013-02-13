@@ -5,7 +5,6 @@ import sys
 import shutil
 
 from XNATFileInfo import *
-from XNATMRMLParser import *
 from XNATUtils import *
 from XNATScenePackager import *
 from XNATSessionManager import *
