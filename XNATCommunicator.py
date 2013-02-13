@@ -8,19 +8,11 @@ import math
 
 from XNATUtils import *
 
-#########################################################
-#
-# 
-comment = """
-  XNATCommunicator
-  
-# TODO : 
-"""
-#
-#########################################################
-
-
-
+#===============================================================================
+# XNATCommunicator uses PyXNAT to send/receive commands and files to an XNAT host
+# Since input is usually string-based, there are several utility methods in this
+# class to clean up strings for input to PyXNAT. 
+#===============================================================================
 
 class XNATCommunicator(object):
     def __init__(self, browser, 
@@ -176,9 +168,6 @@ class XNATCommunicator(object):
             
         self.browser.XNATView.setEnabled(True)
         XNATFile.close()
-        
-        #dlStr = "Downloaded '%s' to '%s'"%(XNATSrc, dst)
-        #print(dlStr)
 
 class PyXNAT(XNATCommunicator):
     

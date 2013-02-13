@@ -388,7 +388,7 @@ class XNATBrowserWidget:
         the username saved.
         """
         #=======================================================================
-        # DOES THE USERNAME EXIST IN THE SETTINGS FILE?
+        # Does the username exist in the settings file?
         #=======================================================================
         if self.currHostName:    
             currUser = self.settings.getCurrUsername(self.currHostName).strip("").strip(" ")
