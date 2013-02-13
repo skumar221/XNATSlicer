@@ -9,7 +9,6 @@ import urllib2
 from datetime import datetime
 # MODULE INCLUDES
 from XNATFileInfo import *
-from XNATMRMLParser import *
 from XNATUtils import *
 from XNATScenePackager import *
 from XNATTimer import *
@@ -33,7 +32,6 @@ class XNATLoadWorkflow(object):
         """
         self.utils = XNATUtils()
         self.browser = browser       
-        self.mrmlParser = XNATMRMLParser(self)
         self.stopwatch = XNATTimer(self.utils)
         self.loadFile = None
         self.newMRMLFile = None
@@ -194,8 +192,8 @@ class SceneLoader(XNATLoadWorkflow):
         # STEP 6: Parse mrml, updating paths to relative
         #=======================================================================
         newMRMLFile = self.utils.appendFile(mrmlFiles[0], "-LOCALIZED")
-        mrmlParser = XNATMRMLParser(self.browser)
-        mrmlParser.changeValues(mrmlFiles[0], newMRMLFile,  {},  None, True)
+        #mrmlParser = XNATMRMLParser(self.browser)
+        #mrmlParser.changeValues(mrmlFiles[0], newMRMLFile,  {},  None, True)
         return newMRMLFile
 
 
