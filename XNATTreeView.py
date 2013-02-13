@@ -7,7 +7,6 @@ import shutil
 import urllib2
 # MODULE INCLUDES
 from XNATFileInfo import *
-from XNATMRMLParser import *
 from XNATUtils import *
 from XNATInstallWizard import *
 from XNATSettings import *

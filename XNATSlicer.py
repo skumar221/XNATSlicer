@@ -11,7 +11,6 @@ sys.path.append(WIDGETPATH)
 # MODULE INCLUDES
 from XNATFileInfo import *
 from XNATLoadWorkflow import *
-from XNATMRMLParser import *
 from XNATUtils import *
 from XNATInstallWizard import *
 from XNATScenePackager import *
@@ -29,7 +28,7 @@ import XNATView
 class XNATSlicer:
   def __init__(self, parent):
     parent.title = "XNATSlicer"
-    parent.categories = ["Remote"]
+    parent.categories = ["XNATSlicer"]
     parent.dependencies = []
     parent.contributors = ["Sunil Kumar (WashU-St. Louis, Dan Marcus (WashU-St. Louis), Steve Pieper (Isomics)"] 
     parent.helpText = """
