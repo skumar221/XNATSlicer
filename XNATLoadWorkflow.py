@@ -191,8 +191,7 @@ class SceneLoader(XNATLoadWorkflow):
         #=======================================================================
         # STEP 6: Parse mrml, updating paths to relative
         #=======================================================================
-        newMRMLFile = self.utils.appendFile(mrmlFiles[0], "-LOCALIZED")
-        
+        newMRMLFile = self.utils.appendFile(mrmlFiles[0], "-LOCALIZED")       
         #
         # NOTE: Parsing of the MRML is needed because node filePaths are absolute, not relative.
         # TODO: Submit a change request for absolute path values to Slicer
