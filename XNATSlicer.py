@@ -7,6 +7,7 @@ import sys
 import inspect
 # GLOBALS
 WIDGETPATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
+WIDGETPATH = os.path.join(WIDGETPATH, "XNATSlicerLib")
 sys.path.append(WIDGETPATH)
 # MODULE INCLUDES
 
