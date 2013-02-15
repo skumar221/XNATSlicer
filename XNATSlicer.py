@@ -9,18 +9,8 @@ import inspect
 WIDGETPATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
 sys.path.append(WIDGETPATH)
 # MODULE INCLUDES
-from XNATFileInfo import *
-from XNATLoadWorkflow import *
-from XNATUtils import *
-from XNATInstallWizard import *
-from XNATScenePackager import *
-from XNATSessionManager import *
-from XNATTimer import *
-from XNATSettings import *
-from XNATTreeView import *
-from XNATCommunicator import *
-import XNATView
 
+from XNATSlicerLib import *
 #
 # XNATSlicer
 #
@@ -436,10 +426,13 @@ class XNATSlicerWidget:
             #===================================================================
             except Exception, e:
                 print("XNATSlicer Module: PyXNAT not found! Beginning installation wizard.")
-                self.installWizard= XNATInstallWizard()
-                if not self.installWizard.pyXNATInstalled():
-                    self.installWizard.beginWizard()
-                    return  
+                if ('win' in slicer.app.os.lower()):
+                    self.installWizard= XNATInstallWizard()
+                    if not self.installWizard.pyXNATInstalled():
+                        self.installWizard.beginWizard()
+                        return  
+                else:
+                    qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "Unfortunately this operating system is not yet supported for XNATSlicer.")
             # Init communicator.
             XNATCommunicator = PyXNAT(browser = self, 
                                server = self.settings.getAddress(self.hostDropdown.currentText), 
