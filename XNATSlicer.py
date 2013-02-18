@@ -426,14 +426,16 @@ class XNATSlicerWidget:
             # IF NOT, TRY INSTALL WIZARD.
             #===================================================================
             except Exception, e:
-                print("XNATSlicer Module: PyXNAT not found! Beginning installation wizard.")
                 if ('win' in slicer.app.os.lower()):
+                    print("XNATSlicer Module: PyXNAT not found! Beginning installation wizard.")
                     self.installWizard= XNATInstallWizard()
                     if not self.installWizard.pyXNATInstalled():
                         self.installWizard.beginWizard()
                         return  
                 else:
-                    qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "Unfortunately this operating system is not yet supported for XNATSlicer.")
+                    str = "Unfortunately this operating system is not yet supported for XNATSlicer."
+                    print("XNATSlicer Module: %s"%(str))
+                    qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "%s"%(str))
                     return
             # Init communicator.
             XNATCommunicator = PyXNAT(browser = self, 
