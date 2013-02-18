@@ -29,21 +29,6 @@ endif()
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
-  XNATAddProjEditor.py
-  XNATCommunicator.py
-  XNATFileInfo.py
-  XNATInstallWizard.py
-  XNATLoadWorkflow.py
-  XNATMRMLParser.py
-  XNATSaveDialog.py
-  XNATSaveWorkflow.py
-  XNATScenePackager.py
-  XNATSessionManager.py
-  XNATSettings.py
-  XNATTimer.py
-  XNATTreeView.py
-  XNATUtils.py
-  XNATView.py
   )
 
 set(MODULE_PYTHON_RESOURCES
