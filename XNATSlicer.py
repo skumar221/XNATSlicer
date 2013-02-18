@@ -434,6 +434,7 @@ class XNATSlicerWidget:
                         return  
                 else:
                     qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "Unfortunately this operating system is not yet supported for XNATSlicer.")
+                    return
             # Init communicator.
             XNATCommunicator = PyXNAT(browser = self, 
                                server = self.settings.getAddress(self.hostDropdown.currentText), 
