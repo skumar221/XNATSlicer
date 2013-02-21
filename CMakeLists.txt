@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 2.8.9)
 
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
@@ -12,45 +12,13 @@ if(NOT Slicer_SOURCE_DIR)
 endif()
 
 #-----------------------------------------------------------------------------
-set(MODULE_NAME XNATSlicer)
-
-#-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
   find_package(Slicer REQUIRED)
   include(${Slicer_USE_FILE})
 endif()
 
 #-----------------------------------------------------------------------------
-if(NOT Slicer_SOURCE_DIR)
-  find_package(Slicer REQUIRED)
-  include(${Slicer_USE_FILE})
-endif()
-
-#-----------------------------------------------------------------------------
-set(MODULE_PYTHON_SCRIPTS
-  ${MODULE_NAME}.py
-  )
-
-set(MODULE_PYTHON_RESOURCES
-  )
-
-#-----------------------------------------------------------------------------
-slicerMacroBuildScriptedModule(
-  NAME ${MODULE_NAME}
-  SCRIPTS "${MODULE_PYTHON_SCRIPTS}"
-  RESOURCES "${MODULE_PYTHON_RESOURCES}"
-  )
-
-#-----------------------------------------------------------------------------
-if(BUILD_TESTING)
-
-  # this will regiester the unittest subclass in the main script
-  # as a ctest (note that it is also usable as a runtime test).
-  slicer_add_python_unittest(SCRIPT XNATSlicer.py)
-
-  # additional build-time testing goes in here
-  add_subdirectory(Testing)
-endif()
+add_subdirectory(XNATSlicer)
 
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
