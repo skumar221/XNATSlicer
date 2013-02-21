@@ -25,7 +25,6 @@ set(MODULE_PYTHON_SCRIPTS
 
 set(MODULE_PYTHON_RESOURCES
   Resources/Icons/${MODULE_NAME}.png
-  ${MODULE_NAME}Lib/data/Utils
   ${MODULE_NAME}Lib/icons/addproj.jpg
   ${MODULE_NAME}Lib/icons/delete.jpg
   ${MODULE_NAME}Lib/icons/load.jpg
