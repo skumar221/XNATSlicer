@@ -6,7 +6,6 @@ set(MODULE_PYTHON_SCRIPTS
   ${MODULE_NAME}.py
   ${MODULE_NAME}Lib/__init__.py
   ${MODULE_NAME}Lib/XNATAddProjEditor.py
-  ${MODULE_NAME}Lib/XNATBrowser.py
   ${MODULE_NAME}Lib/XNATCommunicator.py
   ${MODULE_NAME}Lib/XNATFileInfo.py
   ${MODULE_NAME}Lib/XNATInstallWizard.py
