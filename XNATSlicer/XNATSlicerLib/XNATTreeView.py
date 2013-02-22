@@ -82,6 +82,9 @@ class XNATTreeView(XNATView.XNATView):
         self.viewWidget.clear()
         self.browser.updateStatus(["","Retrieving projects. Please wait...",""])
         projects = self.XNATCommunicator.getFolderContents('/projects')
+        if not projects:
+            return False
+        
         projectItems = self.makeTreeItems(self.viewWidget, projects)
         #=======================================================================
         # STEP 1: Init TreeView
@@ -91,6 +94,7 @@ class XNATTreeView(XNATView.XNATView):
                                 self.getChildrenExpanded)
         self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)",
                                 self.treeItemClicked)
+        return True
         
     def begin(self, XNATCommunicator):
         """ (INHERITED from XNATView) Called from XNATBroswer, 'begin' 
@@ -103,9 +107,11 @@ class XNATTreeView(XNATView.XNATView):
         #=======================================================================
         # STEP 2: Get Projects in XNAT.
         #=======================================================================
-        self.loadProjects()
-        self.browser.updateStatus(["", "Navigate project.", ""])
-        self.addProjButton.setEnabled(True)   
+        if self.loadProjects():
+            self.browser.updateStatus(["", "Navigate project.", ""])
+            self.addProjButton.setEnabled(True) 
+        else:
+            self.browser.updateStatus(["Invalid credentials!", "Check your username, password or server address.", ""]) 
      
     def deleteButtonClicked(self, button=None):
         if button and button.text.lower().find('ok') > -1: 

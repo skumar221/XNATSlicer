@@ -48,7 +48,7 @@ class XNATInstallWizard(object):
                                 "FULL read/write permissions " + 
                                 "for the Slicer install directory '<b>%s</b>'."%(str(slicer.app.slicerHome)) + 
                                 "\n\nInstructions on how to do this " + 
-                                "are here: <a href=\"https://github.com/sunilk-wustl/XNATSlicer/wiki/Win64Install\">https://github.com/sunilk-wustl/XNATSlicer/wiki/Win64Install</a>")
+                                "are here: <a href=\"http://www.slicer.org/slicerWiki/index.php/Documentation/4.2/Extensions/XNATSlicer\">http://www.slicer.org/slicerWiki/index.php/Documentation/4.2/Extensions/XNATSlicer</a>")
         self.checkPermissionsDialog.setText(self.permissionsText)
         self.checkPermissionsDialog.connect('buttonClicked(QAbstractButton*)', 
                                             self.checkPermissionsDialog_next)
