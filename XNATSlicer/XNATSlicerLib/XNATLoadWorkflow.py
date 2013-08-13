@@ -20,11 +20,13 @@ def getLoader(loaderType, browser):
     elif loaderType == "file":  return FileLoader(browser)
     elif loaderType == "mass_dicom":  return DICOMLoader(browser)
 
+    
 #=================================================================
 # XNATLoadWorkflow is a parent class to various loader types
 # (Slicer files, DICOM folders, individual files, etc.).  Loader types
 # are determined by the treeView item being clicked. 
 #=================================================================
+
 
 class XNATLoadWorkflow(object):
     def __init__(self, browser):
@@ -37,18 +39,25 @@ class XNATLoadWorkflow(object):
         self.newMRMLFile = None
         self.currRemoteHost = None
 
+        
     def load(self, args):
         self.XNATCommunicator =  args["XNATCommunicator"]
         self.xnatSrc = args["xnatSrc"]
         self.localDst = args["localDst"]
+
         
     def loadFinish(self):
         pass
 
+
+    
     def terminateLoad(self, warnStr):
         qt.QMessageBox.warning( None, warnStr[0], warnStr[1])
         self.browser.XNATView.setEnabled(True)
 
+
+
+        
     def getLoadables_byDir(self, rootDir):
         """Returns the loadable filenames (determined by filetype) in a dir"""
         allImages = []
@@ -372,7 +381,10 @@ class DICOMLoader(XNATLoadWorkflow):
                     print (self.utils.lf() + " NOT A DICOM: '%s'"%(filePath + filename))
             except Exception, e:
                 print self.utils.lf() + "LIKELY NOT A USEABLE FILE: '%s' "%(filePath + filename) + str(e)
-        
+
+
+
+                
     def proceedWithLoad(self, button): 
         if ((str(button) == 'yes') or 
             (('yes' in button.text.lower()))):
