@@ -5,14 +5,26 @@ import sys
 import shutil
 import time
 import math
+import urllib2
+import string    
+import httplib
+from os.path import abspath, isabs, isdir, isfile, join
+from base64 import b64encode
 
 from XNATUtils import *
 
-#===============================================================================
+
+#********************************************************************************
 # XNATCommunicator uses PyXNAT to send/receive commands and files to an XNAT host
 # Since input is usually string-based, there are several utility methods in this
 # class to clean up strings for input to PyXNAT. 
-#===============================================================================
+#
+#
+#  The Neuroinformatics Research Group
+#  Author: Sunil Kumar (kumar.sunil.p@gmail.com)
+#  Date: 8/2013
+#
+#********************************************************************************
 
 class XNATCommunicator(object):
     def __init__(self, browser, 
@@ -32,26 +44,39 @@ class XNATCommunicator(object):
     
         self.totalDLSize = 0
         self.downloadedBytes = 0
+
+
         
     def setup(self):
         pass
+
+
     
-    def getFiles_URL(self, srcDstMap, withProgressBar = True, fileOrFolder = None):     
-        #=======================================================================
-        # GET TOTAL SIZE OF DOWNLOADS FOR ALL FILES
-        #=======================================================================
+    def getFiles_URL(self, srcDstMap, withProgressBar = True, fileOrFolder = None): 
+
+        
+        #--------------------
+        # Get total size of downloads for all files
+        #-------------------------
         self.totalDLSize = 0
         self.downloadedBytes = 0
         downloadFolders = []
-        #=======================================================================
-        # REMOVE EXISTING DST FILES
-        #=======================================================================
+
+        
+        
+        #-------------------------
+        # Remove existing dst files
+        #-------------------------
         for src, dst in srcDstMap.iteritems(): 
-            if os.path.exists(dst): self.utils.removeFile(dst)
+            if os.path.exists(dst): 
+                self.utils.removeFile(dst)
         timeStart = time.time()
-        #=======================================================================
-        # DOWNLOAD THE FILES
-        #=======================================================================
+
+        
+        
+        #-------------------------
+        # Download files
+        #-------------------------
         if fileOrFolder == "file":
             for src, dst in srcDstMap.iteritems():
                 #print("FILE DOWNLOAD src:%s\tdst:%s"%(src, dst))
@@ -61,23 +86,28 @@ class XNATCommunicator(object):
         elif fileOrFolder == "folder":
             import tempfile
             xnatFileFolders = []
-            #=======================================================================
-            # DETERMINE SOURCE FOLDERS, CREATE NEW DICT BASED ON BASENAME
-            #=======================================================================
+
+            
+            #
+            # Determine source folders, create new dict based on basename
+            #
             for src, dst in srcDstMap.iteritems():
                 #print("FOLDER D/L src:%s\tdst:%s"%(src, dst))
                 srcFolder = os.path.dirname(src)
                 if not srcFolder in xnatFileFolders:
                     xnatFileFolders.append(srcFolder)
-            #=======================================================================
-            # GET THE 'FILEOBJECTS'
-            #=======================================================================
+
+                    
+            #
+            # Get the 'fileobjects'
+            #
             fObjs = []
             for f in xnatFileFolders:
                 #print("FOLDER DOWNLOAD %s"%(f))
                 fObjs = self.XNAT.select(self.cleanSelectString(os.path.dirname(f))).files().get('~/tmp/files')
                 for fO in fObjs:
-                    self.totalDLSize += int(fO.size())                    
+                    self.totalDLSize += int(fO.size())   
+                                     
             for f in xnatFileFolders:
                 if withProgressBar: 
                     src = self.cleanSelectString(f + "?format=zip")                 
@@ -94,28 +124,74 @@ class XNATCommunicator(object):
         #print "DOWNLOAD FOLDERS: " + str(downloadFolders)
         return downloadFolders
         #qt.QMessageBox.warning(None, "Time", "Total time: %s. Bps: %s"%(totalTime, str(bps)))
-    
+
+
+
+        
     def getFolderContents(self):
         pass
+
+
+
     
     def getItemValue(self):
         pass
+
+
+
     
     def makeDir(self):
         pass
 
-    def upload(self):
-        pass
 
+
+    
+    def upload(self, localSrc, xnatDst, delExisting = True):
+
+
+        f=open(localSrc, 'rb')
+        filebody = f.read()
+        f.close()
+
+        url = self.server.encode("utf-8") + '/data' +  xnatDst.encode("utf-8")
+        print "**********" + url
+        
+        req = urllib2.Request (url)
+        connection = httplib.HTTPSConnection (req.get_host ())
+ 
+        userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")       
+        header = { 'Authorization' : 'Basic %s' %  userAndPass, 'content-type': 'application/octet-stream'}
+
+        print self.utils.lf() + "Uploading %s to\n\t%s"%(localSrc, xnatDst)
+        
+        connection.request ('PUT', req.get_selector (), body=b64encode(filebody).decode("base64"), headers=header)
+
+        response = connection.getresponse ()
+        
+        print "response: ", response.read()
+        return response
+
+
+
+    
     def delete(self):
         pass
+
+
+
     
     def getSize(self):
         pass
+
+
+
     
     def downloadFailed(self, windowTitle, msg):
             qt.QMessageBox.warning(None, windowTitle, msg)
 
+
+
+            
     def buffer_read(self, response, fileToWrite, dialog=None, buffer_size=8192):
         try:
             itemSize = response.info().getheader('Content-Length').strip()
@@ -123,6 +199,8 @@ class XNATCommunicator(object):
         except Exception, e:
             #print ("ITEM SIZE ERROR %s"%(e))
             pass
+
+        
         while 1:
             buffer = response.read(buffer_size)
             self.downloadedBytes += len(buffer)
@@ -138,9 +216,14 @@ class XNATCommunicator(object):
             dialog.setValue(percent)
         
         return self.downloadedBytes
+
+
+
+    
     
     def urllib2GetWithProgress(self, XNATSrc, dst, groupSize = None, sizeTracker = 0):
-        import urllib2
+        
+
         XNATSrc = self.server + "/data/archive" + XNATSrc
         passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
         passman.add_password(None, XNATSrc, self.user, self.password)
@@ -169,19 +252,20 @@ class XNATCommunicator(object):
         self.browser.XNATView.setEnabled(True)
         XNATFile.close()
 
+        
 class PyXNAT(XNATCommunicator):
     
     def setup(self):
-        #=======================================================================
-        # CLEAR THE PYXNAT CACHE
-        #=======================================================================
+        #-------------------------
+        # Clear the pyxnat cache
+        #-------------------------
         self.utils.removeFilesInDir(self.utils.pyXNATCache)
         import pyxnat
         #pyxnat.core.cache.CacheManager(self.XNAT).clear()
         from pyxnat import Interface  
-        #=======================================================================
-        # INITIALIZE PARENT
-        #=======================================================================
+        #-------------------------
+        # Initialize parent
+        #-------------------------
         self.XNAT = Interface(server=self.server, 
                               user=self.user, 
                               password=self.password, 
@@ -191,9 +275,15 @@ class PyXNAT(XNATCommunicator):
     
     def getFile(self, srcDstMap, withProgressBar = True):
         return self.getFiles_URL(srcDstMap, fileOrFolder = "file")
+
+
+
     
     def getFiles(self, srcDstMap, withProgressBar = True):
         return self.getFiles_URL(srcDstMap, fileOrFolder = "folder")
+
+
+
     
     def fileExists(self, XNATsrc):
         #print self.utils.lf() +  "Seeing if '%s' exists..."%(XNATsrc)
@@ -215,7 +305,10 @@ class PyXNAT(XNATCommunicator):
             #print (self.utils.lf() + "ERROR CAUGHT: %s"%(str(e)))
             #print (self.utils.lf() + "PATH EXISTS! %s"%(XNATPath))
             return False
-             
+
+
+
+        
     def getResources(self, folder):
         try:
             folder += "/resources"
@@ -232,7 +325,10 @@ class PyXNAT(XNATCommunicator):
             print (self.utils.lf() + 
                    "GetResources error.  It likely did not like the path:\n%s"%(str(e)))
             #self.browser.updateStatus(["", "XNAT Error - getResources! (" + str(e) + ")", ""])
-        
+
+
+
+            
     def getFolderContents(self, folderName):      
         try:
             getContents = self.XNAT.select(self.cleanSelectString(folderName)).get()
@@ -251,7 +347,10 @@ class PyXNAT(XNATCommunicator):
             #print self.utils.lf() +  "ATTRIBUTE GET DID NOT WORK.  TRYNG LABEL() "
             return self.XNAT.select(self.cleanSelectString(XNATItem)).label()
 
-    
+
+
+
+        
     def cleanSelectString(self, selStr):
         if not selStr.startswith("/"):
             selStr = "/" + selStr
@@ -260,31 +359,41 @@ class PyXNAT(XNATCommunicator):
             selStr = selStr[:-1]
         return selStr
 
+
+
+
     
     def delete(self, selStr):
         print "DELETING: " + selStr
         self.XNAT.select(self.cleanSelectString(selStr)).delete()
-    
+
+
+
+        
     def getSize(self, selStr):
-        #=======================================================================
+        #-------------------------
         # GET THE TOTAL DOWNLOAD SIZE
-        #=======================================================================
+        #-------------------------
         bytes = int(self.XNAT.select(self.cleanSelectString(selStr)).size())
         mb = str(bytes/(1024*1024.0)).split(".")[0] + "." + str(bytes/(1024*1024.0)).split(".")[1][:2]
         return {"bytes": str(bytes), "mb" : str(mb)}
 
+
+
+
+    
+    def asdfasdfd(self, localSrc, XNATDst, delExisting = True):
         
-    def upload(self, localSrc, XNATDst, delExisting = True):
         #print self.utils.lf() +  "UPLOAD localSRC: %s\n\t\t\tXNATDst: %s"%(localSrc, XNATDst)
-        #===================================================================
+        #-------------------------
         # DERIVE XNAT PATH STRING, CLEANUP
-        #===================================================================
+        #-------------------------
         str1 = (os.path.dirname(os.path.dirname(XNATDst)))
         if not str1.startswith("/"):
             str1 = "/" + str1
-        #===================================================================
+        #-------------------------
         # CONSTUCT SELECT + INSERT STRINGS
-        #===================================================================
+        #-------------------------
         str2 = str(os.path.basename(XNATDst))
         str3 = self.utils.adjustPathSlashes(str(localSrc))
         #print self.utils.lf() + "STR1: "+  str1 + "\n\t\t\tSTR2: " +  str2 + "\n\t\t\tSTR3: " +  str3
@@ -299,3 +408,4 @@ class PyXNAT(XNATCommunicator):
         #    print "FILE DOES NOT EXIST"   
         #self.XNAT.select(self.cleanSelectString(str1)).file(str2).insert(str3)
         self.XNAT.select(self.cleanSelectString(str1)).file(str2).insert(str3)
+        
