@@ -136,7 +136,7 @@ class XNATCommunicator(object):
 
     
     def upload(self, localSrc, xnatDst, delExisting = True):
-
+        print "%s %s"%(self.utils.lf(), localSrc, xnatDst)
         # Read file to data
         f=open(localSrc, 'rb')
         filebody = f.read()
@@ -223,6 +223,7 @@ class XNATCommunicator(object):
         return self.downloadedBytes
 
 
+    
 
     def getFile(self, srcDstMap, withProgressBar = True):
         return self.getFiles_URL(srcDstMap, fileOrFolder = "file")
@@ -270,7 +271,7 @@ class XNATCommunicator(object):
 
         
     def getJson(self, url):
-        
+        print "%s %s"%(self.utils.lf(), url)
         if (('/scans/' in url) and len(url.split('/scans/')[1])>0):
             if (not url.endswith('/')):
                 url += '/'
@@ -283,7 +284,7 @@ class XNATCommunicator(object):
 
     
     def getLevel(self, url, level):
-        
+        print "%s %s"%(self.utils.lf(), url, level)
         if not level.startswith('/'):
             level = '/' + level
 
@@ -295,9 +296,19 @@ class XNATCommunicator(object):
         
 
         
-    def fileExists(self, fileUrl):
+    def fileExists(self, selStr):
         """ Descriptor
         """
+        print "%s %s"%(self.utils.lf(), selStr)
+
+        #
+        # Query logged files before checking
+        #
+        if (os.path.basename(selStr) in self.fileDict):
+            for fDict in self.fileDict[os.path.basename(selStr)]:
+                if searchStr in fDict['URI']:
+                    return True
+                
         
         # Clean string
         parentDir = self.getLevel(selStr, 'files');
@@ -315,20 +326,17 @@ class XNATCommunicator(object):
     def getSize(self, selStr):
         """ Descriptor
         """
-        
+        print "%s %s"%(self.utils.lf(), selStr)
         bytes = 0
        
-        
+        #
+        # Query logged files before checking
+        #
         if (os.path.basename(selStr) in self.fileDict):
-            print("\n%s in file dict!")%(selStr)
             for fDict in self.fileDict[os.path.basename(selStr)]:
-                print fDict
                 selSplit = selStr.split("/")
                 searchStr = selSplit[-2]  + "/" + selSplit[-1]
-                print "SEARCH STR: ", searchStr
-                print "UR: ", fDict['URI'] 
                 if searchStr in fDict['URI']:
-                    print "FOUNND IT! ", fDict['Size']
                     bytes = int(fDict['Size'])
                     break
 
@@ -354,7 +362,7 @@ class XNATCommunicator(object):
         """ Descriptor
         """
         #try:
-        print "getContents: ", folderName
+        print "%s %s"%(self.utils.lf(), folderName)
         getContents =  self.getJson(folderName)
 
         print getContents
@@ -379,7 +387,8 @@ class XNATCommunicator(object):
 
 
     def getResources(self, folder):
-        
+
+        print "%s %s"%(self.utils.lf(), folder)
         #try:
         if not '/scans/' in folder:
             folder += "/resources"
@@ -406,10 +415,11 @@ class XNATCommunicator(object):
 
 
     def getItemValue(self, XNATItem, attr):
-        #print "%s %s %s",%(self.utils.lf(), XNATItem, attr)
+        
 
         XNATItem = self.cleanSelectString(XNATItem)
-
+        print "%s %s %s"%(self.utils.lf(), XNATItem, attr)
+        
         for i in self.getJson(os.path.dirname(XNATItem)):
             for key, val in i.iteritems():
                 if val == os.path.basename(XNATItem):

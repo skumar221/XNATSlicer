@@ -5,7 +5,7 @@ from __main__ import vtk, ctk, qt, slicer
 import os
 import sys
 import shutil
-import urllib2
+
 
 # MODULE INCLUDES
 from XNATFileInfo import *
@@ -62,9 +62,9 @@ class XNATTreeView(XNATView.XNATView):
         #----------------------
         # Fonts
         #----------------------
-        self.itemFont_folder = qt.QFont("Arial", self.utils.fontSize, 25, False)
-        self.itemFont_file = qt.QFont("Arial", self.utils.fontSize, 75, False)
-        self.itemFont_category = qt.QFont("Arial", self.utils.fontSize, 25, True)
+        self.itemFont_folder = qt.QFont("Arial", self.browser.utils.fontSize, 25, False)
+        self.itemFont_file = qt.QFont("Arial", self.browser.utils.fontSize, 75, False)
+        self.itemFont_category = qt.QFont("Arial", self.browser.utils.fontSize, 25, True)
 
         
         #----------------------
@@ -106,16 +106,15 @@ class XNATTreeView(XNATView.XNATView):
 
         self.viewWidget.clear()
         self.browser.updateStatus(["","Retrieving projects. Please wait...",""])
-        projects = self.XNATCommunicator.getFolderContents('/projects')
-        if not projects:
-            return False
+        projects = self.browser.XNATCommunicator.getFolderContents('/projects')
         
-        projectItems = self.makeTreeItems(self.viewWidget, projects)
-
+        if not projects: return False
+        
         
         #----------------------
         # Init TreeView
         #----------------------
+        projectItems = self.makeTreeItems(self.viewWidget, projects)
         self.viewWidget.insertTopLevelItems(0, projectItems)
         self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)",
                                 self.getChildrenExpanded)
@@ -125,141 +124,19 @@ class XNATTreeView(XNATView.XNATView):
 
 
     
-    def begin(self, XNATCommunicator):
-        """ (INHERITED from XNATView) Called from XNATBroswer, 'begin' 
-            initiates the tree-view.
-        """
-
-        #-----------------------
-        # Call parent init
-        #-----------------------
-        super(XNATTreeView, self).begin(XNATCommunicator)
-
-        
-        #-----------------------
-        # Get Projects in XNAT.
-        #----------------------
-        if self.loadProjects():
-            self.browser.updateStatus(["", "Navigate project.", ""])
-            self.addProjButton.setEnabled(True) 
-        else:
-            qt.QMessageBox.warning( None, "Login error", "Invalid login credentials for '%s'."%(self.XNATCommunicator.server))
 
 
 
             
-    def deleteButtonClicked(self, button=None):
-        if button and button.text.lower().find('ok') > -1: 
-            #--------------------
-            # Construct the full delete string based on type of tree item deleted
-            #--------------------
-            delStr = self.getXNATDir(self.getParents(self.viewWidget.currentItem()))
-            if (('files' in self.viewWidget.currentItem().text(self.column_category))
-                or (self.utils.slicerDirName in self.viewWidget.currentItem().text(self.column_category))):
-                delStr = delStr
-            else:
-                delStr = os.path.dirname(delStr)
-            self.XNATCommunicator.delete(delStr)
-            # Set currItem to parent and expand it   
-            self.viewWidget.setCurrentItem(self.viewWidget.currentItem().parent())
-            self.getChildrenExpanded(self.viewWidget.currentItem())
-        elif button and button.text.lower().find('cancel') > -1:
-             return
-        else:
-            #--------------------
-            # STEP 1b: Show the delete dialog
-            #--------------------
-            self.deleteDialog = qt.QMessageBox()
-            self.deleteDialog.setIcon(qt.QMessageBox.Warning)
-            self.deleteDialog.setText("Are you sure you want to delete the file: '%s' from XNAT?"%(self.viewWidget.currentItem().text(self.column_name)))   
-            self.deleteDialog.connect('buttonClicked(QAbstractButton*)', self.deleteButtonClicked)
-            self.deleteDialog.addButton(qt.QMessageBox.Ok)
-            self.deleteDialog.addButton(qt.QMessageBox.Cancel)    
-            self.deleteDialog.show()
-           
-    def saveButtonClicked(self):        
-        """ Conducts a series of steps (including the file naming workflow) 
-            before actually saving the scene.
-        """     
-        self.lastButtonClicked = "save" 
-        #--------------------===   
-        # STEP 1a: If Scene is linked (i.e. the session manager is active)...
-        #--------------------===
-        if self.sessionManager.sessionArgs:
-            self.makeRequiredSlicerFolders()
-            FileSaveDialog(self.browser, self, self.sessionManager.sessionArgs)
-        #--------------------===
-        # STEP 1b: If scene is unlinked
-        #--------------------===
-        elif (not self.sessionManager.sessionArgs):
-            # Construct new sessionArgs
-            fullPath = self.getXNATDir(self.getParents(self.viewWidget.currentItem()))
-            remoteURI = self.browser.settings.getAddress(self.browser.hostDropdown.currentText) + fullPath
-            sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = fullPath)
-            sessionArgs['sessionType'] = "scene upload - unlinked"
-            sessionArgs.printAll()
-            # Call unlinked dialog
-            SaveUnlinkedDialog(self.browser, self, fullPath, sessionArgs)
 
     def makeRequiredSlicerFolders(self, path = None):       
-        #------------------------
-        # Construct required Slicer folders
-        #------------------------
         if self.sessionManager.sessionArgs:
-            self.XNATCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
-            self.XNATCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['sharedDir']))
+            self.browser.XNATCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
+            self.browser.XNATCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['sharedDir']))
 
-    def beginSaveWorkflow(self, sessionArgs):            
-        self.currItem = self.viewWidget.currentItem()   
-        self.startNewSession(sessionArgs)
-        self.makeRequiredSlicerFolders() 
-        saveWorkflow = XNATSaveWorkflow(self.browser, self.XNATCommunicator, self.sessionManager.sessionArgs)
-        saveWorkflow.saveScene()     
-    
-    def loadButtonClicked(self, button = None):
-        self.lastButtonClicked = "load"
-        #------------------------
-        # STEP 1: Clear Scene
-        #------------------------
-        if not button:
-            if not self.utils.isCurrSceneEmpty():           
-                self.initClearDialog()
-                self.clearSceneDialog.connect('buttonClicked(QAbstractButton*)', self.loadButtonClicked) 
-                self.clearSceneDialog.show()
-                return
+
+
             
-        #------------------------
-        # STEP 2: Begin Workflow
-        #------------------------
-        if (button and button.text.lower().find('yes') > -1) or self.utils.isCurrSceneEmpty():
-            self.sessionManager.clearCurrentSession()
-            slicer.app.mrmlScene().Clear(0)
-            currItem = self.viewWidget.currentItem()
-            parents= self.getParents(currItem)
-            fullPath = self.getXNATDir(self.getParents(currItem))
-            remoteURI = self.browser.settings.getAddress(self.browser.hostDropdown.currentText) + fullPath
-            dst = os.path.join(self.utils.downloadPath, currItem.text(self.column_name))
-            # determine loader based on currItem
-            loader = None
-            if (('files' in currItem.text(self.column_category)) or 
-                (self.utils.slicerDirName in currItem.text(self.column_category))):
-                if (currItem.text(self.column_name).endswith(self.utils.defaultPackageExtension)): 
-                    loader = SceneLoader(self.browser)
-                else:
-                    loader = FileLoader(self.browser)
-            else:
-                loader = DICOMLoader(self.browser)
-            args = {"XNATCommunicator": self.XNATCommunicator, 
-                    "xnatSrc":fullPath, 
-                    "localDst":dst, 
-                    "folderContents": None}
-            loadSuccessful = loader.load(args)            
-        #------------------------
-        # STEP 3: Enable TreeView
-        #------------------------
-        self.viewWidget.setEnabled(True)
-        self.lastButtonClicked = None
-    
     def getParentItemByCategory(self, item, category):
         """ Returns a parent item based on it's XNAT category.  For instance, if
            you want the 'experiments' parent of an item, returns that parent item.
@@ -269,31 +146,45 @@ class XNATTreeView(XNATView.XNATView):
             if category in p.text(self.column_category):
                 return p
         return None 
-        
+
+
+    
+    
     def getTreeItemType(self, item):
+
+        
         #------------------------
         # Standard XNAT folder
         #------------------------
-        for k, dictItem in self.utils.xnatDepthDict.iteritems():
+        for k, dictItem in self.browser.utils.xnatDepthDict.iteritems():
             if item.text(self.column_category).strip(" ") == dictItem:
                 return dictItem
+
+            
         #------------------------
         # Resource folder
         #------------------------
         if item.text(self.column_category).strip(" ") == "resources":
             return "resources"
+
+        
         #------------------------
         # File
         #------------------------
         if item.text(self.column_category).strip(" ") == "files":
             return "files"       
+
+        
         #------------------------
         # Slicer file 
         #------------------------
         if self.applySlicerFolderMask:
-            if item.text(self.column_category).strip(" ") == self.utils.slicerDirName:
+            if item.text(self.column_category).strip(" ") == self.browser.utils.slicerDirName:
                 return "slicerFile"
-        
+
+
+            
+            
     def setEnabled(self, bool):
         """ (INHERITED from XNATView)  Enables or disables the view widget.
         """
@@ -302,6 +193,8 @@ class XNATTreeView(XNATView.XNATView):
         else: 
             self.viewWidget.setEnabled(False)
 
+
+            
     def initClearDialog(self):
         """ Initiates/resets dialog for window to clear the current scene.
         """
@@ -315,7 +208,10 @@ class XNATTreeView(XNATView.XNATView):
         self.clearSceneDialog.setText("In order to load your selection " + 
                                       "you have to clear the current scene." + 
                                       "\nAre you sure you want to clear?")
-    
+
+
+
+        
     def getXNATDepth(self, item):
         """ For use in the Category' column of a given tree node.
             Returns the depth level of where a tree item is in the XNAT 
@@ -324,7 +220,7 @@ class XNATTreeView(XNATView.XNATView):
         parents= self.getParents(item)  
         returnStr = ""   
         try: 
-            returnStr = str(self.utils.xnatDepthDict[len(parents)-1]).lower()
+            returnStr = str(self.browser.utils.xnatDepthDict[len(parents)-1]).lower()
         except:          
             returnStr = "resources"    
         # NOTE:   The return string needs to have some spaces before it to 
@@ -334,7 +230,10 @@ class XNATTreeView(XNATView.XNATView):
             return self.getIndentByItemDepth(item) + "files"
         else:
             return self.getIndentByItemDepth(item) + returnStr
-    
+
+
+        
+        
     def getIndentByItemDepth(self, item):
         """Returns an indent for labeling purposes based on depth of item in 
            the treeView.
@@ -344,14 +243,20 @@ class XNATTreeView(XNATView.XNATView):
         for i in range(0, len(parents)-1): 
             spaceStr += "  "
         return spaceStr
-                 
+
+
+
+    
     def makeTreeItems(self, parent, childStrs, resourceStrs = None, slicerResourceStrs = None):
         """Creates a set of items to be put into the QTreeWidget based
            upon its parents, its children and the XNAT.
         """
+        print "%s %s %s"%(self.browser.utils.lf(), parent, childStrs)
         treeItems = []
+
+        
         #------------------------
-        # STEP 1: Add Children
+        # Add Children
         #------------------------
         if childStrs:
             for itemStr in childStrs:
@@ -377,26 +282,28 @@ class XNATTreeView(XNATView.XNATView):
                         fullPath = self.getXNATDir(self.getParents(rowItem))
                         self.changeFontColor(rowItem, False, "grey", self.column_size)
                         rowItem.setFont(self.column_size, self.itemFont_category)
-                        rowItem.setText(self.column_size, self.XNATCommunicator.getSize(fullPath)["mb"] + " MB")
+                        rowItem.setText(self.column_size, self.browser.XNATCommunicator.getSize(fullPath)["mb"] + " MB")
 
                         
                     # set category aesthetics
                     rowItem.setFont(self.column_category, self.itemFont_category)                  
                     # if no folder masking, make appropriate aesthetic changes
                     if not self.applySlicerFolderMask:
-                        for slicerDir in self.utils.requiredSlicerFolders:
+                        for slicerDir in self.browser.utils.requiredSlicerFolders:
                             try:
                                 if rowItem.parent().text(self.column_name) == slicerDir: 
                                     self.changeFontColor(rowItem, False, "green", self.column_name)
                                     continue
                             except Exception, e:
-                                print (self.utils.lf() + "COLOR APPLY ERROR: " + str(e))               
+                                print (self.browser.utils.lf() + "COLOR APPLY ERROR: " + str(e))               
                     # set item color
                     self.changeFontColor(rowItem, False, "grey", self.column_category)                
                     # add item to tree
                     treeItems.append(rowItem)
+
+
         #------------------------
-        # STEP 2: Add resources
+        # Add resources
         #------------------------
         if resourceStrs:
             for itemStr in resourceStrs: 
@@ -408,7 +315,7 @@ class XNATTreeView(XNATView.XNATView):
                 rowItem.setFont(self.column_name, self.itemFont_folder)               
                 # set font color, if mask               
                 if not self.applySlicerFolderMask:
-                    for slicerDir in self.utils.requiredSlicerFolders:
+                    for slicerDir in self.browser.utils.requiredSlicerFolders:
                         if itemStr == slicerDir: 
                             self.changeFontColor(rowItem, False, "green", self.column_name)
                             continue               
@@ -418,15 +325,17 @@ class XNATTreeView(XNATView.XNATView):
                 rowItem.setFont(self.column_category, self.itemFont_category) 
                 self.changeFontColor(rowItem, False, "grey", self.column_category)                
                 # append item to tree               
-                treeItems.append(rowItem)               
+                treeItems.append(rowItem)      
+
+                
         #------------------------
-        # STEP 3: Add resources with folder mask
+        #  Add resources with folder mask
         #------------------------
         if self.applySlicerFolderMask and slicerResourceStrs:
             for itemStr in slicerResourceStrs:
                 # hide helper folders.                
                 if self.hideSlicerHelperFolders: 
-                    if slicerResourceStrs[itemStr] != self.utils.slicerDirName:
+                    if slicerResourceStrs[itemStr] != self.browser.utils.slicerDirName:
                         continue                
                 # create tree item, define aesthetics                
                 rowItem = qt.QTreeWidgetItem(parent)
@@ -442,11 +351,14 @@ class XNATTreeView(XNATView.XNATView):
                 rowItem.setFont(self.column_size, self.itemFont_category)
                 self.changeFontColor(rowItem, False, "grey", self.column_size)           
                 fullPath = self.getXNATDir(self.getParents(rowItem))
-                rowItem.setText(self.column_size, self.XNATCommunicator.getSize(fullPath)["mb"] + " MB")               
+                rowItem.setText(self.column_size, self.browser.XNATCommunicator.getSize(fullPath)["mb"] + " MB")               
                 # add to tree                          
                 treeItems.append(rowItem)         
         return treeItems
-         
+
+
+
+    
     def getXNATDir(self, parents):
         """ Constructs a directory structure based on the default XNAT 
             organizational scheme, utilizing the tree hierarchy. Critical to 
@@ -458,8 +370,10 @@ class XNATTreeView(XNATView.XNATView):
         isResource = False
         isSlicerFile = False
         dirStr = "/"        
+
+        
         #------------------------
-        # STEP 1: Construct preliminary path
+        # Construct preliminary path
         #------------------------
         XNATDepth = 0        
         for item in parents:          
@@ -467,15 +381,17 @@ class XNATTreeView(XNATView.XNATView):
             if 'resources' in item.text(self.column_category).strip(" "): 
                 isResource = True            
             # for masked slicer folders
-            elif ((self.utils.slicerDirName in item.text(self.column_category)) 
+            elif ((self.browser.utils.slicerDirName in item.text(self.column_category)) 
                   and self.applySlicerFolderMask): 
                 isSlicerFile = True
             # construct directory string
             dirStr += "%s/%s/"%(item.text(self.column_category).strip(" "), 
                                 item.text(self.column_name))
             XNATDepth+=1
+
+            
         #------------------------
-        # STEP 2: Modify if path has 'resources' in it
+        # Modify if path has 'resources' in it
         #------------------------
         if isResource:         
             # append "files" if resources folder          
@@ -487,24 +403,31 @@ class XNATTreeView(XNATView.XNATView):
             # if on a files          
             else:
                 dirStr =  "%s/files/%s"%(os.path.dirname(dirStr), 
-                                         os.path.basename(dirStr))              
+                                         os.path.basename(dirStr))  
+
+                
         #------------------------
-        # STEP 3: Modify for Slicer files
+        # Modify for Slicer files
         #------------------------
         if isSlicerFile:
-            #print self.utils.lf() + "IS SLICER FILE!" 
+            #print self.browser.utils.lf() + "IS SLICER FILE!" 
             self.currLoadable = "scene"
             dirStr = ("%s/resources/%s/files/%s"%(os.path.dirname(os.path.dirname(os.path.dirname(dirStr))),
-                                                  self.utils.slicerDirName,
-                                                  os.path.basename(os.path.dirname(dirStr))))        
+                                                  self.browser.utils.slicerDirName,
+                                                  os.path.basename(os.path.dirname(dirStr))))   
+
+            
         #------------------------
-        # STEP 4: For all others  
+        # For all others  
         #------------------------
         else:
             if XNATDepth < 4: 
-                dirStr += self.utils.xnatDepthDict[XNATDepth] 
+                dirStr += self.browser.utils.xnatDepthDict[XNATDepth] 
         return dirStr
-           
+
+
+
+    
     def getTreeItemInfo(self, item):   
         """Disects a given tree item and returns various useful attributes."""
         itemText = item.text(self.column_name)
@@ -519,7 +442,10 @@ class XNATTreeView(XNATView.XNATView):
         upPaths.reverse()        
         upFolders.reverse()   
         return itemText, itemExt, fullPath, upPaths, upFolders   
-        
+
+
+
+    
     def getParents(self, item):
         """Returns the parents of a specific treeNode 
             all the way to the "project" level
@@ -529,12 +455,18 @@ class XNATTreeView(XNATView.XNATView):
           parents.insert(0, item)
           item = item.parent()
         return parents
+
+
+
     
     def getParentTexts(self, item):
         """Returns the parent text values of a specific 
             treeNode all the way to the "project" level
         """
         return [child.text(self.column_name) for child in self.getParents(item)]
+
+
+
     
     def determineExpanded(self, item):
         """Determines if the current treeItem is expanded
@@ -542,7 +474,9 @@ class XNATTreeView(XNATView.XNATView):
         if item.childIndicatorPolicy() == 0:
             self.getChildren(item, expanded = True) 
 
-                
+
+
+            
     def getChildrenExpanded(self, item):
         """ When the user interacts with the treeView, this is a hook 
             method that gets the branches of a treeItem and expands them 
@@ -553,6 +487,8 @@ class XNATTreeView(XNATView.XNATView):
         if not 'files' in item.text(self.column_category):
             self.getChildren(item, expanded = True) 
 
+
+            
     def getChildrenNotExpanded(self, item):
         """ When the user interacts with the treeView, this is a hook 
             method that gets the branches of a treeItem and does not 
@@ -579,12 +515,12 @@ class XNATTreeView(XNATView.XNATView):
         #------------------------
         # Disable buttons
         #------------------------
-        self.saveButton.setEnabled(False)
+        self.browser.XNATButtons.setEnabled('save', False)
         if self.sessionManager.sessionArgs:
-            self.saveButton.setEnabled(True)
+             self.browser.XNATButtons.setEnabled('save', False)
         
-        self.loadButton.setEnabled(False)
-        self.deleteButton.setEnabled(True)
+        self.browser.XNATButtons.setEnabled('load', False)
+        self.browser.XNATButtons.setEnabled('delete', True)
 
 
         #------------------------
@@ -595,7 +531,7 @@ class XNATTreeView(XNATView.XNATView):
         isExperment = 'experiments' in item.text(self.column_category).strip(" ")
         isScan = 'scans' in item.text(self.column_category).strip(" ")
         isFile = 'files' in item.text(self.column_category).strip(" ")
-        isSlicerFile = self.utils.slicerDirName.replace("/","") in item.text(self.column_category).strip(" ")
+        isSlicerFile = self.browser.utils.slicerDirName.replace("/","") in item.text(self.column_category).strip(" ")
 
         
         #------------------------
@@ -603,21 +539,22 @@ class XNATTreeView(XNATView.XNATView):
         #------------------------
         atEnableLevel = False
         while(item.parent()):
-            if self.utils.defaultXNATSaveLevel in item.text(self.column_category).strip(" "):
+            if self.browser.utils.defaultXNATSaveLevel in item.text(self.column_category).strip(" "):
                 atEnableLevel = True
                 break
             item = item.parent()
         if atEnableLevel:
-            self.loadButton.setEnabled(True)
-            self.saveButton.setEnabled(True)
+            self.browser.XNATButtons.setEnabled('save', True)
+            self.browser.XNATButtons.setEnabled('load', True)
+
 
             
         #------------------------
         # If mask is enabled, determine if item is a slicer file
         #------------------------
         if self.applySlicerFolderMask:
-            if item.text(self.column_category) == self.utils.slicerDirName:
-                #print self.utils.lf() + "IS FILE!"
+            if item.text(self.column_category) == self.browser.utils.slicerDirName:
+                #print self.browser.utils.lf() + "IS FILE!"
                 isFile = True    
 
                 
@@ -625,15 +562,15 @@ class XNATTreeView(XNATView.XNATView):
         # File item routines
         #------------------------
         if isFile or isSlicerFile:
-            self.deleteButton.setEnabled(True)
+            self.browser.XNATButtons.setEnabled('delete', True)
             ext = item.text(self.column_name).rsplit(".")
             # check extension
             if (len(ext)>1):
                 # recognizable extensions        
-                if self.utils.isRecognizedFileExt(ext[1]):
-                    self.loadButton.setEnabled(True)
+                if self.browser.utils.isRecognizedFileExt(ext[1]):
+                    self.browser.XNATButtons.setEnabled('load', True)
                     # scene package
-                    for ext_ in self.utils.packageExtensions:
+                    for ext_ in self.browser.utils.packageExtensions:
                         if ext_.replace(".","") in ext[1]: 
                             # set currloadable to scene                        
                             self.currLoadable = "scene"
@@ -648,8 +585,8 @@ class XNATTreeView(XNATView.XNATView):
         #------------------------
         # User is at the default load/save level, default loader is dicom     
         #------------------------
-        if self.utils.defaultXNATSaveLevel in item.text(self.column_category).strip(" "):
-            self.loadButton.setEnabled(True)
+        if self.browser.utils.defaultXNATSaveLevel in item.text(self.column_category).strip(" "):
+            self.browser.XNATButtons.setEnabled('load', True)
             self.currLoadable = "mass_dicom" 
             return
 
@@ -678,7 +615,7 @@ class XNATTreeView(XNATView.XNATView):
             # Get current XNAT path via parents       
             #--------------------
             xnatDir = self.getXNATDir(parents) 
-
+            print "%s %s"%(self.browser.utils.lf(), xnatDir)
             
             #--------------------
             # Init child-tracking vars
@@ -700,13 +637,13 @@ class XNATTreeView(XNATView.XNATView):
             # If item is not 'resources'
             #--------------------
             if ((not 'resources' in item.text(self.column_category)) and
-                (not self.utils.slicerDirName in item.text(self.column_category))): 
+                (not self.browser.utils.slicerDirName in item.text(self.column_category))): 
                 resourceQuery = xnatDir
                 # for any item above scan, set to parent
                 if (len(parents) != 5): 
                     resourceQuery = os.path.dirname(resourceQuery) 
                 # get the 'resources' directory contents
-                resourceStrs = self.XNATCommunicator.getResources(resourceQuery)               
+                resourceStrs = self.browser.XNATCommunicator.getResources(resourceQuery)               
                 def filterSlicerDirs(dirList):
                     """ Separates dirList into two parts:
                         (1) Ones that have names NOT equivalent to required slicer folders.
@@ -716,7 +653,7 @@ class XNATTreeView(XNATView.XNATView):
                     otherDirs = []
                     for dirName in dirList:
                         foundSlicer = False
-                        for slicerFolder in self.utils.requiredSlicerFolders:
+                        for slicerFolder in self.browser.utils.requiredSlicerFolders:
                             if dirName == slicerFolder:
                                 foundSlicer = True
                         if foundSlicer:
@@ -729,18 +666,18 @@ class XNATTreeView(XNATView.XNATView):
                 if resourceStrs and self.applySlicerFolderMask:                          
                     # call filter so we know what/what not to display
                     resourceStrs, slicerResources = filterSlicerDirs(resourceStrs)
-                    #print self.utils.lf() + " RESOURCE DIRS: %s\n\t\t\tSLICER DIRS: %s"%(resourceStrs, slicerResources)
+                    #print self.browser.utils.lf() + " RESOURCE DIRS: %s\n\t\t\tSLICER DIRS: %s"%(resourceStrs, slicerResources)
                 # create a dictionary for slicer files when mask is applied
                 if slicerResources:
                     if len(slicerResources) > 0:
-                        for slicerFolder in self.utils.requiredSlicerFolders:
+                        for slicerFolder in self.browser.utils.requiredSlicerFolders:
                             currFolder = slicerFolder
                             slicerXNATDir =  "%s/resources/%s/files"%(os.path.dirname(xnatDir),currFolder)
                             # if the dictionary is not defined (no slicer folder in the xnat dir)
                             if not slicerResourceContents:
                                 slicerResourceContents = {}   
                             # get the folder contents given mask
-                            fileList =  self.XNATCommunicator.getFolderContents(slicerXNATDir)
+                            fileList =  self.browser.XNATCommunicator.getFolderContents(slicerXNATDir)
                             for f in fileList:
                                 slicerResourceContents[f] = currFolder
 
@@ -748,25 +685,26 @@ class XNATTreeView(XNATView.XNATView):
             #--------------------
             # Get folder contents
             #--------------------
-            childNames = self.XNATCommunicator.getFolderContents(xnatDir)
+            childNames = self.browser.XNATCommunicator.getFolderContents(xnatDir)
 
             
             #--------------------
             # Cycle through children
             #--------------------
             if ((childNames and len(childNames) > 0) and (not 'files' in item.text(self.column_category)) and
-               (not self.utils.slicerDirName in item.text(self.column_category).strip(" "))):
+               (not self.browser.utils.slicerDirName in item.text(self.column_category).strip(" "))):
                 for strF in childNames:
                     
                     # get the attribute value of the item in XNAT, such as "filename".
-                    attrVal = self.XNATCommunicator.getItemValue(xnatDir  + "/" + str(urllib2.quote(strF)), attr)
+                    print self.browser.utils.lf(), xnatDir
+                    attrVal = self.browser.XNATCommunicator.getItemValue(xnatDir  + "/" + str(urllib2.quote(strF)), attr)
                     # if the attrVal is not available, create it
                     if not attrVal:
                         attrVal =  str(urllib2.quote(strF))
                     # if slicer mask, tag file as being in slicer folder                 
                     if self.applySlicerFolderMask:
                         isSlicerFolder = False
-                        for reqFolder in self.utils.requiredSlicerFolders:
+                        for reqFolder in self.browser.utils.requiredSlicerFolders:
                             if attrVal == reqFolder:
                                 isSlicerFolder = True
                         if not isSlicerFolder:
@@ -799,7 +737,7 @@ class XNATTreeView(XNATView.XNATView):
             try:
                 child = item.child(x)
                 ext = child.text(self.column_name).rsplit(".")[1]            
-                if self.utils.isDICOM(ext):
+                if self.browser.utils.isDICOM(ext):
                     dicomCount +=1
             except Exception, e:
                 pass        
@@ -835,7 +773,7 @@ class XNATTreeView(XNATView.XNATView):
 
         
     def startNewSession(self, sessionArgs, method="currItem"):
-        self.saveButton.setEnabled(True)
+        self.browser.XNATButtons.setEnabled('save', True)
         if method=="currItem":            
             
             # Sometimes we have to reset the curr item
@@ -860,7 +798,7 @@ class XNATTreeView(XNATView.XNATView):
         #------------------------
         # Break apart pathStr to its XNAT categories
         #------------------------
-        pathDict = self.utils.makeXNATPathDictionary(pathStr)
+        pathDict = self.browser.utils.makeXNATPathDictionary(pathStr)
 
 
         #------------------------
