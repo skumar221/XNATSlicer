@@ -1,50 +1,56 @@
-import os
-import unittest
-from __main__ import vtk, qt, ctk, slicer
 
-import glob 
-import sys 
-import inspect
-
-# GLOBALS
+#-------------------------
+# Widget path needs to be globally recognized by python
+#-------------------------
+import os, inspect, sys
 WIDGETPATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
 WIDGETPATH = os.path.join(WIDGETPATH, "XNATSlicerLib")
 sys.path.append(WIDGETPATH)
 
-# MODULE INCLUDES
+from XNATFileInfo import *
+from XNATAddProjEditor import *
+from XNATLoadWorkflow import *
+from XNATUtils import *
+from XNATInstallWizard import *
+from XNATScenePackager import *
+from XNATSessionManager import *
+from XNATTimer import *
+from XNATSettings import *
+from XNATTreeView import *
+from XNATCommunicator import *
+from XNATLoginMenu import *
+from XNATButtons import *
+from XNATView import *
 
-from XNATSlicerLib import *
-#
-# XNATSlicer
-#
 
-
-
+#import XNATUtils
 
 class XNATSlicer:
   def __init__(self, parent):
-    parent.title = "XNATSlicer"
-    parent.categories = ["XNATSlicer"]
-    parent.dependencies = []
-    parent.contributors = ["Sunil Kumar (WashU-St. Louis, Dan Marcus (WashU-St. Louis), Steve Pieper (Isomics)"] 
-    parent.helpText = """
-    The XNATSlicer Browser 1.0
-    """
-    parent.acknowledgementText = """Sunil Kumar - NRG - kumars@mir.wustl.edu""" 
-    self.parent = parent
 
-    # Add this test to the SelfTest module's list for discovery when the module
-    # is created.  Since this module may be discovered before SelfTests itself,
-    # create the list if it doesn't already exist.
-    try:
-      slicer.selfTests
-    except AttributeError:
-      slicer.selfTests = {}
-    slicer.selfTests['XNATSlicer'] = self.runTest
+      
 
-  def runTest(self):
-    tester = XNATSlicerTest()
-    tester.runTest()
+
+      parent.title = "XNATSlicer"
+      parent.categories = ["XNATSlicer"]
+      parent.dependencies = []
+      parent.contributors = ["Sunil Kumar (WashU-St. Louis, Dan Marcus (WashU-St. Louis), Steve Pieper (Isomics)"] 
+      parent.helpText = """ The XNATSlicer Browser 1.0"""
+      parent.acknowledgementText = """Sunil Kumar - NRG - kumars@mir.wustl.edu""" 
+      self.parent = parent
+      
+      # Add this test to the SelfTest module's list for discovery when the module
+      # is created.  Since this module may be discovered before SelfTests itself,
+      # create the list if it doesn't already exist.
+      try:
+          slicer.selfTests
+      except AttributeError:
+          slicer.selfTests = {}
+          slicer.selfTests['XNATSlicer'] = self.runTest
+          
+      def runTest(self):
+          tester = XNATSlicerTest()
+          tester.runTest()
 
 #
 # qXNATSlicerWidget
@@ -67,24 +73,40 @@ class XNATSlicerWidget:
         
       self.utils = XNATUtils()    
       self.layout = self.parent.layout()
+
       
       #--------------------------------
-      # XNAT SETTINGS
+      # Xnat settings
       #--------------------------------
       self.settings = XNATSettings(slicer.qMRMLWidget(), self.utils.utilPath, self)
+
       
       #--------------------------------
-      # STATUS BAR
+      # Status bar
       #--------------------------------
       self.labelStatusBar = labelStatusBar(self, 3)
+
+
+      #--------------------------------
+      # Login Menu
+      #--------------------------------
+      #self.XNATLoginMenu = XNATLoginMenu(parent = self.parent, browser = self)  
+
       
       #--------------------------------
-      # VIEWER - TREE VIEW
+      # Viewer
       #--------------------------------
-      self.XNATView = XNATTreeView(self.parent, 
-                                   self.settings, self)    
+      self.XNATView = XNATTreeView(parent = self.parent, browser = self)  
+
+
       #--------------------------------
-      # USERNAME AND PASSWORD LINES  
+      # XNAT Buttons
+      #--------------------------------
+      self.XNATButtons = XNATButtons(self.parent, browser=self)  
+
+      
+      #--------------------------------
+      # Username and password lines  
       #--------------------------------
       self.usernameLabel = qt.QLabel('username:')
       self.usernameLabel.setFont(self.utils.labelFontBold)
@@ -94,56 +116,77 @@ class XNATSlicerWidget:
       self.passwordLine = qt.QLineEdit() # encrypted
       self.usernameLine.setFixedWidth(100)
       self.passwordLine.setFixedWidth(100)
-      #=======================================================================
-      # PROGRESS BAR
-      #=======================================================================
-      self.generalProgressBar = qt.QProgressBar()
+
+      
+      #----------------------------------
+      # Progress bar
       #--------------------------------
-      # LOGIN BUTTON
+      self.generalProgressBar = qt.QProgressBar()
+
+      
+      #--------------------------------
+      # Login button
       #--------------------------------
       self.loginButton = None
+
+      
       #--------------------------------
-      # HOST DROPDOWN
+      # Host dropdown
       #--------------------------------
       self.hostLabel = qt.QLabel('host:')
       self.hostLabel.setFont(self.utils.labelFontBold)
       self.hostDropdown = None
       self.hostLoggedIn = False
+
+      
       #--------------------------------
-      # GLOBALS
+      # Globals
       #--------------------------------
       self.currHostUrl = None
       self.currHostName = None
       self.currHostAddress = None
       self.XNATHosts = None
+
+      
       #--------------------------------
-      # SETTINGS BUTTON
+      # Settings button
       #--------------------------------
       self.settingsButton = None  
       self.networkRequest = None
+
+      
       #--------------------------------
-      # POPUPS
+      # Popups
       #--------------------------------
       self.statusPopup = None
       self.progressPopup = None
+
+      
       #--------------------------------
-      # LAYOUTS
+      # Layouts
       #--------------------------------
       self.browserLayout = None
       self.loginLayout = None
       self.statusLayout = None #qt.QGridLayout()
       self.XNATViewLayout = qt.QGridLayout()
+
+      
       #--------------------------------
-      # INIT GUI
+      # Init gui
       #--------------------------------
       self.initGUI()
+
+      
       #--------------------------------
-      # LISTENERS/OBSERVERS FROM GUI INTERACTION
+      # Listeners/observers from gui interaction
       #--------------------------------
       slicer.mrmlScene.AddObserver(slicer.mrmlScene.EndCloseEvent, self.sceneClosedListener)
       slicer.mrmlScene.AddObserver(slicer.mrmlScene.EndImportEvent, self.sceneImportedListener)
       self.parent.show()
-    
+
+
+
+      
     def onReload(self,moduleName="XNATSlicer"):
       """Generic reload method for any scripted module.
       ModuleWizard will subsitute correct default moduleName.
@@ -182,7 +225,10 @@ class XNATSlicerWidget:
       globals()[widgetName.lower()] = eval(
           'globals()["%s"].%s(parent)' % (moduleName, widgetName))
       globals()[widgetName.lower()].setup()
-    
+
+
+
+      
     def onReloadAndTest(self,moduleName="ScriptedExample"):
       try:
         self.onReload()
@@ -195,13 +241,18 @@ class XNATSlicerWidget:
         qt.QMessageBox.warning(slicer.util.mainWindow(), 
             "Reload and Test", 'Exception!\n\n' + str(e) + "\n\nSee Python Console for Stack Trace")
     
-    
+
+
+        
     def sceneClosedListener(self, caller, event):
         """Actions for when the user closes a scene from the GUI.
         """ 
         print("'Close Scene' called. Resetting XNAT session data.")    
         self.XNATView.sessionManager.clearCurrentSession()  
-    
+
+
+
+        
     def sceneImportedListener(self, caller, event): 
         """Actions for when the user imports a scene from the GUI.
            NOTE: This technically is not used, as the user must refer to files from an 
@@ -213,54 +264,76 @@ class XNATSlicerWidget:
     
           
     def initGUI(self):  
+
+        
         #--------------------------------
         # Login Section
         #--------------------------------
         loginCollapsibleButton = ctk.ctkCollapsibleButton()
         loginCollapsibleButton.text = "XNAT Login"
+
+        
         #--------------------------------
         # Browser Section
         #--------------------------------
         browserCollapsibleButton = ctk.ctkCollapsibleButton()
         browserCollapsibleButton.text = "XNAT TreeView"
+
+        
         #--------------------------------
         # Status Section
         #--------------------------------
         statusCollapsibleButton = ctk.ctkCollapsibleButton()
         statusCollapsibleButton.text = "Status"
+
+        
         #--------------------------------
         # Add all sections to parent layout.
         #--------------------------------
         self.layout.addWidget(loginCollapsibleButton)
         self.layout.addWidget(statusCollapsibleButton)
         self.layout.addWidget(browserCollapsibleButton)
+
+        
         #--------------------------------
         # Define section layouts.
         #--------------------------------
         self.loginLayout = qt.QVBoxLayout(loginCollapsibleButton)
         self.browserLayout = qt.QVBoxLayout(browserCollapsibleButton)
-        self.statusLayout = qt.QVBoxLayout(statusCollapsibleButton)    
+        self.statusLayout = qt.QVBoxLayout(statusCollapsibleButton)   
+
+        
         #--------------------------------
         # Host Dropdown
         #--------------------------------
         self.initHostDropdown()       
+
+        
         #--------------------------------
         # Manage Hosts Button
         #--------------------------------
         self.initSettingsButton()
+
+        
         #--------------------------------
         # Login Lines
         #--------------------------------
         self.initLoginLines()
+
+        
         #--------------------------------
         # Login Button
         #--------------------------------
         self.initLoginButton()
+
+        
         #--------------------------------
         # XNAT Window
         #--------------------------------
         self.viewerLayout = qt.QVBoxLayout()
         self.cleanTempDir(500)
+
+        
         #--------------------------------
         # Username/Password Row
         #--------------------------------
@@ -271,6 +344,8 @@ class XNATSlicerWidget:
         credentialsRow.addWidget(self.usernameLine)
         credentialsRow.addWidget(self.passwordLine)
         credentialsRow.addWidget(self.loginButton)
+
+        
         #--------------------------------
         # Everything related to logging in
         #--------------------------------
@@ -278,18 +353,22 @@ class XNATSlicerWidget:
         #fullLoginLayout.addLayout(hostRow, 0,0)
         #fullLoginLayout.addWidget(spaceLabel, 0,1)
         fullLoginLayout.addLayout(credentialsRow, 0,2)
+
+        
         #--------------------------------
         # Load/Save button
         #--------------------------------
         self.buttonColumnLayout = qt.QVBoxLayout()
-        self.buttonColumnLayout.addWidget(self.XNATView.loadButton)#, 2, 0)
-        self.buttonColumnLayout.addWidget(self.XNATView.saveButton)#, 0, 0) 
+        self.buttonColumnLayout.addWidget(self.XNATButtons.buttons['load'])#, 2, 0)
+        self.buttonColumnLayout.addWidget(self.XNATButtons.buttons['save'])#, 0, 0) 
     
         self.buttonRowLayout = qt.QHBoxLayout()
-        self.buttonRowLayout.addWidget(self.XNATView.deleteButton)
+        self.buttonRowLayout.addWidget(self.XNATButtons.buttons['delete'])
         self.buttonRowLayout.addSpacing(15)
-        self.buttonRowLayout.addWidget(self.XNATView.addProjButton)
+        self.buttonRowLayout.addWidget(self.XNATButtons.buttons['addProj'])
         self.buttonRowLayout.addStretch()
+
+        
         #--------------------------------
         # XNATViewer
         #--------------------------------
@@ -297,6 +376,8 @@ class XNATSlicerWidget:
         self.XNATViewLayout.addLayout(self.buttonColumnLayout, 0, 1)
         self.XNATViewLayout.addLayout(self.buttonRowLayout, 1, 0)
         self.XNATView.statusView.textField.setFixedHeight(25)
+
+        
         #--------------------------------
         # Apply to globals
         #--------------------------------      
@@ -308,25 +389,34 @@ class XNATSlicerWidget:
         self.generalProgressBar.setFixedHeight(17)
         
         self.statusLayout.addWidget(self.generalProgressBar)
-    
+
+
+
+        
     def initLoginLines(self):
         """ Password and login lines
         """
+
+        
         #---------------------------
-        # DESCRIPTIONS
+        # Descriptions
         #---------------------------
         self.defaultPasswordText = "Password"
         self.defaultUsernameText = "Login"
+
+        
         #---------------------------
-        # ASTHETICS  
+        # Asthetics  
         #---------------------------
         self.usernameLine.setText(self.defaultUsernameText)
         self.usernameLine.setFont(self.utils.labelFontItalic)
         self.passwordLine.setFont(self.utils.labelFontItalic) 
         self.passwordLine.setText(self.defaultPasswordText)
         self.passwordLine.selectAll()
+
+        
         #---------------------------
-        # SIGNALS
+        # Signals
         #---------------------------
         self.usernameLine.connect('cursorPositionChanged(int, int)', 
                                   self.usernameLineEdited)  
@@ -336,6 +426,9 @@ class XNATSlicerWidget:
                                   self.simulateLoginClicked) 
         
         self.populateCurrUser()
+
+
+
         
     def initHostDropdown(self):
         """ Initiates the dropdown that allows the user to select hosts
@@ -347,6 +440,9 @@ class XNATSlicerWidget:
         self.addHosts()
         self.hostDropdown.connect('currentIndexChanged(const QString&)',
                                   self.hostDropdownClicked) 
+
+
+
         
     def initSettingsButton(self):
         """ Initiates the button aesthetics for the button that opens the manage 
@@ -359,7 +455,10 @@ class XNATSlicerWidget:
         self.settingsButton.setFixedSize(self.utils.buttonSizeMed.width() - 10, 26)
         #self.settingsButton.setFixedSize(self.utils.buttonSize)
         self.settingsButton.connect('pressed()', self.settingsButtonClicked)
-    
+
+
+
+        
     def initLoginButton(self):
         """ Connects the login to the first treeView call
         """
@@ -371,7 +470,10 @@ class XNATSlicerWidget:
         self.loginButton.toolTip = "Login to selected XNAT host"    
         self.loginButton.connect('clicked()', self.loginButtonClicked)
         self.loginButton.setFixedSize(self.utils.buttonSizeMed.width(), self.utils.buttonSizeSmall.height() - 4) 
-            
+
+
+
+        
     def updateStatus(self, strings):
         """Updates the status bar with the given strings.
         """
@@ -469,7 +571,7 @@ class XNATSlicerWidget:
                 
                 
         # Init communicator.
-        comm = XNATCommunicator(browser = self, 
+        self.XNATCommunicator = XNATCommunicator(browser = self, 
                                 server = self.settings.getAddress(self.hostDropdown.currentText), 
                                 user = self.usernameLine.text, password=self.passwordLine.text, 
                                 cachedir = self.utils.pyXNATCache)
@@ -477,7 +579,7 @@ class XNATSlicerWidget:
         #---------------------------
         # Begin communicator
         #---------------------------
-        self.XNATView.begin(comm)
+        self.XNATView.begin()
 
 
 
@@ -500,31 +602,47 @@ class XNATSlicerWidget:
         #---------------------------     
         else:
             self.usernameLine.setText(self.defaultUsernameText)        
-    
+
+
+
+            
     def simulateLoginClicked(self):
         """ Equivalent of clicking the login button.
         """
         self.loginButton.animateClick()
         self.loginButtonClicked()
-          
+
+
+
+        
+        
     def settingsButtonClicked(self):
         """ Equivalent of clicking the settings button.
         """
         self.settingsPopup = SettingsPopup(self, self.settings)
         self.settingsPopup.show()
-    
+
+
+
+        
     def usernameLineEdited(self):
         """ Listener when the username line is edited.
         """     
         if self.defaultUsernameText in str(self.usernameLine.text): 
             self.usernameLine.setText("")   
-        
+
+
+            
+            
     def passwordLineEdited(self):  
         """ Listener for when the password line is edited.
         """     
         if self.defaultPasswordText in str(self.passwordLine.text): 
             self.passwordLine.setText("")
         self.passwordLine.setEchoMode(2)
+
+
+
         
     def hostDropdownClicked(self, name):
         """ Signal methods once dropdown is clicked -- loads the stored hosts.
@@ -532,7 +650,10 @@ class XNATSlicerWidget:
         self.currHostName = self.hostDropdown.currentText
         if self.hostDropdown.currentText:    
             self.populateCurrUser()
-      
+
+
+            
+            
     def loginButtonClicked(self):
         """ Signal methods once the login button is clicked.
         """        
@@ -569,6 +690,8 @@ class labelStatusBar(object):
     def layout(self):
         return self.qtLayout
 
+
+    
 class XNATSlicerTest(unittest.TestCase):
     """
     This is the test case for your scripted module.
