@@ -75,8 +75,7 @@ class XNATSaveWorkflow(object):
         #=======================================================================
         self.sessionArgs['sessionType'] = "scene upload"
         self.browser.XNATView.startNewSession(self.sessionArgs)
-        self.browser.XNATView.loadButton.setEnabled(True)
-        self.browser.XNATView.deleteButton.setEnabled(True) 
+
         self.browser.XNATView.setCurrItemToChild(item = None, 
                                                  childFileName = os.path.basename(packageFileName))
         

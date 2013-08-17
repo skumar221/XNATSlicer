@@ -39,20 +39,22 @@ class XNATCommunicator(object):
         self.user = user
         self.password = password
         self.cachedir = cachedir
-        self.utils = XNATUtils()
-        self.XNAT = None
-        self.progDialog = None
+
+
         self.setup()
-    
-        self.totalDLSize = 0
-        self.downloadedBytes = 0
+
+        self.downloadTracker = {
+            'totalDownloadSize': {'bytes': None, 'MB': None},
+            'downloadedSize': {'bytes': None, 'MB': None},
+        }
 
         self.userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
         self.authenticationHeader = { 'Authorization' : 'Basic %s' %(self.userAndPass) }
-
         self.fileDict = {};
 
 
+
+        
     def setup(self):
         pass
 
@@ -65,8 +67,8 @@ class XNATCommunicator(object):
         #--------------------
         # Get total size of downloads for all files
         #-------------------------
-        self.totalDLSize = 0
-        self.downloadedBytes = 0
+        self.downloadTracker['totalDownloadSize']['bytes'] = 0
+        self.downloadTracker['downloadedSize']['bytes'] = 0
         downloadFolders = []
 
         
@@ -76,7 +78,7 @@ class XNATCommunicator(object):
         #-------------------------
         for src, dst in srcDstMap.iteritems(): 
             if os.path.exists(dst): 
-                self.utils.removeFile(dst)
+                self.browser.utils.removeFile(dst)
         timeStart = time.time()
 
         
@@ -86,10 +88,22 @@ class XNATCommunicator(object):
         #-------------------------
         if fileOrFolder == "file":
             for src, dst in srcDstMap.iteritems():
-                #print("FILE DOWNLOAD src:%s\tdst:%s"%(src, dst))
-                self.totalDLSize = int(self.XNAT.select(self.cleanSelectString(src)).size())
-                if withProgressBar: self.urllib2GetWithProgress(self.cleanSelectString(src), dst)
-                else: f.get(dst)                 
+                print("FILE DOWNLOAD src:%s\tdst:%s"%(src, dst))
+
+                fName = os.path.basename(src)
+                fPath = "/projects/" + src.split("/projects/")[1]
+                print fPath
+                
+                #self.downloadTracker['totalDownloadSize']['bytes'] = int(0)
+                #if fName in self.fileDict and 'Size' in self.fileDict[fName]:
+                #    print "GOT SIZE: ! %s"%(int(self.fileDict[fName]['Size']))
+                #    self.downloadTracker['totalDownloadSize']['bytes'] = int(self.fileDict[fName]['Size'])
+ 
+                if withProgressBar: 
+                    self.getFileWithProgress(src, dst)
+                else: 
+                    f.get(dst) 
+                                    
         elif fileOrFolder == "folder":
             import tempfile
             xnatFileFolders = []
@@ -104,39 +118,45 @@ class XNATCommunicator(object):
                 if not srcFolder in xnatFileFolders:
                     xnatFileFolders.append(srcFolder)
 
-                    
+
             #
-            # Get the 'fileobjects'
+            # Get file with progress bar
             #
-            fObjs = []
-            for f in xnatFileFolders:
-                #print("FOLDER DOWNLOAD %s"%(f))
-                fObjs = self.XNAT.select(self.cleanSelectString(os.path.dirname(f))).files().get('~/tmp/files')
-                for fO in fObjs:
-                    self.totalDLSize += int(fO.size())   
-                                     
             for f in xnatFileFolders:
                 if withProgressBar: 
-                    src = self.cleanSelectString(f + "?format=zip")                 
-                    dst = tempfile.mktemp('', 'XNATDownload', self.utils.tempPath) + ".zip"
-                    downloadFolders.append(self.utils.adjustPathSlashes(dst))
-                    if os.path.exists(dst): self.utils.removeFile(dst)
-                    #print("DOWNLOADING %s to %s"%(src, dst))
-                    self.urllib2GetWithProgress(src, dst)
+                    
+                    #
+                    # Sting cleanup
+                    #
+                    src = (f + "?format=zip")                 
+                    dst = tempfile.mktemp('', 'XNATDownload', self.browser.utils.tempPath) + ".zip"
+                    downloadFolders.append(self.browser.utils.adjustPathSlashes(dst))
+                    
+                    # remove existing
+                    if os.path.exists(dst): 
+                        self.browser.utils.removeFile(dst)
+
+                    # Init download
+                    print("FOLDER DOWNLOADING %s to %s"%(src, dst))
+                    self.getFileWithProgress(src, dst)
+
+                    
                    
         timeEnd = time.time()
         totalTime = (timeEnd-timeStart)
-        bps = self.totalDLSize/totalTime
+        
 
         #print "DOWNLOAD FOLDERS: " + str(downloadFolders)
         return downloadFolders
+        #bps = self.downloadTracker['totalDownloadSize']['bytes']/totalTime
         #qt.QMessageBox.warning(None, "Time", "Total time: %s. Bps: %s"%(totalTime, str(bps)))
 
 
 
     
     def upload(self, localSrc, xnatDst, delExisting = True):
-        print "%s %s"%(self.utils.lf(), localSrc, xnatDst)
+        
+        print "%s %s %s"%(self.browser.utils.lf(), localSrc, xnatDst)
         # Read file to data
         f=open(localSrc, 'rb')
         filebody = f.read()
@@ -149,7 +169,7 @@ class XNATCommunicator(object):
         # Request
         r = self.httpsRequest('PUT', 
                           xnatDst, 
-                          body=b64encode(filebody).decode("base64"), 
+                          body = (filebody).encode("utf-8"), 
                           headerAdditions = {'content-type': 'application/octet-stream'})
 
 
@@ -164,7 +184,8 @@ class XNATCommunicator(object):
         restMethod = restMethod.upper()
 
         # Clean url
-        url =  self.server.encode("utf-8") + '/data' +  xnatSelector.encode("utf-8")
+        prepender = self.server.encode("utf-8") + '/data'
+        url =  prepender +  xnatSelector.encode("utf-8") if not prepender in xnatSelector else xnatSelector
 
         # Get request
         req = urllib2.Request (url)
@@ -176,9 +197,9 @@ class XNATCommunicator(object):
         header = dict(self.authenticationHeader.items() + headerAdditions.items())
 
         # REST call
-        connection.request (restMethod, req.get_selector (), body=body, headers=header)
+        connection.request(restMethod, req.get_selector (), body = body, headers = header)
 
-        print self.utils.lf() + "XNAT request - %s %s"%(restMethod, url)
+        print self.browser.utils.lf() + "XNAT request - %s %s"%(restMethod, url)
         # Return response
         return connection.getresponse ()
 
@@ -186,7 +207,7 @@ class XNATCommunicator(object):
 
     
     def delete(self, selStr):
-        print "%s DELETING: %s"%(self.utils.lf(), selStr)
+        print "%s DELETING: %s"%(self.browser.utils.lf(), selStr)
         self.httpsRequest('DELETE', selStr, '')
 
 
@@ -197,30 +218,7 @@ class XNATCommunicator(object):
 
 
             
-    def buffer_read(self, response, fileToWrite, dialog=None, buffer_size=8192):
-        try:
-            itemSize = response.info().getheader('Content-Length').strip()
-            itemSize = int(itemSize)
-        except Exception, e:
-            #print ("ITEM SIZE ERROR %s"%(e))
-            pass
 
-        
-        while 1:
-            buffer = response.read(buffer_size)
-            self.downloadedBytes += len(buffer)
-            fileToWrite.write(buffer)
-            if not buffer:
-                break 
-            
-            percent = (float(self.downloadedBytes) / self.totalDLSize)
-            percent = round(percent*100, 2)
-            if percent == 100:
-                self.browser.updateStatus(["", "Loading, please wait...", ""])
-                self.browser.generalProgressBar.setVisible(False)
-            dialog.setValue(percent)
-        
-        return self.downloadedBytes
 
 
     
@@ -237,20 +235,57 @@ class XNATCommunicator(object):
 
 
     
-    def urllib2GetWithProgress(self, XNATSrc, dst, groupSize = None, sizeTracker = 0):
-        
-        XNATSrc = self.server + "/data/archive" + XNATSrc
+    def getFileWithProgress(self, XNATSrc, dst, groupSize = None, sizeTracker = 0):
+        """ Descriptor
+        """
+        #
+        # Set the path
+        #
+        XNATSrc = self.server + "/data/archive" + XNATSrc if not self.server in XNATSrc else XNATSrc
+
+        #
+        # Authentication hander
+        #
         passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
         passman.add_password(None, XNATSrc, self.user, self.password)
         authhandler = urllib2.HTTPBasicAuthHandler(passman)
         opener = urllib2.build_opener(authhandler)
         urllib2.install_opener(opener)
+
+        #
+        # Begin to open the file to read in bytes
+        #
         XNATFile = open(dst, "wb")
         print ("\nDownloading %s...\n"%(XNATSrc))
         self.browser.updateStatus(["Downloading '%s'."%(os.path.basename(XNATSrc)),"Please wait...", ""])
+      
+        #
+        # Get the response URL
+        #
         response = urllib2.urlopen(XNATSrc)
+
+        #
+        # Get the content size, first by checking log, then by reading header
+        #
+        self.downloadTracker['downloadedSize']['bytes'] = 0   
+        self.downloadTracker['totalDownloadSize'] = self.getSize(XNATSrc)
+        if not self.downloadTracker['totalDownloadSize']['bytes']:
+            # If not in log, read the header
+            if "Content-Length" in response.headers:
+                self.downloadTracker['totalDownloadSize']['bytes'] = int(response.headers["Content-Length"])  
+                self.downloadTracker['totalDownloadSize']['MB'] = self.browser.utils.bytesToMB(self.downloadTracker['totalDownloadSize']['bytes'])
+
+        #
+        # Update the download popup
+        #
+        if self.downloadTracker['totalDownloadSize']['bytes'] and self.browser.downloadPopup:
+            self.browser.downloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
         
-        self.browser.generalProgressBar.setVisible(True)
+        #
+        # Adjust browser UI
+        #
+        self.browser.XNATView.setEnabled(False)
+        
         
         """
         mainWindow = slicer.util.mainWindow()
@@ -259,23 +294,83 @@ class XNATCommunicator(object):
         y = screenMainPos.y() + mainWindow.height/2 - self.browser.generalProgressBar.height/2
         self.browser.generalProgressBar.move(qt.QPoint(x,y))
         """
-        self.browser.XNATView.setEnabled(False)
+
         
-        a = self.buffer_read(response = response, fileToWrite = XNATFile, 
-                             dialog = self.browser.generalProgressBar, buffer_size=8192)
-            
+        #
+        # Read buffers (cyclical)
+        #
+        fileDisplayName = os.path.basename(XNATSrc) if not 'format=zip' in XNATSrc else XNATSrc.split("/subjects/")[1]
+        a = self.buffer_read(response = response, 
+                             fileToWrite = XNATFile, 
+                             buffer_size=8192, 
+                             currSrc = XNATSrc,
+                             fileDisplayName = fileDisplayName)
+
+        #
+        # Reenable Viewer and close the file
+        #
         self.browser.XNATView.setEnabled(True)
         XNATFile.close()
 
 
+        
+    def buffer_read(self, response, fileToWrite, buffer_size=8192, currSrc = "", fileDisplayName = ""):
+        """Descriptor
+        """
+        
+        while 1:            
+            #
+            # Read buffer
+            #
+            buffer = response.read(buffer_size)
+            if not buffer: 
+                if self.browser.downloadPopup:
+                    self.browser.downloadPopup.hide()
+                break 
+            
+            #
+            # Write buffer to file
+            #
+            fileToWrite.write(buffer)
+
+            #
+            # Update progress indicators
+            #
+            self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
+            self.downloadTracker['downloadedSize']['MB'] = self.browser.utils.bytesToMB(self.downloadTracker['downloadedSize']['bytes'])
+            #self.updateProgressIndicators(fileDisplayName)
+            if self.browser.downloadPopup:
+                self.browser.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
+            
+        return self.downloadTracker['downloadedSize']['bytes']
+
+
+    
+    def updateProgressIndicators(self, fileDisplayName):
+        """ Descriptor
+        """
 
         
+        
+        # update browser status 
+        downloadedMB = self.downloadTracker['downloadedSize']['MB']
+        totalMB = self.downloadTracker['totalDownloadSize']['MB']
+        self.browser.updateStatus(["Downloading '%s'."%(fileDisplayName), 
+                                   "%s out of %s MB."%(str(downloadedMB),  
+                                                       str(totalMB)), ""])
+        
+        # update progess bar
+        if downloadedMB and totalMB:
+            percent = round((float(self.downloadTracker['downloadedSize']['bytes']) / self.downloadTracker['totalDownloadSize']['bytes'])*100, 2)
+            if percent == 100:
+                self.browser.updateStatus(["", "Loading, please wait...", ""])
+                self.browser.generalProgressBar.setVisible(False)
+    
+
+            
+        
     def getJson(self, url):
-        print "%s %s"%(self.utils.lf(), url)
-        if (('/scans/' in url) and len(url.split('/scans/')[1])>0):
-            if (not url.endswith('/')):
-                url += '/'
-            url += "files"
+        print "%s %s"%(self.browser.utils.lf(), url)
 
         response = self.httpsRequest('GET', url).read()
         #print "GET JSON RESPONSE: %s"%(response)
@@ -284,14 +379,14 @@ class XNATCommunicator(object):
 
     
     def getLevel(self, url, level):
-        print "%s %s"%(self.utils.lf(), url, level)
+        print "%s %s"%(self.browser.utils.lf(), url, level)
         if not level.startswith('/'):
             level = '/' + level
 
         if (level) in url:
             return  url.split(level)[0] + level
         else:
-            raise Exception("%s invalid get level '%s' parameter: %s"%(self.utils.lf(), url, level))
+            raise Exception("%s invalid get level '%s' parameter: %s"%(self.browser.utils.lf(), url, level))
 
         
 
@@ -299,15 +394,13 @@ class XNATCommunicator(object):
     def fileExists(self, selStr):
         """ Descriptor
         """
-        print "%s %s"%(self.utils.lf(), selStr)
+        print "%s %s"%(self.browser.utils.lf(), selStr)
 
         #
         # Query logged files before checking
         #
         if (os.path.basename(selStr) in self.fileDict):
-            for fDict in self.fileDict[os.path.basename(selStr)]:
-                if searchStr in fDict['URI']:
-                    return True
+            return True
                 
         
         # Clean string
@@ -326,89 +419,90 @@ class XNATCommunicator(object):
     def getSize(self, selStr):
         """ Descriptor
         """
-        print "%s %s"%(self.utils.lf(), selStr)
+        print "%s %s"%(self.browser.utils.lf(), selStr)
         bytes = 0
        
         #
-        # Query logged files before checking
+        # Query logged files
         #
-        if (os.path.basename(selStr) in self.fileDict):
-            for fDict in self.fileDict[os.path.basename(selStr)]:
-                selSplit = selStr.split("/")
-                searchStr = selSplit[-2]  + "/" + selSplit[-1]
-                if searchStr in fDict['URI']:
-                    bytes = int(fDict['Size'])
-                    break
+        fileName = os.path.basename(selStr)
+        if fileName in self.fileDict:
+            bytes = int(self.fileDict[fileName]['Size'])
+            return {"bytes": (bytes), "MB" : self.browser.utils.bytesToMB(bytes)}
 
-        else:
-            print("**************%s in NOT file dict!")%(selStr)
-            print self.fileDict
-            parentDir = self.getLevel(selStr, 'files');
-            
-            # Parse result dictionary
-            
-            for i in self.getJson(parentDir):
-                if os.path.basename(selStr) in i['Name']:
-                    bytes = int(i['Size'])
-
-        mb = str(bytes/(1024*1024.0)).split(".")[0] + "." + str(bytes/(1024*1024.0)).split(".")[1][:2]
-        
-        return {"bytes": str(bytes), "mb" : str(mb)}
+        return {"bytes": None, "MB" : None}
 
 
 
     
-    def getFolderContents(self, folderName):   
+    def getFolderContents(self, queryPaths, metadataTag = 'ID'):   
         """ Descriptor
         """
-        #try:
-        print "%s %s"%(self.utils.lf(), folderName)
-        getContents =  self.getJson(folderName)
+       
+        if isinstance(queryPaths, basestring):
+           queryPaths = [queryPaths]
 
-        print getContents
+        contents = []
         
-        if str(getContents).startswith("<?xml"): 
-            return [] # We don't want text values
+        for p in queryPaths:
+            print "%s query path: %s"%(self.browser.utils.lf(), p)
+            contents =  contents + self.getJson(p)
+            
+        if str(contents).startswith("<?xml"): return [] # We don't want text values
 
-        key = 'ID'
-        if folderName.endswith('subjects'):
-            key = 'label'
-        elif ('/scans/') in folderName or folderName.endswith('/files'):
-            key = 'Name'
-            for content in getContents:
-                self.fileDict[content['Name']] = []
-                self.fileDict[content['Name']].append(content)
+        childNames = []
+        sizes = []
 
-        print "************ Using key '%s'"%(key)
-        return [ content[key] for content in getContents ]
-    #except Exception, e:
-    #        print self.utils.lf() +  "CANT GET FOLDER CONTENTS OF '%s'"%(folderName) + " " + str(e)
+        #
+        #  Get metadata tag
+        #
+        for content in contents:
+            if metadataTag in content:
+                childNames.append(content[metadataTag])
+            else:
+                print "%s NO METADATA %s %s"%(self.browser.utils.lf(), metadataTag, content)
+                childNames.append(content['Name'])
+            # Get size if applicable
+            if ('Size' in content):
+                sizes.append(content['Size'])
+
+        #
+        # Track files
+        #
+        for q in queryPaths:
+            if q.endswith('/files'):
+                for c in contents:
+                    # create a tracker in the fileDict
+                    self.fileDict[c['Name']] = c
+                print "%s %s"%(self.browser.utils.lf(), self.fileDict)
+
+        return childNames, (sizes if len(sizes) > 0 else None)
+
 
 
 
     def getResources(self, folder):
 
-        print "%s %s"%(self.utils.lf(), folder)
+        print "%s %s"%(self.browser.utils.lf(), folder)
         #try:
-        if not '/scans/' in folder:
-            folder += "/resources"
+        folder += "/resources"
             
-        resources = self.getJson(self.cleanSelectString(folder))
-        print self.utils.lf() + " Got resources: '%s'"%(str(resources))
+        resources = self.getJson(folder)
+        print self.browser.utils.lf() + " Got resources: '%s'"%(str(resources))
         resourceNames = []
         
         for r in resources:
             if 'label' in r:
                 resourceNames.append(r['label'])
-                print (self.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['label']))
+                print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['label']))
             elif 'Name' in r:
                 resourceNames.append(r['Name'])
-                print (self.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['Name']))                
+                print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['Name']))                
             
             return resourceNames
         
     #except Exception, e:
-    #       print (self.utils.lf() +  "GetResources error.  It likely did not like the path:\n%s"%(str(e)))
+    #       print (self.browser.utils.lf() +  "GetResources error.  It likely did not like the path:\n%s"%(str(e)))
 
 
             
@@ -418,7 +512,7 @@ class XNATCommunicator(object):
         
 
         XNATItem = self.cleanSelectString(XNATItem)
-        print "%s %s %s"%(self.utils.lf(), XNATItem, attr)
+        print "%s %s %s"%(self.browser.utils.lf(), XNATItem, attr)
         
         for i in self.getJson(os.path.dirname(XNATItem)):
             for key, val in i.iteritems():
@@ -445,7 +539,7 @@ class XNATCommunicator(object):
         
     def makeDir(self, XNATPath):  
         r = self.httpsRequest('PUT', XNATPath)
-        print "%s Put Dir %s \n%s"%(self.utils.lf(), XNATPath, r)
+        print "%s Put Dir %s \n%s"%(self.browser.utils.lf(), XNATPath, r)
         return r
 
 
