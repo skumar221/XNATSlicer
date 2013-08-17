@@ -3,20 +3,14 @@ import datetime, time
 
 import os
 import sys
-from XNATUtils import *
 
-#########################################################
-#
-# 
+
 comment = """
   XNATSessionManager
 
 # TODO : 
 """
-#
-###################################date######################
-utils = XNATUtils()
-    
+
 class XNATSessionArgs(dict):
     def __init__(self, browser, srcPath = None, useDefaultXNATSaveLevel = True):
         self.browser = browser
@@ -34,6 +28,7 @@ class XNATSessionArgs(dict):
         self["XNATCommunicator"] = None
         self["metadata"] = None
         self.inserting = False
+        
         #self.printAll("\nINIT SESSION ARGS===========================")   
         if srcPath:
             self.makeSessionArgs_byPath(srcPath)
@@ -46,9 +41,9 @@ class XNATSessionArgs(dict):
         dict.__setitem__(self, key, value)
     
     def makeSessionArgs_byPath(self, filePath):
-        saveLevelDir, slicerDir, sharedDir = utils.getSaveTuple(filePath) 
-        self['host'] = self.browser.hostDropdown.currentText
-        self['username'] = self.browser.usernameLine.text        
+        saveLevelDir, slicerDir, sharedDir = self.browser.utils.getSaveTuple(filePath) 
+        self['host'] = self.browser.XNATLoginMenu.hostDropdown.currentText
+        self['username'] = self.browser.XNATLoginMenu.usernameLine.text        
         self['saveLevel'] = saveLevelDir
         self['saveDir'] = slicerDir
         self['sharedDir'] = sharedDir
@@ -69,8 +64,7 @@ class XNATSessionManager(object):
         
         self.browser = browser
 
-        self.utils = XNATUtils()       
-        self.sessionFileName = os.path.join(self.utils.utilPath, 'SessionLog.txt')
+        self.sessionFileName = os.path.join(self.browser.utils.utilPath, 'SessionLog.txt')
         
         self.sessionArgs = None
         self.saveItem = None
@@ -82,7 +76,7 @@ class XNATSessionManager(object):
         self.writeSession()
         
     def clearCurrentSession(self):
-        #print(self.utils.lf() + "CLEARING CURRENT SESSION!")
+        #print(self.browser.utils.lf() + "CLEARING CURRENT SESSION!")
         self.sessionArgs = None
 
 
@@ -94,7 +88,7 @@ class XNATSessionManager(object):
             fileLines.append("%s:\t\t%s\n"%(item, self.sessionArgs[item]))
         
         fileLines.append("\n\n")
-        print(self.utils.lf() + "Session log file: %s"%(self.sessionFileName))
+        print(self.browser.utils.lf() + "Session log file: %s"%(self.sessionFileName))
         f = open(self.sessionFileName, 'a')
         f.writelines(fileLines)            
         f.close()

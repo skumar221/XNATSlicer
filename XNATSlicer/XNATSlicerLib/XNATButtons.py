@@ -1,6 +1,10 @@
 from __main__ import vtk, ctk, qt, slicer
 import os
 
+from DICOMLoader import *
+from XNATSaveDialog import *
+from XNATSaveWorkflow import *
+
  
 comment = """
   XNATButtons is the class that handles all of the UI interactions to the XNATCommunicator.
@@ -128,8 +132,9 @@ class XNATButtons(object):
         # If Scene is linked (i.e. the session manager is active)...
         #--------------------
         if self.browser.XNATView.sessionManager.sessionArgs:
+            FileSaveDialog(self.browser, self.browser.XNATView.sessionManager.sessionArgs)
             self.browser.XNATView.makeRequiredSlicerFolders()
-            FileSaveDialog(self.browser, self, self.browser.XNATView.sessionManager.sessionArgs)
+            
 
             
         #--------------------
@@ -138,7 +143,7 @@ class XNATButtons(object):
         elif (not self.browser.XNATView.sessionManager.sessionArgs):
             # Construct new sessionArgs
             fullPath = self.browser.XNATView.getXNATDir(self.browser.XNATView.getParents(self.browser.XNATView.viewWidget.currentItem()))
-            remoteURI = self.browser.settings.getAddress(self.browser.hostDropdown.currentText) + fullPath
+            remoteURI = self.browser.settings.getAddress(self.browser.XNATLoginMenu.hostDropdown.currentText) + fullPath
             sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = fullPath)
             sessionArgs['sessionType'] = "scene upload - unlinked"
             sessionArgs.printAll()
@@ -152,6 +157,7 @@ class XNATButtons(object):
         self.addProjEditor.show()
 
 
+        
 
     def beginSaveWorkflow(self, sessionArgs):            
         self.browser.XNATView.currItem = self.browser.XNATView.viewWidget.currentItem()   
@@ -159,6 +165,8 @@ class XNATButtons(object):
         self.browser.XNATView.makeRequiredSlicerFolders() 
         saveWorkflow = XNATSaveWorkflow(self.browser, self.browser.XNATCommunicator, self.browser.XNATView.sessionManager.sessionArgs)
         saveWorkflow.saveScene()   
+        self.browser.XNATButtons.buttons['load'].setEnabled(True)
+        self.browser.XNATButtons.buttons['delete'].setEnabled(True) 
 
 
         
@@ -170,40 +178,62 @@ class XNATButtons(object):
         #------------------------
         # Clear Scene
         #------------------------
-        if not button:
-            if not self.browser.utils.isCurrSceneEmpty():           
-                self.initClearDialog()
-                self.clearSceneDialog.connect('buttonClicked(QAbstractButton*)', self.loadClicked) 
-                self.clearSceneDialog.show()
-                return
+        if not button and not self.browser.utils.isCurrSceneEmpty():           
+            self.browser.XNATView.initClearDialog()
+            self.browser.XNATView.clearSceneDialog.connect('buttonClicked(QAbstractButton*)', self.loadClicked) 
+            self.browser.XNATView.clearSceneDialog.show()
+            return
 
             
         #------------------------
         # Begin Workflow
         #------------------------
-        if (button and button.text.lower().find('yes') > -1) or self.browser.utils.isCurrSceneEmpty():
+        if (button and 'yes' in button.text.lower()) or self.browser.utils.isCurrSceneEmpty():
+            
             self.browser.XNATView.sessionManager.clearCurrentSession()
             slicer.app.mrmlScene().Clear(0)
+
             currItem = self.browser.XNATView.viewWidget.currentItem()
-            parents= self.browser.XNATView.getParents(currItem)
-            fullPath = self.browser.XNATView.getXNATDir(self.browser.XNATView.getParents(currItem))
-            remoteURI = self.browser.settings.getAddress(self.browser.hostDropdown.currentText) + fullPath
-            dst = os.path.join(self.browser.utils.downloadPath, currItem.text(self.browser.XNATView.column_name))
-            # determine loader based on currItem
+            pathObj = self.browser.XNATView.getXNATPathObject(currItem)
+
+            
+            remoteURI = self.browser.settings.getAddress(self.browser.XNATLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryPaths'][0]
+            if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
+                remoteURI += '/files'
+        
+            dst = os.path.join(self.browser.utils.downloadPath, 
+                               currItem.text(self.browser.XNATView.column_name))
+
+            print "***********%s %s"%(self.browser.utils.lf(), remoteURI)
+
+            
+            #------------------------
+            # Determine loader based on currItem
+            #------------------------
             loader = None
-            if (('files' in currItem.text(self.browser.XNATView.column_category)) or 
-                (self.browser.utils.slicerDirName in currItem.text(self.browser.XNATView.column_category))):
-                if (currItem.text(self.browser.XNATView.column_name).endswith(self.browser.utils.defaultPackageExtension)): 
-                    loader = SceneLoader(self.browser)
-                else:
-                    loader = FileLoader(self.browser)
+            if (('files' in remoteURI and 'Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
+                print "SCENE LOADER SELECTED"
+                loader = self.browser.SceneLoader
+            elif ('files' in remoteURI and '/scans/' in remoteURI):   
+                print "DICOM LOADER SELECTED"     
+                loader =  self.browser.DICOMLoader
             else:
-                loader = DICOMLoader(self.browser)
+                print "FILE LOADER SELECTED"
+                loader =  self.browser.FileLoader
+                
             args = {"XNATCommunicator": self.browser.XNATCommunicator, 
-                    "xnatSrc":fullPath, 
+                    "xnatSrc": remoteURI, 
                     "localDst":dst, 
                     "folderContents": None}
+            
+
+            self.browser.downloadPopup.setDownloadFilename(remoteURI)
+            self.browser.downloadPopup.show()
+            
+
+        
             loadSuccessful = loader.load(args)  
+            
 
             
         #------------------------

@@ -869,6 +869,11 @@ class XNATUtils(object):
         return pathDict
 
 
+    def bytesToMB(self, bytes):
+        bytes = int(bytes)
+        mb = str(bytes/(1024*1024.0)).split(".")[0] + "." + str(bytes/(1024*1024.0)).split(".")[1][:2]
+        return mb
+
      
 class textStatusBar(object):
     def __init__(self, parent = None, overwriteMode = False, size = 7):

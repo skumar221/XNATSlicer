@@ -57,4 +57,5 @@ class XNATView(object):
             qt.QMessageBox.warning( None, "Login error", "Invalid login credentials for '%s'."%(self.XNATCommunicator.server))
 
         
-    
+    def clear(self):
+        self.viewWidget.clear()
