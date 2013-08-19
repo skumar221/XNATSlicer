@@ -93,26 +93,12 @@ class XNATScenePackager(object):
 
 
 
-
-
                     
     def packageDir(self, zipFileName, directoryToZip):
-        #logic = slicer.app.applicationLogic()
-        #logic.SaveSceneToSlicerDataBundleDirectory(sceneDir, None)
-
-        # Approach 1 - seems to be issue-ridden
         slicer.app.applicationLogic().Zip(str(zipFileName), str(directoryToZip))
         #return
         
-        # Approach 2
-        """def zipdir(path, zip):
-            for root, dirs, files in os.walk(path):
-                for file in files:
-                    zip.write(os.path.join(root, file).decode('utf-8'))
-        print self.browser.utils.lf() +  "Zipping: %s to %s"%(directoryToZip, zipFileName)
-        zip = zipfile.ZipFile(zipFileName.decode("utf-8"), 'w')
-        zipdir(directoryToZip.decode("utf-8"), zip)
-        zip.close()"""
+  
 
 
         

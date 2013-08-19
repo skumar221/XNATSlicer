@@ -127,11 +127,12 @@ class XNATButtons(object):
         """     
         self.lastButtonClicked = "save" 
 
-        
+        self.browser.XNATView.setEnabled(False)
         #--------------------  
         # If Scene is linked (i.e. the session manager is active)...
         #--------------------
         if self.browser.XNATView.sessionManager.sessionArgs:
+            self.browser.XNATView.setEnabled(False)
             FileSaveDialog(self.browser, self.browser.XNATView.sessionManager.sessionArgs)
             #self.browser.XNATView.makeRequiredSlicerFolders()
             
@@ -151,7 +152,7 @@ class XNATButtons(object):
             SaveUnlinkedDialog(self.browser, self, fullPath, sessionArgs)
 
 
-            
+          
     def addProjClicked(self):
         self.addProjEditor = XNATAddProjEditor(self, self.browser, self.browser.XNATCommunicator)
         self.addProjEditor.show()
@@ -173,7 +174,7 @@ class XNATButtons(object):
     def loadClicked(self, button = None):
         
         self.lastButtonClicked = "load"
-
+        self.browser.XNATView.setEnabled(False)
 
         #------------------------
         # Clear Scene
