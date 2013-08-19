@@ -8,6 +8,7 @@ import math
 import urllib2
 import string    
 import httplib
+import codecs
 from os.path import abspath, isabs, isdir, isfile, join
 from base64 import b64encode
 import json
@@ -155,22 +156,32 @@ class XNATCommunicator(object):
 
     
     def upload(self, localSrc, xnatDst, delExisting = True):
-        
-        print "%s %s %s"%(self.browser.utils.lf(), localSrc, xnatDst)
-        # Read file to data
-        f=open(localSrc, 'rb')
+
+        # Encoding cleanup
+        xnatDst = str(xnatDst).encode('ascii', 'ignore')
+
+        # Read file
+        f = open(localSrc, 'rb')
         filebody = f.read()
         f.close()
 
-        # Delete existing
-        if delExisting:
-            self.httpsRequest('DELETE', xnatDst, '')
+        print "%s UPLOAD: localSrc: '%s'\n\txnatDst: '%s'"%(self.browser.utils.lf(), localSrc, xnatDst)
 
-        # Request
-        r = self.httpsRequest('PUT', 
-                          xnatDst, 
-                          body = (filebody).encode("utf-8"), 
-                          headerAdditions = {'content-type': 'application/octet-stream'})
+        # Get request and connection
+        req = urllib2.Request(xnatDst)
+        connection = httplib.HTTPSConnection (req.get_host())  
+
+        # Authentication header
+        userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")       
+        header = { 'Authorization' : 'Basic %s' %  userAndPass, 'content-type': 'application/octet-stream'}    
+
+        # REST call
+        connection.request ('PUT', req.get_selector(), body = filebody, headers = header)
+
+        # Response return
+        response = connection.getresponse ()
+        return response
+        #print "response: ", response.read()   
 
 
 
@@ -319,64 +330,39 @@ class XNATCommunicator(object):
         """
         
         while 1:            
-            #
+            
             # Read buffer
-            #
             buffer = response.read(buffer_size)
             if not buffer: 
                 if self.browser.downloadPopup:
                     self.browser.downloadPopup.hide()
                 break 
             
-            #
+            
             # Write buffer to file
-            #
             fileToWrite.write(buffer)
 
-            #
+            
             # Update progress indicators
-            #
             self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
             self.downloadTracker['downloadedSize']['MB'] = self.browser.utils.bytesToMB(self.downloadTracker['downloadedSize']['bytes'])
-            #self.updateProgressIndicators(fileDisplayName)
             if self.browser.downloadPopup:
                 self.browser.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
             
         return self.downloadTracker['downloadedSize']['bytes']
 
-
-    
-    def updateProgressIndicators(self, fileDisplayName):
-        """ Descriptor
-        """
-
-        
-        
-        # update browser status 
-        downloadedMB = self.downloadTracker['downloadedSize']['MB']
-        totalMB = self.downloadTracker['totalDownloadSize']['MB']
-        self.browser.updateStatus(["Downloading '%s'."%(fileDisplayName), 
-                                   "%s out of %s MB."%(str(downloadedMB),  
-                                                       str(totalMB)), ""])
-        
-        # update progess bar
-        if downloadedMB and totalMB:
-            percent = round((float(self.downloadTracker['downloadedSize']['bytes']) / self.downloadTracker['totalDownloadSize']['bytes'])*100, 2)
-            if percent == 100:
-                self.browser.updateStatus(["", "Loading, please wait...", ""])
-                self.browser.generalProgressBar.setVisible(False)
     
 
             
         
     def getJson(self, url):
         print "%s %s"%(self.browser.utils.lf(), url)
-
         response = self.httpsRequest('GET', url).read()
         #print "GET JSON RESPONSE: %s"%(response)
         return json.loads(response)['ResultSet']['Result']
 
 
+    
     
     def getLevel(self, url, level):
         print "%s %s"%(self.browser.utils.lf(), url, level)
@@ -396,9 +382,8 @@ class XNATCommunicator(object):
         """
         print "%s %s"%(self.browser.utils.lf(), selStr)
 
-        #
+    
         # Query logged files before checking
-        #
         if (os.path.basename(selStr) in self.fileDict):
             return True
                 
@@ -422,9 +407,8 @@ class XNATCommunicator(object):
         print "%s %s"%(self.browser.utils.lf(), selStr)
         bytes = 0
        
-        #
+        
         # Query logged files
-        #
         fileName = os.path.basename(selStr)
         if fileName in self.fileDict:
             bytes = int(self.fileDict[fileName]['Size'])
@@ -484,7 +468,8 @@ class XNATCommunicator(object):
     def getResources(self, folder):
 
         print "%s %s"%(self.browser.utils.lf(), folder)
-        #try:
+
+        
         folder += "/resources"
             
         resources = self.getJson(folder)
@@ -500,9 +485,6 @@ class XNATCommunicator(object):
                 print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['Name']))                
             
             return resourceNames
-        
-    #except Exception, e:
-    #       print (self.browser.utils.lf() +  "GetResources error.  It likely did not like the path:\n%s"%(str(e)))
 
 
             
@@ -552,8 +534,6 @@ class XNATCommunicator(object):
             
 
 
-
-            
 
 
 

@@ -275,8 +275,10 @@ class XNATUtils(object):
         if os.path.exists(path):
             self.removeDir(path)
         if os.path.exists(path):
-            os.rmdir(path)
-
+            try:
+                os.rmdir(path)
+            except Exception, e:
+                print self.lf() + "%s Can't remove dir '%s'"%(str(e), path)
 
 
             
@@ -295,10 +297,14 @@ class XNATUtils(object):
             for each in os.listdir(path):
                 if pattern.search(each):
                     name = os.path.join(path, each)
-                    try: os.remove(name)
+                    try: 
+                        os.remove(name)
                     except:
                         self.removeDir(name, '')
-                        os.rmdir(name)
+                        try:
+                            os.rmdir(name)
+                        except Exception, e:
+                            print self.lf() + "%s Can't remove dir '%s'"%(str(e), name)
         else:
             print self.lf() + " ATTEMPTED TO REMOVE: %s but it does not exist!"%(path)
 
