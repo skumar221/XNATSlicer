@@ -35,7 +35,7 @@ class XNATSaveWorkflow(object):
         
     def saveScene(self):    
 
-        
+        self.browser.XNATView.setEnabled(False)
         #----------------------
         # Package scene
         #
@@ -79,6 +79,7 @@ class XNATSaveWorkflow(object):
 
         self.browser.XNATView.setCurrItemToChild(item = None, 
                                                  childFileName = os.path.basename(packageFileName))
+        self.browser.XNATView.setEnabled(True)
         
 
 
