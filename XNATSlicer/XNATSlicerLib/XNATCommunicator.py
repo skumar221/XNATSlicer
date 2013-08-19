@@ -165,6 +165,8 @@ class XNATCommunicator(object):
         filebody = f.read()
         f.close()
 
+        if delExisting:
+            self.httpsRequest('DELETE', xnatDst, '')
         print "%s UPLOAD: localSrc: '%s'\n\txnatDst: '%s'"%(self.browser.utils.lf(), localSrc, xnatDst)
 
         # Get request and connection

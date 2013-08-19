@@ -51,84 +51,132 @@ class XNATPopup(object):
 
 class XNATDownloadPopup(XNATPopup):
 
+    
 
     def __init__(self, browser, title = "XNAT Download", memDisplay = "MB"):
-        
+        """ Descriptor
+        """
         super(XNATDownloadPopup, self).__init__(browser = browser, title = title)
 
+        # Params
         self.memDisplay = memDisplay
         self.downloadFileSize = None
 
-        #
+        
         # Window size
-        #
         self.window.setFixedWidth(500)
 
-        #
+    
         # Line text
-        #
         self.textDisp = [
             "",
             '[Unknown amount] ' +  self.memDisplay + ' out of [Unknown total] ' + self.memDisplay,
         ]
-        self.lines = [qt.QLabel(i) for i in self.textDisp]
-
-        #
+        self.lines = [qt.QLabel("") for x in range(0,2)]
+        
+        
         # Prog bar
-        #
         self.progBar = qt.QProgressBar()
-        self.progBar.setMinimum(0)
-        self.progBar.setMaximum(0)
         self.progBar.setFixedHeight(17)
 
-        #
+        
         # Add widgets to layout
-        #
         for l in self.lines:
             self.layout.addRow(l)
         self.layout.addRow(self.progBar)
 
         
+        # Clear all
+        self.reset()
+
 
         
-    def setDownloadFilename(self, filename):
-        self.downloadedBytes = 0
-        self.progBar.setMaximum(0)
-        # Truncate filename
-        filename = '...' + filename.split('/experiments')[1] if len(filename) > 33 else filename
-        self.lines[0].setText("Downloading: '%s'"%(filename))
+        
+    def reset(self):
+        """ Descriptor
+        """
+        self.lines[0].setText(self.textDisp[0])
         self.lines[1].setText(self.textDisp[1])
 
+        self.progBar.setMinimum(0)
+        self.progBar.setMaximum(0)       
+
+        self.downloadFileSize = 0
+        self.downloadedBytes = 0
+
 
         
         
+    def setDownloadFilename(self, filename):
+        """ Descriptor
+        """
+        self.reset()
+        
+        # Truncate filename
+        filename = '...' + filename.split('/experiments')[1] if len(filename) > 33 else filename
+        
+        # Update Display
+        self.lines[0].setText("Downloading: '%s'"%(filename))
+
+        
+
+
+    def recalcMem(self, size):
+        """ For toggling between MB display and byte
+        display.
+        """
+        if (self.memDisplay.lower() == 'mb'):
+            return self.browser.utils.bytesToMB(size) 
+        return size      
+
+
+
+    
     def setDownloadFileSize(self, size):
+        """ Descriptor
+        """
         if size:
+            
             self.downloadFileSize = size
             self.progBar.setMinimum(0)
             self.progBar.setMaximum(100)
-            if (self.memDisplay.lower() == 'mb'):
-                size = self.browser.utils.bytesToMB(size)
+
+            # Memory display
+            size = self.recalcMem(size)
+
+            # Update display
             self.lines[1].setText(self.lines[1].text.replace('[Unknown total]', str(size)))
-            
 
 
             
         
     def update(self, downloadedBytes):
+        """ Updates the progress bar in the popup accordingly with 
+            downloadedBytes param.
+        """
+
         if downloadedBytes > 0:
-            #self.downloadedBytes += int(downloadedBytes)
             self.downloadedBytes = int(downloadedBytes)
             size = self.downloadedBytes
-            print "%s %s"%(self.browser.utils.lf(), size)
-            if (self.memDisplay.lower() == 'mb'):
-                size = self.browser.utils.bytesToMB(self.downloadedBytes)
-            print "MB: %s %s"%(self.browser.utils.lf(), size)
+
+            # Memory display
+            size = self.recalcMem(size)
+                
+            # Update display
             self.lines[1].setText('%s MB out '%(str(size)) + self.lines[1].text.split('out')[1][1:])
-        
+
+
+        # If we know the size of downloaded files
         if self.downloadFileSize:
+            
+            # Calculate download pct
             pct = float(float(self.downloadedBytes) / float(self.downloadFileSize))
-            #print "%s Downloaded: %s\tDownloadSize: %s\tPct: %s"%(self.browser.utils.lf(), self.downloadedBytes , self.downloadFileSize, pct)
+
+            # Output to Python command prompt
+            print "%s %s Downloaded: %s\tDownloadSize: %s\tPct: %s"%(self.browser.utils.lf(), self.lines[0].text, 
+                                                                     self.downloadedBytes , self.downloadFileSize, pct)
+
+            # Update progress bar
             self.progBar.setValue(pct * 100)
             
 
