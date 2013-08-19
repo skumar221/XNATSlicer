@@ -1,7 +1,15 @@
 from __main__ import vtk, qt, ctk, slicer
 
 
-"""
+
+comment =  """
+
+XNATPopup and its children are used for any needed popup interaction with XNAT.
+
+
+QT specific issues:
+
+
 from: http://harmattan-dev.nokia.com/docs/library/html/qt4/qt.html#WindowModality-enum
 
 Qt::NonModal	0	The window is not modal and does not block input to other windows.
@@ -9,11 +17,19 @@ Qt::WindowModal	1	The window is modal to a single window hierarchy and blocks in
 Qt::ApplicationModal	2	The window is modal to the application and blocks input to all windows.
 """
 
-        
+
+
+
 class XNATPopup(object):
+    """ Popup class for XNAT-relevant interactions
+    """
+
+
+
     
     def __init__(self, browser, title = "XNATPopup", modality = 2):
-        
+        """Descriptor
+        """
         self.browser = browser
         self.spacer = qt.QLabel("\n\n\n")
 
@@ -27,8 +43,12 @@ class XNATPopup(object):
         self.window.setLayout(self.layout)
         self.window.hide()
 
-    
+
+        
+        
     def show(self, position = True):
+        """Descriptor
+        """
         self.window.show()
         
         if position:
@@ -42,6 +62,8 @@ class XNATPopup(object):
         self.window.raise_()
         
 
+        
+        
     def hide(self):
         self.window.hide()
 
@@ -49,15 +71,20 @@ class XNATPopup(object):
 
         
 
+        
 class XNATDownloadPopup(XNATPopup):
+    """ Subclass of the XNAT Popup class
+    """
+
+
 
     
-
     def __init__(self, browser, title = "XNAT Download", memDisplay = "MB"):
         """ Descriptor
         """
         super(XNATDownloadPopup, self).__init__(browser = browser, title = title)
 
+        
         # Params
         self.memDisplay = memDisplay
         self.downloadFileSize = None
@@ -93,7 +120,7 @@ class XNATDownloadPopup(XNATPopup):
         
         
     def reset(self):
-        """ Descriptor
+        """ Resets tracked parameters
         """
         self.lines[0].setText(self.textDisp[0])
         self.lines[1].setText(self.textDisp[1])

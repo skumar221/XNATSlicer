@@ -12,7 +12,6 @@ from XNATTimer import *
 
 
 
-################################################################################
 comment = """
             XNATSaveDialog is a class that manages various 
             dialogs related to saving XNAT files.
@@ -30,49 +29,41 @@ comment = """
                 (Where user enters filename, amongst other
                 things.)
           """
-#################################################################################
 
 
 
 class XNATSaveDialog(object):
     """ Parent class of all of the save dialogs.
     """
+
+
+
     
     def __init__(self, browser):
-        
-        #-------------------------
-        # INIT PARAMS
-        #-------------------------
+        """ Descriptor
+        """
+
         self.browser = browser
-        
-        #-------------------------
-        # DIALOG WINDOW LIST
-        #-------------------------
         self.dialogs = []        
-        
-        #-------------------------
-        # CALL SETUP FUNCTIONS -- USUALLY TO CHILD
-        #-------------------------
+
         self.setup()
-        
-        #-------------------------
-        # SHOW FIRST WINDOW
-        #-------------------------
         self.begin()         
 
 
 
         
     def begin(self):
+        """ Descriptor
+        """
+        
         print "%s"%(self.browser.utils.lf())
-        #-------------------------
-        # SHOW FIRST WINDOW
-        #-------------------------
+
+        
+        # Show first window
         self.dialogs[0].show()
         
-        #-------------------------
-        # ADJUST POSITION
-        #-------------------------
+
+        # Adjust position
         mainWindow = slicer.util.mainWindow()
         screenMainPos = mainWindow.pos
         x = screenMainPos.x() + 400
@@ -81,114 +72,142 @@ class XNATSaveDialog(object):
 
 
         
+        
     def okClicked(self):
         pass
+
+
+
     
     def yesClicked(self):
         pass
+
+
+
     
     def noClicked(self):
         pass
-        
+
+
+
+    
     def cancelClicked(self):
         for dialog in self.dialogs: dialog.hide()
         return
-       
+
+
+
+    
     def setNumDialogs(self, numDialogs = 1, dialogType = None):
         for x in range(0, numDialogs):
             try:
-                #-------------------------
-                # SET DIALOG BASED ON TYPE
-                #-------------------------
+                
+                # Set dialog based on type
                 self.dialogs.append(dialogType[str(x)])      
                         
             except Exception, e:
-                #-------------------------
-                # SET DEFAULT DIALOG TYPE
-                #-------------------------
+
+                # Set default dialog type
                 print "EXCEPTION: SET NUM DIALOGS: " + str(e)
                 self.dialogs.append(qt.QMessageBox())   
                 self.dialogs[x].connect('buttonClicked(QAbstractButton*)', 
                                         self.buttonClicked)
                 self.dialogs[x].setTextFormat(1)
-         
+
+
+
+                
     def buttonClicked(self):
         pass
 
+
+    
 
 
     
 class SaveEmptyDialog(XNATSaveDialog):
     
      def __init__(self, browser, viewer):
-         #======================================================================
-         # CALL PARENT
-         #======================================================================
-         super(SaveEmptyDialog, self).__init__(browser, viewer)
-       
+
+         
+         # Call parent
+         super(saveemptydialog, self).__init__(browser, viewer)
+
+
+
+         
      def setup(self):
-         #======================================================================
-         # DIALOG SETUP
-         #======================================================================
-         self.setNumDialogs(1)
-         self.dialogs[0].setText('The Slicer scene appears to be empty. ' + 
-                                 'Are you sure you want to continue?')      
-         #======================================================================
-         # BUTTON SETUP
-         #======================================================================
+
+         
+         # dialog setup
+         self.setnumdialogs(1)
+         self.dialogs[0].settext('the slicer scene appears to be empty. ' + 
+                                 'are you sure you want to continue?')      
+         
+         # Button Setup
          self.dialogs[0].addButton(qt.QMessageBox.Ok)
          self.dialogs[0].addButton(qt.QMessageBox.Cancel)
-             
-     def buttonClicked(self,button):
-       #-------------------------
-        # IF OK BUTTON CLICKED
-       #-------------------------
-        if button.text.lower().find('ok') > -1: 
-            #===================================================================
-            # RE-CALL viewer.save WITH UPDATED PARAMS
-            #===================================================================
-            self.browser.XNATView.saveButtonClicked(excludeRoutines = ['empty'])
 
+
+         
+         
+     def buttonClicked(self,button):
+
+         
+        # if ok button clicked
+        if button.text.lower().find('ok') > -1: 
+
+            # re-call viewer.save with updated params
+            self.browser.xnatview.savebuttonclicked(excluderoutines = ['empty'])
 
 
             
-class SaveUnlinkedDialog(XNATSaveDialog):
+
+
+            
+class saveunlinkeddialog(xnatsavedialog):
+
+
     
-     def __init__(self, browser, viewer, savePath, sessionArgs):
-         #======================================================================
-         # CALL PARENT
-         #======================================================================
-         self.sessionArgs = sessionArgs
-         super(SaveUnlinkedDialog, self).__init__(browser, viewer)
+     def __init__(self, browser, viewer, savepath, sessionargs):
          
+        # call parent
+        self.sessionargs = sessionargs
+        super(saveunlinkeddialog, self).__init__(browser, viewer)
+
+
+        
        
      def setup(self):
-         #---------------------
-         # DIALOG SETUP
-         #---------------------
-         self.setNumDialogs(1)
-         msg = """The scene doesn't appear to be associated with a specific XNAT location.  
-                  Would you like to save it within this XNAT """
-        
-         msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultXNATSaveLevel[:-1], os.path.basename(self.sessionArgs['saveLevel']))
-         msg.replace('location', self.browser.utils.defaultXNATSaveLevel[:-1])
+
          
-         self.dialogs[0].setText(msg)      
-         #---------------------
-         # BUTTON SETUP
-         #---------------------
-         self.dialogs[0].addButton(qt.QMessageBox.Yes)
-         self.dialogs[0].addButton(qt.QMessageBox.Cancel)
-         self.browser.XNATView.selectItem_byPath((self.sessionArgs['saveLevel']))
-             
-     def buttonClicked(self,button):
-       #-------------------------
-        # IF OK BUTTON CLICKED
-       #-------------------------
+         # dialog setup
+         self.setnumdialogs(1)
+         msg = """the scene doesn't appear to be associated with a specific xnat location.  
+                  would you like to save it within this xnat """
+        
+         msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultxnatsavelevel[:-1], os.path.basename(self.sessionargs['savelevel']))
+         msg.replace('location', self.browser.utils.defaultxnatsavelevel[:-1])
+         
+         self.dialogs[0].settext(msg)      
+
+         
+         # button setup
+         self.dialogs[0].addbutton(qt.qmessagebox.yes)
+         self.dialogs[0].addbutton(qt.qmessagebox.cancel)
+         self.browser.xnatview.selectitem_bypath((self.sessionargs['savelevel']))
+
+
+
+         
+     def buttonclicked(self,button):
+
+         
+        # If ok button clicked
         if button.text.lower().find('yes') > -1: 
-            #----------------------
-            # RE-CALL viewer.save WITH UPDATED PARAMS
-            #----------------------
+
+            
+            # Re-call viewer.save with updated params
             FileSaveDialog(self.browser, self.sessionArgs)
 
 
@@ -197,31 +216,28 @@ class SaveUnlinkedDialog(XNATSaveDialog):
 
             
 class FileSaveDialog(XNATSaveDialog):  
+""" Descriptor
+"""
+
     
-    def __init__(self, browser, sessionArgs):
+    def __init__(self, browser, sessionargs):
+        """ Descriptor
+        """
 
-        
-       
-        #-------------------------
-        # Determine filename
-        #-------------------------
-        self.fileName = None
+        # determine filename
+        self.filename = none
 
-        #-------------------------
+
         # Init params
-        #-------------------------
-        self.sessionArgs = sessionArgs
+        self.sessionargs = sessionargs
 
-        #-------------------------
-        # DIALOG SETUP
-        #-------------------------
-        self.inputIndex = 0  
-        self.noticeLabel = qt.QLabel("")
-        self.saveSharableCB = None
 
-        #-------------------------
-        # CALL PARENT
-        #-------------------------
+        # Dialog setup
+        self.inputindex = 0  
+        self.noticelabel = qt.qlabel("")
+        self.savesharablecb = none
+
+        # Call parent
         super(FileSaveDialog, self).__init__(browser)
 
         print "%s"%(self.browser.utils.lf())
@@ -234,39 +250,37 @@ class FileSaveDialog(XNATSaveDialog):
         
         print "%s"%(self.browser.utils.lf())
 
-        
-        #-------------------------
-        # WINDOW SETUP   
-        #-------------------------
-        self.setNumDialogs(1, {'0':qt.QDialog(slicer.util.mainWindow())}) 
-        self.dialogs[0].setFixedWidth(600)   
+
+        # Window setup   
+        self.setnumdialogs(1, {'0':qt.qdialog(slicer.util.mainwindow())}) 
+        self.dialogs[0].setfixedwidth(600)   
 
         
-        #-------------------------
-        # LABELING
-        #-------------------------
+        # Labeling
         self.saveButtonStr = "Save"
         fileLineLabel = qt.QLabel("Filename: ")
-        #-------------------------
-        # SET FILELINE TEXT
-        #-------------------------  
+
+
+        # Set fileline text
         self.fileLine = qt.QLineEdit(self.sessionArgs['fileName'].split(self.browser.utils.defaultPackageExtension)[0])
-        #-------------------------
+
+        
         # DISPLAY NOTICES  
-        #-------------------------
         #        if self.originFileName:
         #            newText = ".(Please note, the selected scene <b>'%s'</b> is different from the one loaded--<b>'%s'</b>.)"%(self.fileName, self.originFileName) 
         #            self.fileLine = qt.QLineEdit(self.originFileName.split(".")[0])    
-        #-------------------------
-        # FILENAME LINE
-        #-------------------------
+
+
+        
+        # Filename line
         fileInputLayout = qt.QHBoxLayout()
         fileInputLayout.addWidget(fileLineLabel)
         fileInputLayout.addWidget(self.fileLine)
         dialogLayout = qt.QVBoxLayout()
-        #-------------------------
-        # BUTTONS
-        #-------------------------
+
+        
+
+        # Buttons
         saveButton = qt.QPushButton()
         saveButton.setText(self.saveButtonStr)
         cancelButton = qt.QPushButton()
@@ -276,23 +290,22 @@ class FileSaveDialog(XNATSaveDialog):
         buttonRow.addButton(cancelButton, 2)               
         
   
+        # Bottom row        
+        bottomrow = qt.qhboxlayout()
+        #bottomrow.addwidget(self.savesharablecb)
+        bottomrow.addwidget(buttonrow)
 
-        #-------------------------
-        # BOTTOM ROW        
-        #-------------------------
-        bottomRow = qt.QHBoxLayout()
-        #bottomRow.addWidget(self.saveSharableCB)
-        bottomRow.addWidget(buttonRow)
-        #-------------------------
-        # APPLY LAYOUTS
-        #-------------------------
-        dialogLayout.addLayout(fileInputLayout)
-        dialogLayout.addWidget(self.noticeLabel)
-        dialogLayout.addLayout(bottomRow)
-        self.dialogs[0].setLayout(dialogLayout)
-        #-------------------------
-        # BUTTON CONNECT
-        #-------------------------  
+        
+
+        # apply layouts
+        dialoglayout.addlayout(fileinputlayout)
+        dialoglayout.addwidget(self.noticelabel)
+        dialoglayout.addlayout(bottomrow)
+        self.dialogs[0].setlayout(dialoglayout)
+
+
+        
+        # button connect  
         buttonRow.connect('clicked(QAbstractButton*)', self.buttonClicked)
         self.browser.XNATView.selectItem_byPath((self.sessionArgs['saveLevel']))
 
@@ -300,11 +313,17 @@ class FileSaveDialog(XNATSaveDialog):
 
             
     def buttonClicked(self,button):
+        """ Descriptor
+        """
         slicer.app.processEvents()
-        self.dialogs[0].hide()                  
-        # FILENAME FROM TEXTLINE
+        self.dialogs[0].hide()         
+
+        
+        # Filename from textline
         self.sessionArgs['fileName'] = self.browser.utils.replaceForbiddenChars(self.fileLine.text.split(".")[0], "_")
         self.sessionArgs['fileName'] += self.browser.utils.defaultPackageExtension
+
+        
         if button.text.lower().find((self.saveButtonStr).lower()) > -1:                       
             self.sessionArgs['sharable'] = False      
             self.browser.XNATButtons.beginSaveWorkflow(self.sessionArgs)  
