@@ -133,7 +133,7 @@ class XNATButtons(object):
         #--------------------
         if self.browser.XNATView.sessionManager.sessionArgs:
             FileSaveDialog(self.browser, self.browser.XNATView.sessionManager.sessionArgs)
-            self.browser.XNATView.makeRequiredSlicerFolders()
+            #self.browser.XNATView.makeRequiredSlicerFolders()
             
 
             

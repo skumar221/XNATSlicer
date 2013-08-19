@@ -67,11 +67,11 @@ class XNATDownloadPopup(XNATPopup):
         #
         # Line text
         #
-        textDisp = [
-            "Downloading 'foo'",
+        self.textDisp = [
+            "",
             '[Unknown amount] ' +  self.memDisplay + ' out of [Unknown total] ' + self.memDisplay,
         ]
-        self.lines = [qt.QLabel(i) for i in textDisp]
+        self.lines = [qt.QLabel(i) for i in self.textDisp]
 
         #
         # Prog bar
@@ -96,7 +96,8 @@ class XNATDownloadPopup(XNATPopup):
         self.progBar.setMaximum(0)
         # Truncate filename
         filename = '...' + filename.split('/experiments')[1] if len(filename) > 33 else filename
-        self.lines[0].setText(self.lines[0].text.replace('foo', filename))
+        self.lines[0].setText("Downloading: '%s'"%(filename))
+        self.lines[1].setText(self.textDisp[1])
 
 
         
@@ -109,21 +110,26 @@ class XNATDownloadPopup(XNATPopup):
             if (self.memDisplay.lower() == 'mb'):
                 size = self.browser.utils.bytesToMB(size)
             self.lines[1].setText(self.lines[1].text.replace('[Unknown total]', str(size)))
+            
 
 
             
         
     def update(self, downloadedBytes):
         if downloadedBytes > 0:
-            self.downloadedBytes += int(downloadedBytes)
+            #self.downloadedBytes += int(downloadedBytes)
+            self.downloadedBytes = int(downloadedBytes)
             size = self.downloadedBytes
             print "%s %s"%(self.browser.utils.lf(), size)
             if (self.memDisplay.lower() == 'mb'):
-                size = self.browser.utils.bytesToMB(downloadedBytes)
-            self.lines[1].setText(self.lines[1].text.replace('[Unknown amount]', str(size)))
+                size = self.browser.utils.bytesToMB(self.downloadedBytes)
+            print "MB: %s %s"%(self.browser.utils.lf(), size)
+            self.lines[1].setText('%s MB out '%(str(size)) + self.lines[1].text.split('out')[1][1:])
         
         if self.downloadFileSize:
-            self.progBar.setValue((self.downloadedBytes / self.downloadFileSize) * 100)
+            pct = float(float(self.downloadedBytes) / float(self.downloadFileSize))
+            #print "%s Downloaded: %s\tDownloadSize: %s\tPct: %s"%(self.browser.utils.lf(), self.downloadedBytes , self.downloadFileSize, pct)
+            self.progBar.setValue(pct * 100)
             
 
         

@@ -171,7 +171,7 @@ class XNATCommunicator(object):
         req = urllib2.Request(xnatDst)
         connection = httplib.HTTPSConnection (req.get_host())  
 
-        # Authentication header
+        # Make authentication header
         userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")       
         header = { 'Authorization' : 'Basic %s' %  userAndPass, 'content-type': 'application/octet-stream'}    
 
@@ -313,7 +313,7 @@ class XNATCommunicator(object):
         fileDisplayName = os.path.basename(XNATSrc) if not 'format=zip' in XNATSrc else XNATSrc.split("/subjects/")[1]
         a = self.buffer_read(response = response, 
                              fileToWrite = XNATFile, 
-                             buffer_size=8192, 
+                             buffer_size = 8192, 
                              currSrc = XNATSrc,
                              fileDisplayName = fileDisplayName)
 
@@ -345,7 +345,6 @@ class XNATCommunicator(object):
             
             # Update progress indicators
             self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
-            self.downloadTracker['downloadedSize']['MB'] = self.browser.utils.bytesToMB(self.downloadTracker['downloadedSize']['bytes'])
             if self.browser.downloadPopup:
                 self.browser.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
             
