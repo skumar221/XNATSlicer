@@ -112,7 +112,7 @@ class XNATButtons(object):
             #--------------------
             self.deleteDialog = qt.QMessageBox()
             self.deleteDialog.setIcon(qt.QMessageBox.Warning)
-            self.deleteDialog.setText("Are you sure you want to delete the file: '%s' from XNAT?"%(self.viewWidget.currentItem().text(self.browser.XNATView.column_name)))   
+            self.deleteDialog.setText("Are you sure you want to delete the file: '%s' from XNAT?"%(self.browser.XNATView.viewWidget.currentItem().text(self.browser.XNATView.column_name)))   
             self.deleteDialog.connect('buttonClicked(QAbstractButton*)', self.deleteClicked)
             self.deleteDialog.addButton(qt.QMessageBox.Ok)
             self.deleteDialog.addButton(qt.QMessageBox.Cancel)    
