@@ -323,7 +323,6 @@ class XNATCommunicator(object):
         #-------------------- 
         XNATFile = open(dst, "wb")
         print ("\nDownloading %s...\n"%(XNATSrc))
-        self.browser.updateStatus(["Downloading '%s'."%(os.path.basename(XNATSrc)),"Please wait...", ""])
       
 
 

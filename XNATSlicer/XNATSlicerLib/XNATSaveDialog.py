@@ -28,7 +28,7 @@ comment = """
             3) FileSaveDialog
                 (Where user enters filename, amongst other
                 things.)
-          """
+"""
 
 
 
@@ -165,7 +165,7 @@ class SaveEmptyDialog(XNATSaveDialog):
 
 
             
-class saveunlinkeddialog(xnatsavedialog):
+class SaveUnlinkedDialog(XNATSaveDialog):
 
 
     
@@ -173,7 +173,7 @@ class saveunlinkeddialog(xnatsavedialog):
          
         # call parent
         self.sessionargs = sessionargs
-        super(saveunlinkeddialog, self).__init__(browser, viewer)
+        super(saveUnlinkedDialog, self).__init__(browser, viewer)
 
 
         
@@ -182,20 +182,21 @@ class saveunlinkeddialog(xnatsavedialog):
 
          
          # dialog setup
-         self.setnumdialogs(1)
+         self.setNumDialogs(1)
          msg = """the scene doesn't appear to be associated with a specific xnat location.  
                   would you like to save it within this xnat """
         
-         msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultxnatsavelevel[:-1], os.path.basename(self.sessionargs['savelevel']))
-         msg.replace('location', self.browser.utils.defaultxnatsavelevel[:-1])
+         msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultXNATSaveLevel[:-1], os.path.basename(self.sessionArgs['savelevel']))
+         msg.replace('location', self.browser.utils.defaultXNATSaveLevel[:-1])
+
          
-         self.dialogs[0].settext(msg)      
+         self.dialogs[0].setText(msg)      
 
          
          # button setup
-         self.dialogs[0].addbutton(qt.qmessagebox.yes)
-         self.dialogs[0].addbutton(qt.qmessagebox.cancel)
-         self.browser.xnatview.selectitem_bypath((self.sessionargs['savelevel']))
+         self.dialogs[0].addButton(qt.QMessageBox.yes)
+         self.dialogs[0].addButton(qt.QMessageBox.cancel)
+         self.browser.XNAView.selectItem_byPath((self.sessionArgs['savelevel']))
 
 
 
@@ -216,26 +217,26 @@ class saveunlinkeddialog(xnatsavedialog):
 
             
 class FileSaveDialog(XNATSaveDialog):  
-""" Descriptor
-"""
+    """ Descriptor
+    """
 
     
-    def __init__(self, browser, sessionargs):
+    def __init__(self, browser, sessionArgs):
         """ Descriptor
         """
 
         # determine filename
-        self.filename = none
+        self.fileName = None
 
 
         # Init params
-        self.sessionargs = sessionargs
+        self.sessionArgs = sessionArgs
 
 
         # Dialog setup
-        self.inputindex = 0  
-        self.noticelabel = qt.qlabel("")
-        self.savesharablecb = none
+        self.inputIndex = 0  
+        self.noticeLabel = qt.QLabel("")
+
 
         # Call parent
         super(FileSaveDialog, self).__init__(browser)
@@ -252,8 +253,8 @@ class FileSaveDialog(XNATSaveDialog):
 
 
         # Window setup   
-        self.setnumdialogs(1, {'0':qt.qdialog(slicer.util.mainwindow())}) 
-        self.dialogs[0].setfixedwidth(600)   
+        self.setNumDialogs(1, {'0':qt.QDialog(slicer.util.mainWindow())}) 
+        self.dialogs[0].setFixedWidth(600)   
 
         
         # Labeling
@@ -291,17 +292,16 @@ class FileSaveDialog(XNATSaveDialog):
         
   
         # Bottom row        
-        bottomrow = qt.qhboxlayout()
-        #bottomrow.addwidget(self.savesharablecb)
-        bottomrow.addwidget(buttonrow)
+        bottomRow = qt.QHBoxLayout()
+        bottomRow.addWidget(buttonRow)
 
         
 
         # apply layouts
-        dialoglayout.addlayout(fileinputlayout)
-        dialoglayout.addwidget(self.noticelabel)
-        dialoglayout.addlayout(bottomrow)
-        self.dialogs[0].setlayout(dialoglayout)
+        dialogLayout.addLayout(fileInputLayout)
+        dialogLayout.addWidget(self.noticeLabel)
+        dialogLayout.addLayout(bottomRow)
+        self.dialogs[0].setLayout(dialogLayout)
 
 
         
@@ -324,6 +324,9 @@ class FileSaveDialog(XNATSaveDialog):
         self.sessionArgs['fileName'] += self.browser.utils.defaultPackageExtension
 
         
-        if button.text.lower().find((self.saveButtonStr).lower()) > -1:                       
+        if self.saveButtonStr.lower() in button.text.lower():                       
             self.sessionArgs['sharable'] = False      
             self.browser.XNATButtons.beginSaveWorkflow(self.sessionArgs)  
+        else:
+            self.browser.XNATView.setEnabled(True)
+            

@@ -130,4 +130,31 @@ def codecTry3(num):
     print "response: ", response.read()
 
 
-codecTry3(24)
+codecTry3(242)
+
+
+
+# MAC
+def codecTry3(num):
+    import codecs
+    import urllib2
+    import httplib
+    localSrc = '/Users/sunilkumar/Desktop/test1.mrb'
+    xnatDst = 'http://central.xnat.org/data/projects/XNATSlicerTest/subjects/DE-IDENTIFIED/experiments/UCLA_1297/resources/Slicer/files/test%s.mrb'%(num)    
+    project_archive = codecs.open(str(localSrc), "rb", "cp037")
+    filebody = project_archive.read()        
+    login = "sunilk"
+    password = "ambuSa5t"
+    f=open(localSrc, 'rb')
+    filebody = f.read()
+    f.close()
+    req = urllib2.Request(xnatDst)
+    connection = httplib.HTTPSConnection (req.get_host())  
+    userAndPass = b64encode(b"%s:%s"%(login, password)).decode("ascii")       
+    header = { 'Authorization' : 'Basic %s' %  userAndPass, 'content-type': 'application/octet-stream'}    
+    connection.request ('PUT', req.get_selector(), body = filebody, headers = header)
+    response = connection.getresponse ()
+    print "response: ", response.read()
+
+
+codecTry3(242)

@@ -76,23 +76,20 @@ class XNATSlicerWidget:
       self.utils = XNATUtils()    
       self.layout = self.parent.layout()
 
+
       
       #--------------------------------
       # Xnat settings
       #--------------------------------
       self.settings = XNATSettings(slicer.qMRMLWidget(), self.utils.utilPath, self)
 
+
       
-      #--------------------------------
-      # Status bar
-      #--------------------------------
-      self.labelStatusBar = labelStatusBar(self, 3)
-
-
       #--------------------------------
       # Login Menu
       #--------------------------------
       self.XNATLoginMenu = XNATLoginMenu(parent = self.parent, browser = self)  
+
 
       
       #--------------------------------
@@ -101,11 +98,11 @@ class XNATSlicerWidget:
       self.XNATView = XNATTreeView(parent = self.parent, browser = self)  
 
 
+      
       #--------------------------------
       # XNAT Buttons
       #--------------------------------
       self.XNATButtons = XNATButtons(self.parent, browser=self)  
-
 
 
       
@@ -117,6 +114,7 @@ class XNATSlicerWidget:
       self.downloadPopup = XNATDownloadPopup(browser = self)
       #self.uploadPopup = XNATDownloadPopup(browser = self)
 
+
       
       #--------------------------------
       # Layouts
@@ -125,11 +123,22 @@ class XNATSlicerWidget:
       self.loginLayout = None
       self.XNATViewLayout = qt.QGridLayout()
 
+
+
+      #--------------------------------
+      # Loaders
+      #--------------------------------
+      self.SceneLoader = SceneLoader(self)
+      self.FileLoader = FileLoader(self)
+      self.DICOMLoader = DICOMLoader(self)
+
+      
       
       #--------------------------------
       # Init gui
       #--------------------------------
       self.initGUI()
+
 
       
       #--------------------------------
@@ -140,10 +149,7 @@ class XNATSlicerWidget:
       self.parent.show()
 
 
-
-
-
-
+      
 
       
     def onReload(self,moduleName="XNATSlicer"):
@@ -223,6 +229,7 @@ class XNATSlicerWidget:
     
 
             
+            
     def initGUI(self):  
 
         self.XNATLoginMenu.initGUI()
@@ -263,6 +270,8 @@ class XNATSlicerWidget:
         #--------------------------------
         self.viewerLayout = qt.QVBoxLayout()
         self.cleanTempDir(500)
+
+
         
         #--------------------------------
         # Load/Save button
@@ -270,12 +279,12 @@ class XNATSlicerWidget:
         self.buttonColumnLayout = qt.QVBoxLayout()
         self.buttonColumnLayout.addWidget(self.XNATButtons.buttons['load'])#, 2, 0)
         self.buttonColumnLayout.addWidget(self.XNATButtons.buttons['save'])#, 0, 0) 
-    
         self.buttonRowLayout = qt.QHBoxLayout()
         self.buttonRowLayout.addWidget(self.XNATButtons.buttons['delete'])
         self.buttonRowLayout.addSpacing(15)
         self.buttonRowLayout.addWidget(self.XNATButtons.buttons['addProj'])
         self.buttonRowLayout.addStretch()
+
 
         
         #--------------------------------
@@ -284,7 +293,7 @@ class XNATSlicerWidget:
         self.XNATViewLayout.addWidget(self.XNATView.viewWidget, 0, 0)
         self.XNATViewLayout.addLayout(self.buttonColumnLayout, 0, 1)
         self.XNATViewLayout.addLayout(self.buttonRowLayout, 1, 0)
-        self.XNATView.statusView.textField.setFixedHeight(25)
+        
 
         
         #--------------------------------
@@ -293,28 +302,9 @@ class XNATSlicerWidget:
         self.loginLayout.addLayout(self.XNATLoginMenu.loginLayout)
         self.browserLayout.addLayout(self.XNATViewLayout)
 
-        
-    def updateStatus(self, strings):
-        """Deprecated
-        """
-        pass
-    
-    #if not self.XNATView.viewWidget.isEnabled():
-    #        self.XNATView.viewWidget.setEnabled(True)
-    #    self.labelStatusBar.showMessage(strings)
-    #    self.statusLayout.update()
-
 
 
         
-    def updateStatus_Locked(self, strings):
-        """Updates the status bar by locking the viewer widget.
-        """
-        self.XNATView.viewWidget.setEnabled(False)
-        self.labelStatusBar.showMessage(strings)
-
-
-
         
     def cleanTempDir(self, maxSize):
         """ Empties contents of the temp directory based upon maxSize
@@ -323,22 +313,20 @@ class XNATSlicerWidget:
         folder = self.utils.tempPath
         folder_size = 0
         
-        #---------------------------
-        # Loop through files to get file paths.
-        #---------------------------
+
+        # Loop through files to get file sizes.
         for (path, dirs, files) in os.walk(folder):
           for file in files:
             folder_size += os.path.getsize(os.path.join(path, file))
         print ("XNATSlicer Data Folder = %0.1f MB" % (folder_size/(1024*1024.0)))
-        
+
+
+        # If the folder size exceeds limit, remove contents
         folder_size = math.ceil(folder_size/(1024*1024.0))
         if folder_size > maxSize:
             self.utils.removeFilesInDir(self.utils.tempPath)    
             self.utils.removeFilesInDir(self.utils.tempUploadPath)   
 
-
-
-            
 
 
 
@@ -347,73 +335,33 @@ class XNATSlicerWidget:
         """ Opens the view class linked to the XNATRestAPI
         """
         
-        #---------------------------
-        # Can pyxnat be imported?
-        #---------------------------
-        print("XNATSlicer Module: Seeing if XNATCommunicator is installed...")
+
+        # Can the relevant libraries be imported?
+        print("XNATSlicer Module: Seeing if SSL is installed...")
         try:      
             import ssl
-            import urllib2
-            import httplib
-            print("XNATSlicer Module: Found urllib2, httplib and ssl!")
-            
-            
-        #---------------------------
-        # If not, try install wizard.
-        #---------------------------
-        except Exception, e:
-            if ('win' in slicer.app.os.lower()):
-                print("XNATSlicer Module: urllib2, httplib and ssl not found! Beginning installation wizard.")
-                self.installWizard = XNATInstallWizard()
-                self.installWizard.beginWizard()
+            httplib.HTTPSConnection
+            print("SSL is installed!")
 
-            else:
-                str = "Unfortunately this operating system is not yet supported for XNATSlicer."
-                print("XNATSlicer Module: %s"%(str))
-                qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "%s"%(str))
-                return
+            
+        # If not, kick back OS error
+        except Exception, e:
+            str = "XNATSlicer is currently not is supported for this operating system (%s).  XNATSlicer currently works on the following operating systems: %s."%(self.utils.osType, 'Win64')
+            print("XNATSlicer Module: %s"%(str))
+            qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "%s"%(str))
+            return
                 
-                
+
         # Init communicator.
         self.XNATCommunicator = XNATCommunicator(browser = self, 
                                 server = self.settings.getAddress(self.XNATLoginMenu.hostDropdown.currentText), 
                                 user = self.XNATLoginMenu.usernameLine.text, password=self.XNATLoginMenu.passwordLine.text, 
                                 cachedir = self.utils.pyXNATCache)
 
-        #---------------------------
+
         # Begin communicator
-        #---------------------------
         self.XNATView.begin()
 
-
-        
-        self.SceneLoader = SceneLoader(self)
-        self.FileLoader = FileLoader(self)
-        self.DICOMLoader = DICOMLoader(self)
-
-
-        
-class labelStatusBar(object):    
-    def __init__(self, parent = None, numLabels = 3):
-        self.labels = []
-        self.qtLayout = qt.QVBoxLayout()
-        for i in range (0, numLabels):
-            lab = qt.QLabel("")
-            lab.setWordWrap(True)
-            self.labels.append(lab)
-            self.labels[i].setFont(qt.QFont("Arial", 7, 0, False))
-            self.layout.addWidget(lab)
-        self.showMessage(["Not logged in to XNAT server.", "Please login.", ""], True)
-    
-    def showMessage(self, strings, ital = False, bold = False):      
-        for i in range(0, len(strings)):
-            if ital: strings[i] = "<i>" + strings[i] + "</i>"
-            if bold: strings[i] = "<b>" + strings[i] + "</b>"
-            self.labels[i].setText(strings[i])
-            
-    @property
-    def layout(self):
-        return self.qtLayout
 
 
     
