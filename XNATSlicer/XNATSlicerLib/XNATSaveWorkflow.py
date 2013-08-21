@@ -34,12 +34,18 @@ class XNATSaveWorkflow(object):
         self.scenePackager = XNATScenePackager(self.browser)
         self.sessionArgs = sessionArgs
 
+        # Set wait window
+        self.waitWindow = qt.QMessageBox(0, "Uploading", "Please wait while file uploads...")
+
 
         
         
     def saveScene(self):    
         """  Main command scene
         """
+
+        # Show wait window
+        self.waitWindow.show()
 
         
         # Disable the view widget
@@ -67,12 +73,7 @@ class XNATSaveWorkflow(object):
 
         self.browser.XNATCommunicator.upload(packageFileName, uploadStr)
         slicer.app.processEvents()
-        if self.sessionArgs['sharable']:
-            self.browser.updateStatus(["", "Finished updating '%s' in XNAT."%
-                                       (os.path.basename(packageFileName)), ""])
-        else: self.browser.updateStatus(["", "Finished writing '%s' to XNAT."%
-                                         (os.path.basename(packageFileName)), ""])                        
-
+  
             
         # Update viewer
         self.sessionArgs['sessionType'] = "scene upload"
@@ -80,7 +81,10 @@ class XNATSaveWorkflow(object):
         self.browser.XNATView.setCurrItemToChild(item = None, 
                                                  childFileName = os.path.basename(packageFileName))
         self.browser.XNATView.setEnabled(True)
-        
+
+
+        # Hide wait window
+        self.waitWindow.hide()
 
 
         

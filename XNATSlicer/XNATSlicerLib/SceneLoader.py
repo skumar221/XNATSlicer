@@ -1,29 +1,38 @@
 from XNATLoadWorkflow import *
 
+
+
+comment = """
+SceneLoader
+"""
+
+
 class SceneLoader(XNATLoadWorkflow):
+    """ Descriptor
+    """
+
+
     
     def load(self, args):
+        """ Descriptor
+        """
         super(SceneLoader, self).load(args)
 
         
-        #----------------------------
         # Get scene package
-        #----------------------------
         self.browser.XNATCommunicator.getFile({self.xnatSrc : self.localDst})
-        self.browser.updateStatus(["", "Decompressing '" + os.path.basename(self.xnatSrc) + "'", ""])
+        print(self.browser.utils.lf() +  "Decompressing " + os.path.basename(self.xnatSrc))
 
         
-        #----------------------------
+        
         #  Analyze package to determine scene type
-        #----------------------------
         fileInfo = XNATFileInfo(remoteURI = self.xnatSrc, localURI = self.localDst)
         packageInfo = self.analyzePackage(fileInfo) 
         newMRMLFile = self.prepSelfContainedScene(packageInfo)
 
         
-        #----------------------------
+
         # Load is good if mrml file is returned
-        #----------------------------
         if newMRMLFile: 
             return self.loadFinish(newMRMLFile)    
         return False
@@ -32,12 +41,12 @@ class SceneLoader(XNATLoadWorkflow):
 
     
     def decompressPackagedScene(self, packageFileName, destDir):
+        """ Descriptor
+        """
         fileURLs = []
 
         
-        #----------------------------
         # Zip handling
-        #----------------------------
         if packageFileName.endswith('zip'):
             z = zipfile.ZipFile(packageFileName)
             try:               
@@ -49,9 +58,7 @@ class SceneLoader(XNATLoadWorkflow):
                 print ("Extraction error: %s"%(str(e)))
 
                 
-        #----------------------------
         # *.mrb handling
-        #----------------------------
         elif packageFileName.endswith('mrb'):          
             logic = slicer.app.applicationLogic()
             if not os.path.exists(destDir):
@@ -70,16 +77,14 @@ class SceneLoader(XNATLoadWorkflow):
         """ Checks downloaded scene file for its contents.  Delegates how to handle it accordingly.
         """
         
-        #----------------------------
+
         # Decompress scene, get files
-        #----------------------------
         extractDir = self.utils.tempPath
         tempUnpackDir = os.path.join(extractDir, currXNATFileInfo.basenameNoExtension)
         fileList = self.decompressPackagedScene(currXNATFileInfo.localURI, tempUnpackDir)
+
         
-        #----------------------------
         # Return dictionary of useful params
-        #----------------------------
         return {'basename': currXNATFileInfo.basename, 
                 'unpackDir': tempUnpackDir, 
                 'nameOnly': currXNATFileInfo.basenameNoExtension, 
@@ -90,18 +95,15 @@ class SceneLoader(XNATLoadWorkflow):
 
     
     def prepSelfContainedScene(self, packageInfo):
-        """ Loads the scene package if the scene was created outside of the module's packaging workflow (XNATScenePacakger)."""
+        """ Loads the scene package if the scene was created 
+        outside of the module's packaging workflow (XNATScenePacakger)."""
 
         
-        #----------------------------
         # Cache the scene     
-        #----------------------------
         self.storeSceneLocally(packageInfo, False)    
 
         
-        #----------------------------
         # Deconstruct package info
-        #----------------------------
         scenePackageBasename = packageInfo['basename']
         extractDir = packageInfo['unpackDir']
         sceneName = packageInfo['nameOnly']
@@ -109,9 +111,7 @@ class SceneLoader(XNATLoadWorkflow):
         localURI = packageInfo['localURI']
 
         
-        #----------------------------
         # Get mrmls and nodes within package
-        #----------------------------
         fileList = []
         rootdir = self.cachePathDict['localFiles']
         for root, subFolders, files in os.walk(rootdir):
@@ -123,16 +123,12 @@ class SceneLoader(XNATLoadWorkflow):
         parseableFiles = loadables['ALLNONMRML']
 
         
-        #----------------------------
         # define relevant paths
-        #----------------------------
         newRemoteDir = self.utils.getParentPath(remoteURI, "resources")
         filePathsToChange = {}
 
         
-        #----------------------------
         # Cache images and sharables
-        #----------------------------
         for pFile in parseableFiles:
             pFileBase = os.path.basename(pFile)
             if os.path.basename(os.path.dirname(pFile)) == "Data":
@@ -140,9 +136,8 @@ class SceneLoader(XNATLoadWorkflow):
                 filePathsToChange[os.path.basename(urllib2.quote(pFileBase))] = "./Data/" + urllib2.quote(pFileBase)
 
                 
-        #----------------------------
+
         # Parse mrml, updating paths to relative
-        #----------------------------
         newMRMLFile = self.utils.appendFile(mrmlFiles[0], "-LOCALIZED")       
         #
         # NOTE: Parsing of the MRML is needed because node filePaths are absolute, not relative.
@@ -155,13 +150,13 @@ class SceneLoader(XNATLoadWorkflow):
 
 
     
+    
     def storeSceneLocally(self, packageInfo, cacheOriginalPackage = True):
         """ Creates a project cache (different from an image cache) based on
         """  
         
-        #----------------------------
+
         # Init params         
-        #----------------------------
         scenePackageBasename = packageInfo['basename']
         extractDir = packageInfo['unpackDir']
         sceneName = packageInfo['nameOnly']
@@ -169,9 +164,8 @@ class SceneLoader(XNATLoadWorkflow):
         localURI = packageInfo['localURI']
 
         
-        #----------------------------
+
         # Establish caching directories
-        #----------------------------
         sceneDir = os.path.join(self.utils.projectPath, sceneName)
         if not os.path.exists(sceneDir): os.mkdir(sceneDir)       
         self.cachePathDict = {'localFiles': os.path.join(sceneDir, 'localFiles'),
@@ -179,9 +173,8 @@ class SceneLoader(XNATLoadWorkflow):
                               'originalPackage': os.path.join(sceneDir, 'originalPackage')}
 
         
-        #----------------------------
+
         # Create relevant paths locally
-        #----------------------------
         for value in self.cachePathDict.itervalues(): 
             if not os.path.exists(value):
                 try: os.makedirs(value)
@@ -192,24 +185,19 @@ class SceneLoader(XNATLoadWorkflow):
                 self.utils.removeFilesInDir(value)
 
                 
-        #----------------------------
         # Move unpacked contents to new directory
-        #----------------------------
         self.utils.moveDirContents(extractDir, self.cachePathDict['localFiles'])
 
         
-        #----------------------------
+
         # Move package as well to cache, if desired 
-        #----------------------------
         if cacheOriginalPackage:
             qFile = qt.QFile(localURI)
             qFile.copy(os.path.join(self.cachePathDict['originalPackage'], scenePackageBasename))
             qFile.close()
 
             
-        #----------------------------
         # Delete package
-        #----------------------------
         try:
             os.remove(localURI)
         except Exception, e:
@@ -224,21 +212,18 @@ class SceneLoader(XNATLoadWorkflow):
            """
 
            
-        #----------------------------
         # Call loadscene
-        #----------------------------
-        self.browser.updateStatus(["", "Loading '" + os.path.basename(self.xnatSrc) + "'", ""])
+        print( "Loading '" + os.path.basename(self.xnatSrc) + "'")
         slicer.util.loadScene(fileName) 
         
         sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = self.xnatSrc)
         sessionArgs['sessionType'] = "scene download"
         self.browser.XNATView.startNewSession(sessionArgs)
         
-        self.browser.updateStatus_Locked(["", "Scene '%s' loaded."%(os.path.basename(fileName.rsplit(".")[0])), ""])  
+        print( "Scene '%s' loaded."%(os.path.basename(fileName.rsplit(".")[0])))  
 
         
-        #----------------------------
+
         # Enable view in browser
-        #----------------------------
         self.browser.XNATView.setEnabled(True)
         return True

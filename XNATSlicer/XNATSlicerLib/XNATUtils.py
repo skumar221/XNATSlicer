@@ -245,10 +245,6 @@ class XNATUtils(object):
         return self.MODULEPATHS["pythonMods_Win64"]
     
     @property
-    def osType(self):
-        return osType
-    
-    @property
     def pyXNATCache(self):
         return self.MODULEPATHS["pyXNATCache"]
     

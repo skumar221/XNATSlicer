@@ -14,7 +14,7 @@ import XNATView
 
 
 comment = """
-XNATTreeView is a subclass of the XNATView class.  It 
+XNATTreeView is a class of the XNATView class.  It 
 uses QTreeWidget to describe the XNAT file system accessed,
 presenting them in a tree-node hierarchy.
 
@@ -100,7 +100,7 @@ class XNATTreeView(XNATView.XNATView):
         """ Descriptor
         """
         self.viewWidget.clear()
-        self.browser.updateStatus(["","Retrieving projects. Please wait...",""])
+        print(self.browser.utils.lf(), "Retrieving projects. Please wait...","")
         projects, sizes = self.browser.XNATCommunicator.getFolderContents(['/projects'], 'ID')
         
         if not projects: return False

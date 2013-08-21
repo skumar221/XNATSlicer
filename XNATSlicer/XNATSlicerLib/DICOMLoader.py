@@ -7,7 +7,7 @@ class DICOMLoader(XNATLoadWorkflow):
         pass
         
     def load(self, args):
-        self.browser.updateStatus_Locked(["", "Downloading DICOMS...", ""]) 
+        print(self.browser.utils.lf(), "Downloading DICOMS...") 
 
 
         #-------------------------
@@ -96,7 +96,7 @@ class DICOMLoader(XNATLoadWorkflow):
             (('yes' in button.text.lower()))):
             experimentsList = []
             scansList = []   
-            self.browser.updateStatus(["", "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait."])   
+            print(self.browser.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.")   
 
             
             #--------------------
@@ -176,7 +176,7 @@ class DICOMLoader(XNATLoadWorkflow):
             #--------------------
             # Inventory downloaded 
             #--------------------
-            self.browser.updateStatus_Locked(["Inventorying downloaded files...", "", ""])    
+            print (self.browser.utils.lf(), "Inventorying downloaded files...")    
             downloadedDICOMS = []
             for z in zipFolders:
                 d = z.split(".")[0]
@@ -204,8 +204,7 @@ class DICOMLoader(XNATLoadWorkflow):
             #--------------------
             # Store existing slicer.dicomdatabase contents to file
             #--------------------
-            self.browser.updateStatus_Locked(["Adding to Slicer's DICOM database...", "", ""])
-
+            print(self.browser.utils.lf(), "Adding to Slicer's DICOM database...")
             prevDICOMS = slicer.dicomDatabase.allFiles()
 
             
@@ -228,17 +227,17 @@ class DICOMLoader(XNATLoadWorkflow):
 
             
             #--------------------
-            #Add dicom files to slicer dicom database
+            # Add dicom files to slicer dicom database
             #--------------------
             i = ctk.ctkDICOMIndexer()
             for dicomFile in downloadedDICOMS:          
-                self.browser.updateStatus_Locked(["Adding '%s'"%(dicomFile), "to Slicer's DICOM database.", "Please wait..."])  
+                print(self.browser.utils.lf(), "Adding '%s'"%(dicomFile), "to Slicer's DICOM database.", "Please wait...")  
                 #print("Adding '%s'"%(dicomFile), "to Slicer's DICOM database.", "Please wait...")  
                 i.addFile(slicer.dicomDatabase, dicomFile)#, cachedPath)
 
 
             #--------------------
-            #  Open a custum dicom module
+            # Open a custum dicom module
             #--------------------
             from DICOM import DICOMWidget
             self.DICOMWidget = DICOMWidget()         
@@ -277,14 +276,14 @@ class DICOMLoader(XNATLoadWorkflow):
     def checkPopupOpen(self):
         if self.DICOMWidget and self.DICOMWidget.detailsPopup.window.isHidden():
             slicer.app.disconnect("focusChanged(QWidget *, QWidget *)", self.checkPopupOpen)
-            self.browser.updateStatus_Locked(["", "Restoring original DICOM database.  Please wait.",""])
+            print(self.browser.utils.lf(), "Restoring original DICOM database.  Please wait.")
             self.restorePrevDICOMDB()
             del self.DICOMWidget
-            self.browser.updateStatus(["", "Finished original DICOM database.",""])
+            print(self.browser.utils.lf(), "Finished original DICOM database.")
             self.browser.XNATView.setEnabled(True)
     
     def beginDICOMSession(self):
-        self.browser.updateStatus(["", "DICOMS successfully loaded.",""])
+        print(self.browser.utils.lf(), "DICOMS successfully loaded.")
         sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = self.xnatSrc)
         sessionArgs['sessionType'] = "dicom download"
         self.browser.XNATView.startNewSession(sessionArgs)
