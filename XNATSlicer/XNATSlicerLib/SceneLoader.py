@@ -21,7 +21,7 @@ class SceneLoader(XNATLoadWorkflow):
         
         # Get scene package
         self.browser.XNATCommunicator.getFile({self.xnatSrc : self.localDst})
-        print(self.browser.utils.lf() +  "Decompressing " + os.path.basename(self.xnatSrc))
+        #print(self.browser.utils.lf() +  "Decompressing " + os.path.basename(self.xnatSrc))
 
         
         
@@ -213,14 +213,14 @@ class SceneLoader(XNATLoadWorkflow):
 
            
         # Call loadscene
-        print( "Loading '" + os.path.basename(self.xnatSrc) + "'")
+        #print( "Loading '" + os.path.basename(self.xnatSrc) + "'")
         slicer.util.loadScene(fileName) 
         
         sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = self.xnatSrc)
         sessionArgs['sessionType'] = "scene download"
         self.browser.XNATView.startNewSession(sessionArgs)
         
-        print( "Scene '%s' loaded."%(os.path.basename(fileName.rsplit(".")[0])))  
+        print( "\nScene '%s' loaded."%(os.path.basename(fileName.rsplit(".")[0])))  
 
         
 

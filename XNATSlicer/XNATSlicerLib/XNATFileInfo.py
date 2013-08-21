@@ -5,9 +5,7 @@ import sys
 from XNATUtils import *
 
 
-#########################################################
-#
-# 
+
 comment = """
   XNATFileInfo is a class that primarily deals with metadata and string 
   manipulation of various files pertinent to the XNATWorkflow.  Relevant 
@@ -19,8 +17,8 @@ comment = """
 # TODO : Create children classes of XNATFileInfo -- right now it tries to 
 handle everything.
 """
-#
-#########################################################
+
+
 
 FILEINFO = {}
 

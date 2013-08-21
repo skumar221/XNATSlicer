@@ -32,6 +32,9 @@ comment = """
 
 
 
+
+
+
 class XNATSaveDialog(object):
     """ Parent class of all of the save dialogs.
     """
@@ -56,7 +59,7 @@ class XNATSaveDialog(object):
         """ Descriptor
         """
         
-        print "%s"%(self.browser.utils.lf())
+        #print "%s"%(self.browser.utils.lf())
 
         
         # Show first window
@@ -126,7 +129,8 @@ class XNATSaveDialog(object):
 
     
 class SaveEmptyDialog(XNATSaveDialog):
-    
+     """ Descriptor
+     """
      def __init__(self, browser, viewer):
 
          
@@ -161,16 +165,18 @@ class SaveEmptyDialog(XNATSaveDialog):
             self.browser.xnatview.savebuttonclicked(excluderoutines = ['empty'])
 
 
-            
+        
 
 
-            
+
 class SaveUnlinkedDialog(XNATSaveDialog):
-
+     """ Descriptor
+     """
 
     
      def __init__(self, browser, viewer, savepath, sessionargs):
-         
+        """ Descriptor
+        """
         # call parent
         self.sessionargs = sessionargs
         super(saveUnlinkedDialog, self).__init__(browser, viewer)
@@ -179,19 +185,18 @@ class SaveUnlinkedDialog(XNATSaveDialog):
         
        
      def setup(self):
-
+         """ Descriptor
+         """
          
          # dialog setup
          self.setNumDialogs(1)
-         msg = """the scene doesn't appear to be associated with a specific xnat location.  
-                  would you like to save it within this xnat """
-        
+         msg = """the scene doesn't appear to be associated with a specific xnat location.  Would you like to save it within this xnat """
          msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultXNATSaveLevel[:-1], os.path.basename(self.sessionArgs['savelevel']))
          msg.replace('location', self.browser.utils.defaultXNATSaveLevel[:-1])
-
+         
          
          self.dialogs[0].setText(msg)      
-
+         
          
          # button setup
          self.dialogs[0].addButton(qt.QMessageBox.yes)
@@ -202,7 +207,8 @@ class SaveUnlinkedDialog(XNATSaveDialog):
 
          
      def buttonclicked(self,button):
-
+        """ Descriptor
+        """
          
         # If ok button clicked
         if button.text.lower().find('yes') > -1: 
@@ -241,15 +247,16 @@ class FileSaveDialog(XNATSaveDialog):
         # Call parent
         super(FileSaveDialog, self).__init__(browser)
 
-        print "%s"%(self.browser.utils.lf())
+        #print "%s"%(self.browser.utils.lf())
         return
 
 
 
     
     def setup(self):     
-        
-        print "%s"%(self.browser.utils.lf())
+        """ Descriptor
+        """        
+        #print "%s"%(self.browser.utils.lf())
 
 
         # Window setup   

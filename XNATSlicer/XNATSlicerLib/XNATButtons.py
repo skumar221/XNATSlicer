@@ -205,22 +205,22 @@ class XNATButtons(object):
         # Begin Workflow
         #------------------------
         if (button and 'yes' in button.text.lower()) or self.browser.utils.isCurrSceneEmpty():
-            
+
             self.browser.XNATView.sessionManager.clearCurrentSession()
             slicer.app.mrmlScene().Clear(0)
-
+            
             currItem = self.browser.XNATView.viewWidget.currentItem()
+            
             pathObj = self.browser.XNATView.getXNATPathObject(currItem)
 
-            
+
             remoteURI = self.browser.settings.getAddress(self.browser.XNATLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryPaths'][0]
+            
             if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
                 remoteURI += '/files'
-        
+
             dst = os.path.join(self.browser.utils.downloadPath, 
                                currItem.text(self.browser.XNATView.column_name))
-
-            print "***********%s %s"%(self.browser.utils.lf(), remoteURI)
 
             
             #------------------------
@@ -228,13 +228,13 @@ class XNATButtons(object):
             #------------------------
             loader = None
             if (('files' in remoteURI and 'Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
-                print "SCENE LOADER SELECTED"
+                #print "SCENE LOADER SELECTED"
                 loader = self.browser.SceneLoader
             elif ('files' in remoteURI and '/scans/' in remoteURI):   
-                print "DICOM LOADER SELECTED"     
+                #print "DICOM LOADER SELECTED"     
                 loader =  self.browser.DICOMLoader
             else:
-                print "FILE LOADER SELECTED"
+                #print "FILE LOADER SELECTED"
                 loader =  self.browser.FileLoader
                 
             args = {"XNATCommunicator": self.browser.XNATCommunicator, 
