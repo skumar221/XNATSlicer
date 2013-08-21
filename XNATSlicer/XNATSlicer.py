@@ -212,7 +212,7 @@ class XNATSlicerWidget:
     def sceneClosedListener(self, caller, event):
         """Actions for when the user closes a scene from the GUI.
         """ 
-        print("'Close Scene' called. Resetting XNAT session data.")    
+        #print("'Close Scene' called. Resetting XNAT session data.")    
         self.XNATView.sessionManager.clearCurrentSession()  
 
 
@@ -224,7 +224,7 @@ class XNATSlicerWidget:
            XNAT location. Nonetheless, it is implemented in the event that it is needed.
         """
         if self.XNATView.lastButtonClicked == None:
-            print("'Import Data' called. Resetting XNAT session data.")
+            #print("'Import Data' called. Resetting XNAT session data.")
             self.XNATView.sessionManager.clearCurrentSession() 
     
 
@@ -341,7 +341,7 @@ class XNATSlicerWidget:
         try:      
             import ssl
             httplib.HTTPSConnection
-            print("SSL is installed!")
+            print("XNATSlicer Module: SSL is installed!")
 
             
         # If not, kick back OS error

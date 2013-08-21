@@ -1,5 +1,9 @@
 from __main__ import vtk, ctk, qt, slicer
+
 import os
+
+from XNATSettings import *
+
 
 
 comment = """
@@ -8,19 +12,24 @@ comment = """
 # TODO : 
 """
 
-from XNATSettings import *
 
 
 class XNATLoginMenu(object):
+    """ XNATLoginMenu
+    """
+
+
+
+    
     def __init__(self, parent = None, browser = None):
+        """ Descriptor
+        """
         
         self.parent = parent
         self.browser = browser
 
         
-        #--------------------------------
         # Username and password lines  
-        #--------------------------------
         self.usernameLabel = qt.QLabel('username:')
         self.usernameLabel.setFont(self.browser.utils.labelFontBold)
         self.passwordLabel = qt.QLabel('password:')
@@ -31,69 +40,52 @@ class XNATLoginMenu(object):
         self.passwordLine.setFixedWidth(100)
 
         
-
-        #--------------------------------
         # Login button
-        #--------------------------------
         self.loginButton = None
         
         
-        #--------------------------------
         # Host dropdown
-        #--------------------------------
         self.hostLabel = qt.QLabel('host:')
         self.hostLabel.setFont(self.browser.utils.labelFontBold)
         self.hostDropdown = None
         self.hostLoggedIn = False
 
 
-        #--------------------------------
         # Globals
-        #--------------------------------
         self.currHostUrl = None
         self.currHostName = None
         self.currHostAddress = None
         self.XNATHosts = None
 
 
-        #--------------------------------
         # Settings button
-        #--------------------------------
         self.settingsButton = None  
         self.networkRequest = None
 
 
 
-
         
     def initGUI(self):
-        #--------------------------------
+        """ Descriptor
+        """
+        
         # Host Dropdown
-        #--------------------------------
         self.initHostDropdown()       
 
         
-        #--------------------------------
         # Manage Hosts Button
-        #--------------------------------
         self.initSettingsButton()
 
         
-        #--------------------------------
         # Login Lines
-        #--------------------------------
         self.initLoginLines()
 
         
-        #--------------------------------
         # Login Button
-        #--------------------------------
         self.initLoginButton()
 
 
-        #--------------------------------
         # Username/Password Row
-        #--------------------------------
         credentialsRow = qt.QHBoxLayout()
         credentialsRow.addWidget(self.settingsButton)
         credentialsRow.addWidget(self.hostDropdown)
@@ -103,30 +95,24 @@ class XNATLoginMenu(object):
         credentialsRow.addWidget(self.loginButton)
 
         
-        #--------------------------------
         # Everything related to logging in
-        #--------------------------------
         self.loginLayout = qt.QGridLayout() 
-        #fullLoginLayout.addLayout(hostRow, 0,0)
-        #fullLoginLayout.addWidget(spaceLabel, 0,1)
         self.loginLayout.addLayout(credentialsRow, 0,2)
 
 
+        
+        
     def initLoginLines(self):
         """ Password and login lines
         """
 
         
-        #---------------------------
         # Descriptions
-        #---------------------------
         self.defaultPasswordText = "Password"
         self.defaultUsernameText = "Login"
 
         
-        #---------------------------
         # Asthetics  
-        #---------------------------
         self.usernameLine.setText(self.defaultUsernameText)
         self.usernameLine.setFont(self.browser.utils.labelFontItalic)
         self.passwordLine.setFont(self.browser.utils.labelFontItalic) 
@@ -134,16 +120,13 @@ class XNATLoginMenu(object):
         self.passwordLine.selectAll()
 
         
-        #---------------------------
         # Signals
-        #---------------------------
-        self.usernameLine.connect('cursorPositionChanged(int, int)', 
-                                  self.usernameLineEdited)  
-        self.passwordLine.connect('cursorPositionChanged(int, int)', 
-                                  self.passwordLineEdited)
-        self.passwordLine.connect('returnPressed()', 
-                                  self.simulateLoginClicked) 
-        
+        self.usernameLine.connect('cursorPositionChanged(int, int)', self.usernameLineEdited)  
+        self.passwordLine.connect('cursorPositionChanged(int, int)', self.passwordLineEdited)
+        self.passwordLine.connect('returnPressed()', self.simulateLoginClicked) 
+
+
+        # Load the previously stored user
         self.populateCurrUser()
 
 
@@ -157,8 +140,7 @@ class XNATLoginMenu(object):
         self.hostDropdown.toolTip = "Select XNAT host"
         self.currHostUrl = qt.QUrl(self.hostDropdown.currentText)
         self.addHosts()
-        self.hostDropdown.connect('currentIndexChanged(const QString&)',
-                                  self.hostDropdownClicked) 
+        self.hostDropdown.connect('currentIndexChanged(const QString&)', self.hostDropdownClicked) 
 
 
 
@@ -172,7 +154,6 @@ class XNATLoginMenu(object):
                                                           'wrench.png')) )
         self.settingsButton.toolTip = "Settings"
         self.settingsButton.setFixedSize(self.browser.utils.buttonSizeMed.width() - 10, 26)
-        #self.settingsButton.setFixedSize(self.browser.utils.buttonSize)
         self.settingsButton.connect('pressed()', self.settingsButtonClicked)
 
 
@@ -201,9 +182,8 @@ class XNATLoginMenu(object):
         for name in hostDict:     
             self.hostDropdown.addItem(name)
             
-        #---------------------------
+ 
         # Loop through to find default host
-        #---------------------------
         if not self.currHostName:
             for i in range(0, len(hostDict.keys())):    
                 if int(self.browser.settings.isDefault(hostDict.keys()[i]))>0:
@@ -218,18 +198,17 @@ class XNATLoginMenu(object):
         """ If "Remember username" is clicked, queries the settings file to bring up 
         the username saved.
         """
-        #---------------------------
+
         # Does the username exist in the settings file?
-        #---------------------------
         if self.currHostName:    
             currUser = self.browser.settings.getCurrUsername(self.currHostName).strip("").strip(" ")
             if len(currUser) > 0:  
                 self.usernameLine.setText(currUser)
             else: 
-                self.usernameLine.setText(self.defaultUsernameText)
-        #---------------------------
-        # IF NOT, POPULATE WITH DEFAULT LINE
-        #---------------------------     
+                self.usernameline.settext(self.defaultusernametext)
+
+                
+        # If not, populate with default line
         else:
             self.usernameLine.setText(self.defaultUsernameText)       
 
@@ -240,8 +219,7 @@ class XNATLoginMenu(object):
         """ Equivalent of clicking the login button.
         """
         self.loginButton.animateClick()
-        self.loginButtonClicked()
-
+        #self.loginButtonClicked()
 
 
         

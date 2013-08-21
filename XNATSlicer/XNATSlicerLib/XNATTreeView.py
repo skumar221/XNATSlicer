@@ -100,7 +100,7 @@ class XNATTreeView(XNATView.XNATView):
         """ Descriptor
         """
         self.viewWidget.clear()
-        print(self.browser.utils.lf(), "Retrieving projects. Please wait...","")
+        #print(self.browser.utils.lf(), "Retrieving projects. Please wait...","")
         projects, sizes = self.browser.XNATCommunicator.getFolderContents(['/projects'], 'ID')
         
         if not projects: return False
@@ -490,6 +490,7 @@ class XNATTreeView(XNATView.XNATView):
         
         pathObj['parents'] = self.getParents(item)
         xnatDir = self.getXNATDir(pathObj['parents'])
+    
         pathObj['childQueryPaths'] = [xnatDir if not '/scans/' in xnatDir else xnatDir + "files"]
         pathObj['currPath'] = os.path.dirname(pathObj['childQueryPaths'][0])        
        
@@ -508,7 +509,7 @@ class XNATTreeView(XNATView.XNATView):
         parlen = len(pathObj['parents'])
 
         
-        print "\n\n%s %s"%(self.browser.utils.lf(), parlen)
+        # print "\n\n%s %s"%(self.browser.utils.lf(), parlen)
         
         if parlen == 3: 
             pathObj['childMetadataTag'] = "ID"  # SCAN level
@@ -531,9 +532,7 @@ class XNATTreeView(XNATView.XNATView):
             pathObj['slicerMetadataTag'] = 'Name'
 
 
-        if parlen > 3:
-            print pathObj
-             
+
         return pathObj
 
 

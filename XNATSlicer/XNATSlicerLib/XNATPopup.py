@@ -200,8 +200,7 @@ class XNATDownloadPopup(XNATPopup):
             pct = float(float(self.downloadedBytes) / float(self.downloadFileSize))
 
             # Output to Python command prompt
-            print "%s %s Downloaded: %s\tDownloadSize: %s\tPct: %s"%(self.browser.utils.lf(), self.lines[0].text, 
-                                                                     self.downloadedBytes , self.downloadFileSize, pct)
+            #print "%s %s Downloaded: %s\tDownloadSize: %s\tPct: %s"%(self.browser.utils.lf(), self.lines[0].text, self.downloadedBytes , self.downloadFileSize, pct)
 
             # Update progress bar
             self.progBar.setValue(pct * 100)

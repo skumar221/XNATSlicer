@@ -28,6 +28,9 @@ class to clean up strings for input to PyXNAT.
 
 
 
+
+
+
 class XNATCommunicator(object):
     """ Communication class to XNAT.  Urllib2 is the current library.
     """
@@ -94,11 +97,11 @@ class XNATCommunicator(object):
         #-------------------------
         if fileOrFolder == "file":
             for src, dst in srcDstMap.iteritems():
-                print("FILE DOWNLOAD src:%s\tdst:%s"%(src, dst))
+                print("%s file download\nsrc: '%s' \ndst: '%s'"%(self.browser.utils.lf(), src, dst))
 
                 fName = os.path.basename(src)
                 fPath = "/projects/" + src.split("/projects/")[1]
-                print fPath
+                #print fPath
                 
                 #self.downloadTracker['totalDownloadSize']['bytes'] = int(0)
                 #if fName in self.fileDict and 'Size' in self.fileDict[fName]:
@@ -146,7 +149,7 @@ class XNATCommunicator(object):
 
                         
                     # Init download
-                    print("FOLDER DOWNLOADING %s to %s"%(src, dst))
+                    print("%s folder downloading %s to %s"%(self.browser.utils.lf(), src, dst))
                     self.getFileWithProgress(src, dst)
 
                     
@@ -186,7 +189,7 @@ class XNATCommunicator(object):
             self.httpsRequest('DELETE', xnatDst, '')
 
             
-        print "%s UPLOAD: localSrc: '%s'\n\txnatDst: '%s'"%(self.browser.utils.lf(), localSrc, xnatDst)
+        print "%s Uploading\nsrc: '%s'\nxnatDst: '%s'"%(self.browser.utils.lf(), localSrc, xnatDst)
 
 
 
@@ -252,8 +255,7 @@ class XNATCommunicator(object):
         
         # REST call
         connection.request(restMethod, req.get_selector (), body = body, headers = header)
-
-        print self.browser.utils.lf() + "XNAT request - %s %s"%(restMethod, url)
+        #print ('%s httpsRequest: %s %s')%(self.browser.utils.lf(), restMethod, url)
 
 
         # Return response
@@ -265,7 +267,7 @@ class XNATCommunicator(object):
     def delete(self, selStr):
         """ Description
         """
-        print "%s DELETING: %s"%(self.browser.utils.lf(), selStr)
+        print "%s deleting %s"%(self.browser.utils.lf(), selStr)
         self.httpsRequest('DELETE', selStr, '')
 
         
@@ -322,7 +324,7 @@ class XNATCommunicator(object):
         # Begin to open the file to read in bytes
         #-------------------- 
         XNATFile = open(dst, "wb")
-        print ("\nDownloading %s...\n"%(XNATSrc))
+        #print ("\nDownloading %s...\n"%(XNATSrc))
       
 
 
@@ -427,7 +429,7 @@ class XNATCommunicator(object):
     def getJson(self, url):
         """ Descriptor
         """
-        print "%s %s"%(self.browser.utils.lf(), url)
+        #print "%s %s"%(self.browser.utils.lf(), url)
         response = self.httpsRequest('GET', url).read()
         #print "GET JSON RESPONSE: %s"%(response)
         return json.loads(response)['ResultSet']['Result']
@@ -438,7 +440,7 @@ class XNATCommunicator(object):
     def getLevel(self, url, level):
         """ Descriptor
         """
-        print "%s %s"%(self.browser.utils.lf(), url, level)
+        #print "%s %s"%(self.browser.utils.lf(), url, level)
         if not level.startswith('/'):
             level = '/' + level
 
@@ -453,7 +455,7 @@ class XNATCommunicator(object):
     def fileExists(self, selStr):
         """ Descriptor
         """
-        print "%s %s"%(self.browser.utils.lf(), selStr)
+        #print "%s %s"%(self.browser.utils.lf(), selStr)
 
     
         # Query logged files before checking
@@ -477,7 +479,7 @@ class XNATCommunicator(object):
     def getSize(self, selStr):
         """ Descriptor
         """
-        print "%s %s"%(self.browser.utils.lf(), selStr)
+        #print "%s %s"%(self.browser.utils.lf(), selStr)
         bytes = 0
        
         
@@ -511,7 +513,7 @@ class XNATCommunicator(object):
         #-------------------- 
         contents = []
         for p in queryPaths:
-            print "%s query path: %s"%(self.browser.utils.lf(), p)
+            #print "%s query path: %s"%(self.browser.utils.lf(), p)
             contents =  contents + self.getJson(p)
             
         if str(contents).startswith("<?xml"): return [] # We don't want text values
@@ -527,7 +529,7 @@ class XNATCommunicator(object):
             if metadataTag in content:
                 childNames.append(content[metadataTag])
             else:
-                print "%s NO METADATA %s %s"%(self.browser.utils.lf(), metadataTag, content)
+                #print "%s NO METADATA %s %s"%(self.browser.utils.lf(), metadataTag, content)
                 childNames.append(content['Name'])
 
                 
@@ -545,7 +547,7 @@ class XNATCommunicator(object):
                 for c in contents:
                     # create a tracker in the fileDict
                     self.fileDict[c['Name']] = c
-                print "%s %s"%(self.browser.utils.lf(), self.fileDict)
+                #print "%s %s"%(self.browser.utils.lf(), self.fileDict)
 
 
                 
@@ -559,13 +561,13 @@ class XNATCommunicator(object):
         """
 
         
-        print "%s %s"%(self.browser.utils.lf(), folder)
+        #print "%s %s"%(self.browser.utils.lf(), folder)
 
         
         # Get the resource Json
         folder += "/resources"
         resources = self.getJson(folder)
-        print self.browser.utils.lf() + " Got resources: '%s'"%(str(resources))
+        #print self.browser.utils.lf() + " Got resources: '%s'"%(str(resources))
 
 
         # Filter the Jsons
@@ -573,10 +575,10 @@ class XNATCommunicator(object):
         for r in resources:
             if 'label' in r:
                 resourceNames.append(r['label'])
-                print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['label']))
+                #print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['label']))
             elif 'Name' in r:
                 resourceNames.append(r['Name'])
-                print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['Name']))                
+                #print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['Name']))                
             
             return resourceNames
 
@@ -589,7 +591,7 @@ class XNATCommunicator(object):
 
         # Clean string
         XNATItem = self.cleanSelectString(XNATItem)
-        print "%s %s %s"%(self.browser.utils.lf(), XNATItem, attr)
+        #print "%s %s %s"%(self.browser.utils.lf(), XNATItem, attr)
 
 
         # Parse json
@@ -625,7 +627,7 @@ class XNATCommunicator(object):
         """ Makes a directory in XNAT via PUT
         """ 
         r = self.httpsRequest('PUT', XNATPath)
-        print "%s Put Dir %s \n%s"%(self.browser.utils.lf(), XNATPath, r)
+        #print "%s Put Dir %s \n%s"%(self.browser.utils.lf(), XNATPath, r)
         return r
 
 

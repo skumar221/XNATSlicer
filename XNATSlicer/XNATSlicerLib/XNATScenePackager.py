@@ -5,26 +5,25 @@ import datetime, time
 import os
 import sys
 import shutil
-
-
-
-from XNATFileInfo import *
-
-from XNATUtils import *
-from XNATTimer import *
-
-# For zipping packages
-
 from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
 
+from XNATFileInfo import *
+from XNATUtils import *
+from XNATTimer import *
+
+
+
 comment = """
   XNATScenePackager is used for the Save/Update process.  When 
-  sending a scene to XNAT, the class conducts the necessary slicer.app 
-  calls to get all of the scene's files into a .zip.  
+  sending a scene to XNAT, the class calls the necessary slicer.app API 
+  functions to get all of the scene's files into a .zip.  
 
 # TODO : 
 """
+
+
+
 
 
 class XNATScenePackager(object):
@@ -32,16 +31,21 @@ class XNATScenePackager(object):
        Slicer-XNAT workflow."""
 
 
+
        
     def __init__(self, browser = None):
+        """ Init public vars
+        """
         self.browser = browser
 
+        
 
     
     def bundleScene(self, args):
         """ Main function of the class
         """
-    
+
+        
         # Init variables.
         XNATCommunicator = args['XNATCommunicator'] 
         XNATDir = args['saveDir']
@@ -53,12 +57,14 @@ class XNATScenePackager(object):
 
         # Create a directory for packaging.
         tempDir = os.path.join(self.browser.utils.tempUploadPath, packageName)
-        print self.browser.utils.lf() +  "CREATE PACKAGE DIRECTORY: %s"%(tempDir)
-        
+        #print self.browser.utils.lf() +  "CREATE PACKAGE DIRECTORY: %s"%(tempDir)
+
+
+        # Try to remove the existing directory if it exists
         try:
-            print self.browser.utils.lf() + ("%s does not exist. Making it."%(tempDir)) 
-            self.browser.utils.removeFilesInDir(tempDir)
-            os.rmdir(tempDir)
+            #print self.browser.utils.lf() + ("%s does not exist. Making it."%(tempDir)) 
+            if os.path.exists(tempDir): 
+                self.browser.utils.removeDirsAndFiles(tempDir)
         except Exception, e: 
             pass
          
@@ -67,13 +73,19 @@ class XNATScenePackager(object):
         except Exception, e: 
             pass
 
-        
-        # Write according to scene type and if there's matching metadata.
-        print self.browser.utils.lf() +  "Writing scene to: %s"%(tempDir)
-        self.saveToBundleDirectory(tempDir)            
+            
+        # Make the save directory
+        try: 
+            os.makedirs(tempDir + "/Data")
+        except Exception, e: 
+            print self.browser.utils.lf() +  "Likely the dir already exists: " + str(e)
+
+            
+        # Call the API command
+        slicer.app.applicationLogic().SaveSceneToSlicerDataBundleDirectory(tempDir, None)          
 
 
-        # Acqure mrml filename
+        # Acqure mrml filename within the bundlir dir
         mrml = None
         for root, dirs, files in os.walk(tempDir):
             for relFileName in files:
@@ -81,7 +93,8 @@ class XNATScenePackager(object):
                     mrml = os.path.join(root, relFileName)
                     break
                     
-       
+
+        # Return appropriate dictionary
         return {'path':self.browser.utils.adjustPathSlashes(tempDir), 
                 'mrml': self.browser.utils.adjustPathSlashes(mrml)}
 
@@ -91,43 +104,8 @@ class XNATScenePackager(object):
     
     def packageDir(self, zipFileName, directoryToZip):
         """ Zips the bundled directory according to the
-        native API
+        native API methods.
         """
         slicer.app.applicationLogic().Zip(str(zipFileName), str(directoryToZip))
         #return
-        
-  
-
-
-        
-    def saveToBundleDirectory(self, saveDir):
-        """ Puts all of the scene nodes (including the mrml) into a bundle
-        directory.
-        """ 
-
-
-        # Remove existing if the name is the same
-        if os.path.exists(saveDir): 
-            self.browser.utils.removeDirsAndFiles(saveDir)
-
-            
-        # Make the save directory
-        try: 
-            os.makedirs(saveDir + "/Data")
-        except Exception, e: 
-            print self.browser.utils.lf() +  "Likely the dir already exists: " + str(e)
-
-            
-        # Call the API command
-        slicer.app.applicationLogic().SaveSceneToSlicerDataBundleDirectory(saveDir, None)
-
-
-
-
-        
-    def clearAndMakeDir(self, path): 
-        """ Utility
-        """ 
-        if os.path.exists(path): shutil.rmtree(path, True)
-        os.mkdir(path)
   

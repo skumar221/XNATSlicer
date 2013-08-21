@@ -19,6 +19,9 @@ a file to XNAT.  Packaging scenes and uploaded are conducted here.
 
 
 
+
+
+
     
 class XNATSaveWorkflow(object):
     """ Descriptor above.
@@ -68,19 +71,17 @@ class XNATSaveWorkflow(object):
         
         # Upload package     
         uploadStr = self.sessionArgs['saveDir'] + "/" + os.path.basename(packageFileName)    
-        print ("UPLOADING HERE: " + uploadStr)
-        from urlparse import urljoin
-
         self.browser.XNATCommunicator.upload(packageFileName, uploadStr)
         slicer.app.processEvents()
   
             
         # Update viewer
+        baseName = os.path.basename(packageFileName)
         self.sessionArgs['sessionType'] = "scene upload"
         self.browser.XNATView.startNewSession(self.sessionArgs)
-        self.browser.XNATView.setCurrItemToChild(item = None, 
-                                                 childFileName = os.path.basename(packageFileName))
+        self.browser.XNATView.setCurrItemToChild(item = None, childFileName = baseName)
         self.browser.XNATView.setEnabled(True)
+        print "\nUpload of '%s' complete."%(baseName)
 
 
         # Hide wait window
