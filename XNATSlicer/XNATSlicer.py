@@ -346,9 +346,9 @@ class XNATSlicerWidget:
             
         # If not, kick back OS error
         except Exception, e:
-            str = "XNATSlicer is currently not is supported for this operating system (%s).  XNATSlicer currently works on the following operating systems: %s."%(self.utils.osType, 'Win64')
-            print("XNATSlicer Module: %s"%(str))
-            qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "%s"%(str))
+            strs = "XNATSlicer is currently not is supported for this operating system (%s).  XNATSlicer currently works on the following operating systems: %s."%(self.utils.osType, 'Win64')
+            print("XNATSlicer Module: %s"%(strs))
+            qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "%s"%(strs))
             return
                 
 
@@ -360,7 +360,11 @@ class XNATSlicerWidget:
 
 
         # Begin communicator
-        self.XNATView.begin()
+        try:
+            self.XNATView.begin()
+        except Exception, e:
+            print("XNATSlicer Module: %s"%(str(e)))
+            qt.QMessageBox.warning(slicer.util.mainWindow(), "Login error!", "%s"%('There appears to be a login error.'))
 
 
 

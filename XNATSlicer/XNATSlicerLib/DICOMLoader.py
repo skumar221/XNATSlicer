@@ -3,6 +3,16 @@ from XNATLoadWorkflow import *
 
 
 comment = """
+DICOMLoader is the loader class for all DICOM input received
+from XNAT.  The high-level workflow of the download is as follows:
+
+1) Download a zip file of one scan or multiple scans in DICOM format.
+2) Unpack the zip file and cache accordingly
+3) Apply these files to the database
+4) Open the DICOMWidget.detailsPopup to parse and unify
+
+DICOMLoader makes use of Slicer's DICOM database and 
+Steve Pieper's DICOMPlugin for parsing.
 """
 
 
@@ -16,16 +26,13 @@ class DICOMLoader(XNATLoadWorkflow):
     """
 
 
-    
-    def setup(self):
-        pass
-
-
 
     
     def load(self, args):
-        #print(self.browser.utils.lf(), "Downloading DICOMS...") 
-
+        """ Starter function for loading DICOMs into Slicer from
+        XNAT.  The function 'proceedWithLoad' is its successor.
+        """
+        
 
         # Call parent
         super(DICOMLoader, self).load(args)
@@ -37,10 +44,8 @@ class DICOMLoader(XNATLoadWorkflow):
             self.XNATLevel = 'scans'
         elif '/experiments/' in self.xnatSrc:
             self.XNATLevel = 'experiments'
-        elif '/subjects/' in xnatSrc:
+        elif '/subjects/' in self.xnatSrc:
             self.XNATLevel = 'subjects'
-
-            
         self.folderName = os.path.basename(os.path.dirname(self.xnatSrc))
         self.downloadables = []
         self.DICOMWidget = None
@@ -72,60 +77,51 @@ class DICOMLoader(XNATLoadWorkflow):
 
             
             
-    def checkForResourceDICOMS(self, parentXNATPath):
+    def getDownloadables(self, parentXNATPath):
         """Checks if DICOM files exist at the 'resources' level.
         """
 
-        
-        #print "%s %s"%(self.browser.utils.lf(), parentXNATPath)
         resources = self.browser.XNATCommunicator.getResources(parentXNATPath)     
-        #print "RESOURCES %s %s"%(self.browser.utils.lf(), resources) 
-        for res in resources:
-            filePath =  "%s/resources/%s/files"%(parentXNATPath,res) 
-            #print "RESOURCES %s %s"%(self.browser.utils.lf(), filePath) 
-            content, size = self.browser.XNATCommunicator.getFolderContents(filePath, metadataTag = 'Name')
-            self.vetDICOMs(filePath, content)
+        #print "%s parentXNATPath: %s\nresources:%s"%(self.browser.utils.lf(), parentXNATPath, resources) 
+        for resource in resources:
+            filePath =  "%s/resources/%s/files"%(parentXNATPath, resource) 
+            fileNames, size = self.browser.XNATCommunicator.getFolderContents(filePath, metadataTag = 'Name')
 
+            # Check to see if the file extensions are valid
+            for filename in fileNames:
+                if '.' in filename and self.utils.isDICOM(filename.split(".")[1].lower()):
 
-            
-    
-    def vetDICOMs(self, filePath, fileNames):
-        """  Cleans the DICOM list based on what is an acceptable
-        format.
-        """
-        #print "%s %s"%(self.browser.utils.lf(), fileNames) 
-        for filename in fileNames:
-            try:
-                ext = filename.split(".")[1]
-                if self.utils.isDICOM(ext.lower()):
-                    if not filePath.endswith("/"): 
-                        filePath +="/"
-                    self.downloadables.append(filePath + filename)
+                    # Add to "downloadables" if good
+                    self.downloadables.append(filePath + "/" + filename)
                 else:
-                    print  "%s Not a dicom: '%s' "%(self.utils.lf(), (filePath + filename))
-            except Exception, e:
-                print  "%s Likely not a usable file: '%s' "%(self.utils.lf(), (filePath + filename)) + str(e)
+                    print  "%s Not a usable file: '%s' "%(self.utils.lf(), (filename))
 
 
 
                 
-    def proceedWithLoad(self, button): 
-        """ Function once after user clicks 'Yes' in the 'Are You Sure?' dialog.
+    def proceedWithLoad(self, proceed): 
+        """ MAIN function.  Function once after user clicks 
+        'Yes' in the 'Are You Sure?' dialog.
         """
-        
-        proceed = False
-        if isinstance(button, basestring) and 'yes' in button:
-            proceed = True
-        elif button.text and 'yes' in button.text.lower():
-            proceed = True
 
+        if isinstance(proceed, qt.QPushButton): 
+            proceed = proceed.text
 
             
-        if proceed:
+        if 'yes' in proceed.lower():
 
+            
             experimentsList = []
             scansList = []   
-            #print(self.browser.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.")   
+            
+            
+            #------------------------
+            # Set display indicators
+            #------------------------
+            self.browser.downloadPopup.setDownloadFilename(self.xnatSrc)
+            self.browser.downloadPopup.show()
+            self.browser.XNATView.viewWidget.setEnabled(False)
+            print(self.browser.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.")   
 
 
             
@@ -140,65 +136,62 @@ class DICOMLoader(XNATLoadWorkflow):
 
                 
             #--------------------
-            # If the tree node level is at 'subjects'
-            # check for DICOMs accordingly.
+            # SUBJECT - get downloadables (currently not enabled and untested)
             #--------------------
             if self.XNATLevel == 'subjects':
-                # Get 'resources' at the 'experiment' level.
-                self.checkForResourceDICOMS(os.path.dirname(self.xnatSrc)) 
-                # Get 'experiments'.                                 
-                experimentsList = self.browser.XNATCommunicator.getFolderContents(self.xnatSrc)
+
+                # Get downloadables
+                self.getDownloadables(os.path.dirname(self.xnatSrc)) 
+                
+                # Get 'experiments'                               
+                experimentsList, sizes = self.browser.XNATCommunicator.getFolderContents(self.xnatSrc)
+                
                 # Check for DICOMs (via 'resources') at the 'experiments' level.
                 for expt in experimentsList:
-                    self.checkForResourceDICOMS(self.xnatSrc + "/" + expt)
+                    self.getDownloadables(self.xnatSrc + "/" + expt)
+                    
                 # Get 'scans'
                 for expt in experimentsList:
                     parentScanFolder = self.xnatSrc + "/" + expt + "/scans"
                     scanList = self.browser.XNATCommunicator.getFolderContents(parentScanFolder)
                     for scan in scanList:
-                        self.checkForResourceDICOMS(parentScanFolder + "/" + scan)
+                        self.getDownloadables(parentScanFolder + "/" + scan)
 
 
                         
             #--------------------
-            # If the tree node level is at 'experiments', 
-            # check for dicoms at experiments level
+            # EXPERIMENT - get downloadables
             #--------------------
             elif self.XNATLevel == 'experiments':
                 #print "GETTING EXPERIMENT DICOMS"
-                self.checkForResourceDICOMS(os.path.dirname(self.xnatSrc)) 
-                scansList = self.browser.XNATCommunicator.getFolderContents(self.xnatSrc)
+                self.getDownloadables(os.path.dirname(self.xnatSrc)) 
+                scansList, sizes = self.browser.XNATCommunicator.getFolderContents(self.xnatSrc)
                 for scan in scansList:
-                    self.checkForResourceDICOMS(self.xnatSrc + "/" + scan)
+                    self.getDownloadables(self.xnatSrc + "/" + scan)
 
 
                     
             #--------------------
-            # If the tree node level is at 'scans', 
-            # check for dicoms at the scans level
+            # SCAN - get downloadables
             #--------------------
             elif self.XNATLevel == 'scans':
-                #print "GETTING SCAN DICOMS"
                 selector = self.xnatSrc.split("/files")[0] if self.xnatSrc.endswith('/files') else self.xnatSrc
-                self.checkForResourceDICOMS(selector)   
+                self.getDownloadables(selector)   
 
 
                 
             #--------------------
-            # If the tree node level is at 'resources', check for dicoms at the resources level
+            # RESOURCES - get downloadables
             #--------------------
             elif self.XNATLevel == 'resources':
-                #print "GETTING RESOURCE DICOMS"
-                self.checkForResourceDICOMS(self.xnatSrc.split("/resources")[0])    
+                self.getDownloadables(self.xnatSrc.split("/resources")[0])    
 
 
                 
             #--------------------
             # Download all dicoms as part of a zip
-            #--------------------
-            import math   # for progress calculation    
-
-            if len(self.downloadables)==0:
+            #--------------------   
+            if len(self.downloadables) == 0:
                 self.browser.XNATCommunicator.downloadFailed("Download Failed", "No scans in found to download!")
                 return 
             
@@ -213,14 +206,14 @@ class DICOMLoader(XNATLoadWorkflow):
 
             
             #--------------------
-            # Inventory downloaded zjpfile
+            # Inventory downloaded zipfile
             #--------------------
-            #print (self.browser.utils.lf(), "Inventorying downloaded files...")    
+            print "%s Inventorying downloaded files..."%(self.browser.utils.lf())    
             downloadedDICOMS = []
             for z in zipFolders:
                 d = z.split(".")[0]
                 
-                # remove existing zip if it exists
+                # remove existing unzip path if it exists
                 if os.path.exists(d): 
                     self.utils.removeDirsAndFiles(d)
                     
@@ -232,13 +225,15 @@ class DICOMLoader(XNATLoadWorkflow):
                 for root, dirs, files in os.walk(d):
                     for relFileName in files:          
                         downloadedDICOMS.append(self.utils.adjustPathSlashes(os.path.join(root, relFileName)))
-            m = slicer.util.mainWindow()
+           
 
 
             
             #--------------------
             # Make sure Slicer's DICOMdatabase is set up
             #--------------------
+            self.browser.XNATView.viewWidget.setEnabled(False) 
+            m = slicer.util.mainWindow()
             if not slicer.dicomDatabase:
                 msg =  'It doesn\'t look like your DICOM database '
                 msg += 'directory is setup. Please set it up in '
@@ -250,7 +245,8 @@ class DICOMLoader(XNATLoadWorkflow):
                 msg += 'When finished, a \'DICOM Details\' window will appear '
                 msg += 'pertaining only to the images downloaded (your previous '
                 msg += 'DICOM database is still intact.)'
-                self.terminateLoad(['DICOM load', msg])    
+                self.terminateLoad(['DICOM load', msg])   
+               
                 
 
             

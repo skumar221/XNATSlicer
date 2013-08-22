@@ -55,13 +55,18 @@ class XNATLoadWorkflow(object):
     def load(self, args):
         """ Parent class of any load workflow
         """
-        self.browser.XNATCommunicator =  args["XNATCommunicator"]
         self.xnatSrc = args["xnatSrc"]
         self.localDst = args["localDst"]
 
 
 
         
+    def setup(self):
+        pass
+
+
+
+     
     def loadFinish(self):
         """ Parent class of any load workflow
         """

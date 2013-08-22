@@ -1,14 +1,10 @@
-# SLICER INCLUDES
 from __main__ import vtk, ctk, qt, slicer
 
-
-# PYTHON INCLUDES
 import os
 import sys
 import shutil
 import urllib2
 
-# PARENT CLASS INCLUDES
 import XNATView
 
 
@@ -21,6 +17,10 @@ presenting them in a tree-node hierarchy.
 The view classes (and subclasses) ultimately communicate
 with the load and save workflows.   
 """
+
+
+
+
 
 
 
@@ -184,10 +184,8 @@ class XNATTreeView(XNATView.XNATView):
     def setEnabled(self, bool):
         """ (INHERITED from XNATView)  Enables or disables the view widget.
         """
-        if bool: 
-            self.viewWidget.setEnabled(True)
-        else: 
-            self.viewWidget.setEnabled(False)
+        self.viewWidget.setEnabled(bool)
+
 
 
             
@@ -219,9 +217,13 @@ class XNATTreeView(XNATView.XNATView):
             returnStr = str(self.browser.utils.xnatDepthDict[len(parents)-1]).lower()
         except:          
             returnStr = "resources"    
+
+            
         # NOTE:   The return string needs to have some spaces before it to 
         #         visually reflect where it is in the hierarchy.  This is for
         #         display purposes in the 'Category' column of the treeView.
+
+        
         if "resources" in parents[len(parents)-2].text(self.column_category): 
             return self.getIndentByItemDepth(item) + "files"
         else:
@@ -393,40 +395,35 @@ class XNATTreeView(XNATView.XNATView):
         self.currLoadable = None
 
         
-        #------------------------
-        # Disable buttons
-        #------------------------
-        self.browser.XNATButtons.setEnabled('save', False)
-        if self.sessionManager.sessionArgs:
-             self.browser.XNATButtons.setEnabled('save', False)
-        
-        self.browser.XNATButtons.setEnabled('load', False)
-        self.browser.XNATButtons.setEnabled('delete', True)
-
 
         #------------------------
         # Check if at saveable/loadable level 
         #------------------------
         isSubject = 'subjects' in item.text(self.column_category).strip(" ")
         isResource = 'resources' in item.text(self.column_category).strip(" ")
-        isExperment = 'experiments' in item.text(self.column_category).strip(" ")
+        isExperiment = 'experiments' in item.text(self.column_category).strip(" ")
         isScan = 'scans' in item.text(self.column_category).strip(" ")
         isFile = 'files' in item.text(self.column_category).strip(" ")
         isSlicerFile = self.browser.utils.slicerDirName.replace("/","") in item.text(self.column_category).strip(" ")
+
 
         
         #------------------------
         # Enable load/save at the default save level
         #------------------------
-        atEnableLevel = False
-        while(item.parent()):
-            if self.browser.utils.defaultXNATSaveLevel in item.text(self.column_category).strip(" "):
-                atEnableLevel = True
-                break
-            item = item.parent()
-        if atEnableLevel:
+        self.browser.XNATButtons.setEnabled('save', False)
+        self.browser.XNATButtons.setEnabled('load', False)
+        self.browser.XNATButtons.setEnabled('delete', False)
+        self.browser.XNATButtons.setEnabled('addProj', True)
+        
+        if isExperiment or isScan:
             self.browser.XNATButtons.setEnabled('save', True)
             self.browser.XNATButtons.setEnabled('load', True)
+            
+        elif isFile or isSlicerFile or isResource:
+            self.browser.XNATButtons.setEnabled('save', True)
+            self.browser.XNATButtons.setEnabled('load', True)
+            self.browser.XNATButtons.setEnabled('delete', True)
 
 
             
@@ -435,21 +432,19 @@ class XNATTreeView(XNATView.XNATView):
         #------------------------
         if self.applySlicerFolderMask:
             if item.text(self.column_category) == self.browser.utils.slicerDirName:
-                #print self.browser.utils.lf() + "IS FILE!"
                 isFile = True    
+
 
                 
         #------------------------
         # File item routines
         #------------------------
         if isFile or isSlicerFile:
-            self.browser.XNATButtons.setEnabled('delete', True)
             ext = item.text(self.column_name).rsplit(".")
             # check extension
             if (len(ext)>1):
                 # recognizable extensions        
                 if self.browser.utils.isRecognizedFileExt(ext[1]):
-                    self.browser.XNATButtons.setEnabled('load', True)
                     # scene package
                     for ext_ in self.browser.utils.packageExtensions:
                         if ext_.replace(".","") in ext[1]: 
@@ -462,12 +457,12 @@ class XNATTreeView(XNATView.XNATView):
                         self.currLoadable = "file"
                         return   
 
+
                     
         #------------------------
         # User is at the default load/save level, default loader is dicom     
         #------------------------
         if self.browser.utils.defaultXNATSaveLevel in item.text(self.column_category).strip(" "):
-            self.browser.XNATButtons.setEnabled('load', True)
             self.currLoadable = "mass_dicom" 
             return
 
@@ -580,7 +575,6 @@ class XNATTreeView(XNATView.XNATView):
 
         
     def startNewSession(self, sessionArgs, method="currItem"):
-        self.browser.XNATButtons.setEnabled('save', True)
         if method=="currItem":            
             
             # Sometimes we have to reset the curr item
