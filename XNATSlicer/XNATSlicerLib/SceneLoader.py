@@ -16,8 +16,16 @@ class SceneLoader(XNATLoadWorkflow):
     def load(self, args):
         """ Descriptor
         """
+            
         super(SceneLoader, self).load(args)
 
+
+        
+        # Display indicators
+        self.browser.downloadPopup.setDownloadFilename(self.xnatSrc)
+        self.browser.downloadPopup.show()
+
+        
         
         # Get scene package
         self.browser.XNATCommunicator.getFile({self.xnatSrc : self.localDst})
