@@ -478,24 +478,39 @@ class XNATSettings:
     self.database.setValue(hostName +"/"+ hostIsDefaultTag, True)
     self.database.endGroup()
 
+
+
+    
   def isDefault(self, hostName):
-    print self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, "")
-    if int(self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, "")) == 1: return True
+    if "1" in (self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, "").strip()): 
+        return True
     return False 
+
+
+
   
   def isModifiable(self, hostName):
     title = unicode(str(self.database.value(hostTag + hostName + "/" + hostIsModifiableTag, "")))
     import unicodedata
     return unicodedata.normalize('NFKD', title).encode('ascii','ignore')
-   
+
+
+
+  
   def getAddress(self, hostName):
     return self.database.value(hostTag + hostName + "/" + hostAddressTag, "")
-    
+
+
+
+  
   def setCurrUsername(self, hostName, username):
     self.database.beginGroup(hostTag)  
     self.database.setValue(hostName +"/" + hostCurrUserTag, username)
     self.database.endGroup()
-  
+
+
+
+    
   def getCurrUsername(self, hostName):
     return self.database.value(hostTag + hostName + "/" + hostCurrUserTag, "")
 
