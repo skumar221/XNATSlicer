@@ -680,12 +680,21 @@ class XNATTreeView(XNATView.XNATView):
             # Slicer Paths
             #
             if 'slicerQueryPaths' in pathObj:
+                
                 # Children for slicer path
-                childNames2, sizes2 = self.browser.XNATCommunicator.getFolderContents(pathObj['slicerQueryPaths'], metadataTag = pathObj['slicerMetadataTag'])   
+                childNames2, sizes2 = self.browser.XNATCommunicator.getFolderContents(pathObj['slicerQueryPaths'], metadataTag = pathObj['slicerMetadataTag'])  
+                 
                 # Sizes
-                sizes = sizes + sizes2 if sizes else ["" for x in range(len(childNames))] + sizes2
+                if sizes and sizes2:
+                    sizes = sizes + sizes2
+                else:
+                    sizes = ["" for x in range(len(childNames))]
+                    if sizes2: 
+                        sizes += sizes2
+                        
                 # Categories
                 pathObj['childCategories'] = pathObj['childCategories'] + ['Slicer' for x in range(len(childNames2))]
+                
                 # put children together
                 childNames = childNames + childNames2        
 
