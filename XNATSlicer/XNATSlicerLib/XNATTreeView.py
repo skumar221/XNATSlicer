@@ -27,6 +27,10 @@ with the load and save workflows.
 class XNATTreeView(XNATView.XNATView):
     """ Initiate globals.
     """  
+
+
+
+    
     def setup(self):
 
         
@@ -104,7 +108,8 @@ class XNATTreeView(XNATView.XNATView):
         projects, sizes = self.browser.XNATCommunicator.getFolderContents(['/projects'], 'ID')
         
         if not projects: return False
-                
+
+        
         #----------------------
         # Init TreeView
         #----------------------

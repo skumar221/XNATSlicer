@@ -42,7 +42,7 @@ class XNATSaveDialog(object):
 
 
     
-    def __init__(self, browser):
+    def __init__(self, browser, saveWorkflow):
         """ Descriptor
         """
 
@@ -52,7 +52,7 @@ class XNATSaveDialog(object):
         self.setup()
         self.begin()         
 
-
+        self.saveWorkflow = saveWorkflow;
 
         
     def begin(self):
@@ -123,48 +123,6 @@ class XNATSaveDialog(object):
     def buttonClicked(self):
         pass
 
-
-    
-
-
-    
-class SaveEmptyDialog(XNATSaveDialog):
-     """ Descriptor
-     """
-     def __init__(self, browser, viewer):
-
-         
-         # Call parent
-         super(saveemptydialog, self).__init__(browser, viewer)
-
-
-
-         
-     def setup(self):
-
-         
-         # dialog setup
-         self.setnumdialogs(1)
-         self.dialogs[0].settext('the slicer scene appears to be empty. ' + 
-                                 'are you sure you want to continue?')      
-         
-         # Button Setup
-         self.dialogs[0].addButton(qt.QMessageBox.Ok)
-         self.dialogs[0].addButton(qt.QMessageBox.Cancel)
-
-
-         
-         
-     def buttonClicked(self,button):
-
-         
-        # if ok button clicked
-        if button.text.lower().find('ok') > -1: 
-
-            # re-call viewer.save with updated params
-            self.browser.xnatview.savebuttonclicked(excluderoutines = ['empty'])
-
-
         
 
 
@@ -173,13 +131,14 @@ class SaveUnlinkedDialog(XNATSaveDialog):
      """ Descriptor
      """
 
-    
-     def __init__(self, browser, viewer, savepath, sessionargs):
+
+
+     
+     def __init__(self, browser, saveWorkflow):
         """ Descriptor
         """
         # call parent
-        self.sessionargs = sessionargs
-        super(saveUnlinkedDialog, self).__init__(browser, viewer)
+        super(saveUnlinkedDialog, self).__init__(browser, saveWorkflow)
 
 
         
@@ -191,7 +150,7 @@ class SaveUnlinkedDialog(XNATSaveDialog):
          # dialog setup
          self.setNumDialogs(1)
          msg = """the scene doesn't appear to be associated with a specific xnat location.  Would you like to save it within this xnat """
-         msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultXNATSaveLevel[:-1], os.path.basename(self.sessionArgs['savelevel']))
+         msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultXNATSaveLevel[:-1], os.path.basename(self.browser.XNATView.sessionManager.sessionArgs['savelevel']))
          msg.replace('location', self.browser.utils.defaultXNATSaveLevel[:-1])
          
          
@@ -201,7 +160,7 @@ class SaveUnlinkedDialog(XNATSaveDialog):
          # button setup
          self.dialogs[0].addButton(qt.QMessageBox.yes)
          self.dialogs[0].addButton(qt.QMessageBox.cancel)
-         self.browser.XNAView.selectItem_byPath((self.sessionArgs['savelevel']))
+         self.browser.XNAView.selectItem_byPath((self.browser.XNATView.sessionManager.sessionArgs['savelevel']))
 
 
 
@@ -215,7 +174,7 @@ class SaveUnlinkedDialog(XNATSaveDialog):
 
             
             # Re-call viewer.save with updated params
-            FileSaveDialog(self.browser, self.sessionArgs)
+            FileSaveDialog(self.browser, self.browser.XNATView.sessionManager.sessionArgs)
 
 
             
@@ -227,25 +186,22 @@ class FileSaveDialog(XNATSaveDialog):
     """
 
     
-    def __init__(self, browser, sessionArgs):
+    
+    def __init__(self, browser, saveWorkflow):
         """ Descriptor
         """
 
         # determine filename
         self.fileName = None
 
-
-        # Init params
-        self.sessionArgs = sessionArgs
-
-
+        
         # Dialog setup
         self.inputIndex = 0  
         self.noticeLabel = qt.QLabel("")
 
 
         # Call parent
-        super(FileSaveDialog, self).__init__(browser)
+        super(FileSaveDialog, self).__init__(browser, saveWorkflow)
 
         #print "%s"%(self.browser.utils.lf())
         return
@@ -270,7 +226,7 @@ class FileSaveDialog(XNATSaveDialog):
 
 
         # Set fileline text
-        self.fileLine = qt.QLineEdit(self.sessionArgs['fileName'].split(self.browser.utils.defaultPackageExtension)[0])
+        self.fileLine = qt.QLineEdit(self.browser.XNATView.sessionManager.sessionArgs['fileName'].split(self.browser.utils.defaultPackageExtension)[0])
 
         
         # DISPLAY NOTICES  
@@ -278,15 +234,13 @@ class FileSaveDialog(XNATSaveDialog):
         #            newText = ".(Please note, the selected scene <b>'%s'</b> is different from the one loaded--<b>'%s'</b>.)"%(self.fileName, self.originFileName) 
         #            self.fileLine = qt.QLineEdit(self.originFileName.split(".")[0])    
 
-
         
         # Filename line
         fileInputLayout = qt.QHBoxLayout()
         fileInputLayout.addWidget(fileLineLabel)
         fileInputLayout.addWidget(self.fileLine)
         dialogLayout = qt.QVBoxLayout()
-
-        
+     
 
         # Buttons
         saveButton = qt.QPushButton()
@@ -303,7 +257,6 @@ class FileSaveDialog(XNATSaveDialog):
         bottomRow.addWidget(buttonRow)
 
         
-
         # apply layouts
         dialogLayout.addLayout(fileInputLayout)
         dialogLayout.addWidget(self.noticeLabel)
@@ -311,10 +264,9 @@ class FileSaveDialog(XNATSaveDialog):
         self.dialogs[0].setLayout(dialogLayout)
 
 
-        
         # button connect  
         buttonRow.connect('clicked(QAbstractButton*)', self.buttonClicked)
-        self.browser.XNATView.selectItem_byPath((self.sessionArgs['saveLevel']))
+        self.browser.XNATView.selectItem_byPath((self.browser.XNATView.sessionManager.sessionArgs['saveLevel']))
 
 
 
@@ -322,18 +274,36 @@ class FileSaveDialog(XNATSaveDialog):
     def buttonClicked(self,button):
         """ Descriptor
         """
+        
         slicer.app.processEvents()
         self.dialogs[0].hide()         
 
         
         # Filename from textline
-        self.sessionArgs['fileName'] = self.browser.utils.replaceForbiddenChars(self.fileLine.text.split(".")[0], "_")
-        self.sessionArgs['fileName'] += self.browser.utils.defaultPackageExtension
+        self.browser.XNATView.sessionManager.sessionArgs['fileName'] = self.browser.utils.replaceForbiddenChars(self.fileLine.text.split(".")[0], "_")
+        self.browser.XNATView.sessionManager.sessionArgs['fileName'] += self.browser.utils.defaultPackageExtension
 
-        
+
+        # If 'yes' or 'ok' to save
         if self.saveButtonStr.lower() in button.text.lower():                       
-            self.sessionArgs['sharable'] = False      
-            self.browser.XNATButtons.beginSaveWorkflow(self.sessionArgs)  
+            self.browser.XNATView.sessionManager.sessionArgs['sharable'] = False       
+
+            
+            # Pre-save
+            self.browser.XNATView.startNewSession(self.browser.XNATView.sessionManager.sessionArgs)
+            self.browser.XNATView.makeRequiredSlicerFolders() 
+
+            
+            # Save to Xnat         
+            self.saveWorkflow.saveScene()   
+
+            
+            # UI config
+            self.browser.XNATButtons.buttons['load'].setEnabled(True)
+            self.browser.XNATButtons.buttons['delete'].setEnabled(True) 
+
+            
+        # Otherwise reenable everything
         else:
             self.browser.XNATView.setEnabled(True)
             

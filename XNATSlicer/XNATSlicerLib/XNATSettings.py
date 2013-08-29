@@ -479,6 +479,7 @@ class XNATSettings:
     self.database.endGroup()
 
   def isDefault(self, hostName):
+    print self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, "")
     if int(self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, "")) == 1: return True
     return False 
   

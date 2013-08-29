@@ -1,26 +1,39 @@
 from __main__ import vtk, ctk, qt, slicer
 import os
 
-from DICOMLoader import *
-from XNATSaveDialog import *
+
+from XNATLoadWorkflow import *
 from XNATSaveWorkflow import *
+from XNATDeleteWorkflow import *
 
- 
+
+
 comment = """
-  XNATButtons is the class that handles all of the UI interactions to the XNATCommunicator.
+  XNATButtons is the class that handles all of the UI interactions to
+  call on the various XNATWorkflows.
 
-# TODO : 
+  author: sunilk@mokacreativellc.com
+  
+ TODO : 
 """
 
 
+
+
+
+
 class XNATButtons(object):
-    """ Descriptor
+    """ Creates buttons for the GUI and calls respective workflows.
     """
 
 
     
+    
     def __init__(self, parent = None, browser = None):
-        
+        """  Create buttons
+        """
+
+        # for inserting in gui
         self.parent = parent
         self.browser = browser
         self.buttons = {}
@@ -58,8 +71,9 @@ class XNATButtons(object):
 
     
     def setEnabled(self, buttonKey = None, enabled = True):
-        """ Descriptor
+        """ Sets a button enabled or disabled as part of QT
         """
+        
         if buttonKey:
             self.buttons[buttonKey].setEnabled(enabled)
         else:
@@ -69,14 +83,8 @@ class XNATButtons(object):
 
 
                 
-    def generateButton(self, 
-                       iconFile="", 
-                       toolTip="", 
-                       font = qt.QFont('Arial', 10, 10, False), 
-                       size =  qt.QSize(30, 30), 
-                       enabled=False, 
-                       onclick=''):
-        """ Descriptor
+    def generateButton(self, iconFile="", toolTip="", font = qt.QFont('Arial', 10, 10, False),  size =  qt.QSize(30, 30), enabled=False, onclick=''):
+        """ Creates an empty button.
         """
         
         button = qt.QPushButton()
@@ -85,181 +93,52 @@ class XNATButtons(object):
         button.setFont(font)
         button.setFixedSize(size)
         button.connect('clicked()', onclick)
-        button.setEnabled(enabled)               
+        button.setEnabled(enabled) 
+                      
         return button
 
 
 
     
     def deleteClicked(self, button=None):
-        """ Descriptor
+        """ Starts Delete workflow.
         """  
-        if button and button.text.lower().find('ok') > -1: 
 
-            # Construct the full delete string based on type of tree item deleted
-            delStr = self.browser.XNATView.getXNATDir(self.browser.XNATView.getParents(self.browser.XNATView.viewWidget.currentItem()))
-            if (('files' in self.browser.XNATView.viewWidget.currentItem().text(self.browser.XNATView.column_category))
-                or (self.browser.utils.slicerDirName in self.browser.XNATView.viewWidget.currentItem().text(self.browser.XNATView.column_category))):
-                delStr = delStr
-            else:
-                delStr = os.path.dirname(delStr)
-            self.browser.XNATCommunicator.delete(delStr)
-
-            
-            # Set currItem to parent and expand it   
-            self.browser.XNATView.viewWidget.setCurrentItem(self.browser.XNATView.viewWidget.currentItem().parent())
-            self.browser.XNATView.getChildrenExpanded(self.browser.XNATView.viewWidget.currentItem())
-        elif button and button.text.lower().find('cancel') > -1:
-             return
-        else:
-
-            
-            # Show the delete dialog
-            self.deleteDialog = qt.QMessageBox()
-            self.deleteDialog.setIcon(qt.QMessageBox.Warning)
-            self.deleteDialog.setText("Are you sure you want to delete the file: '%s' from XNAT?"%(self.browser.XNATView.viewWidget.currentItem().text(self.browser.XNATView.column_name)))   
-            self.deleteDialog.connect('buttonClicked(QAbstractButton*)', self.deleteClicked)
-            self.deleteDialog.addButton(qt.QMessageBox.Ok)
-            self.deleteDialog.addButton(qt.QMessageBox.Cancel)    
-            self.deleteDialog.show()
+        deleter = XNATDeleteWorkflow(self.browser)
+        deleter.beginWorkflow()
 
 
 
             
     def saveClicked(self):        
-        """ Conducts a series of steps (including the file naming workflow) 
-            before actually saving the scene.
+        """ Starts Save workflow.
         """     
+        
         self.lastButtonClicked = "save" 
         self.browser.XNATView.setEnabled(False)
 
+        saver = XNATSaveWorkflow(self.browser)
+        saver.beginWorkflow()
 
-        # If Scene is linked (i.e. the session manager is active)...
-        if self.browser.XNATView.sessionManager.sessionArgs:
-            self.browser.XNATView.setEnabled(False)
-            FileSaveDialog(self.browser, self.browser.XNATView.sessionManager.sessionArgs)
-            #self.browser.XNATView.makeRequiredSlicerFolders()
-            
-         
-        # If scene is unlinked
-        elif (not self.browser.XNATView.sessionManager.sessionArgs):
-
-            
-            # Construct new sessionArgs
-            fullPath = self.browser.XNATView.getXNATDir(self.browser.XNATView.getParents(self.browser.XNATView.viewWidget.currentItem()))
-            remoteURI = self.browser.settings.getAddress(self.browser.XNATLoginMenu.hostDropdown.currentText) + fullPath
-            sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = fullPath)
-            sessionArgs['sessionType'] = "scene upload - unlinked"
-            sessionArgs.printAll()
-
-            
-            # Call unlinked dialog
-            SaveUnlinkedDialog(self.browser, self, fullPath, sessionArgs)
-
-
-            
-          
-    def addProjClicked(self):
-        """ Descriptor
-        """
-
-        self.addProjEditor = XNATAddProjEditor(self, self.browser, self.browser.XNATCommunicator)
-        self.addProjEditor.show()
 
 
         
-
-    def beginSaveWorkflow(self, sessionArgs):   
-        """ Descriptor
-        """         
-        
-        self.browser.XNATView.currItem = self.browser.XNATView.viewWidget.currentItem()   
-        self.browser.XNATView.startNewSession(sessionArgs)
-        self.browser.XNATView.makeRequiredSlicerFolders() 
-        saveWorkflow = XNATSaveWorkflow(self.browser, self.browser.XNATCommunicator, self.browser.XNATView.sessionManager.sessionArgs)
-        saveWorkflow.saveScene()   
-        self.browser.XNATButtons.buttons['load'].setEnabled(True)
-        self.browser.XNATButtons.buttons['delete'].setEnabled(True) 
-
-        
-
-        
-    def loadClicked(self, button = None):
-        """ Descriptor
+    def loadClicked(self):
+        """ Starts Load workflow.
         """
         
         self.lastButtonClicked = "load"
         self.browser.XNATView.setEnabled(False)
 
-
-        
-        #------------------------
-        # Clear Scene
-        #------------------------
-        if not button and not self.browser.utils.isCurrSceneEmpty():           
-            self.browser.XNATView.initClearDialog()
-            self.browser.XNATView.clearSceneDialog.connect('buttonClicked(QAbstractButton*)', self.loadClicked) 
-            self.browser.XNATView.clearSceneDialog.show()
-            return
-
-        
-            
-        #------------------------
-        # Begin Workflow
-        #------------------------
-        if (button and 'yes' in button.text.lower()) or self.browser.utils.isCurrSceneEmpty():
-
-            # Clear the scene and current session
-            self.browser.XNATView.sessionManager.clearCurrentSession()
-            slicer.app.mrmlScene().Clear(0)
-
-            # Acquire vars
-            currItem = self.browser.XNATView.viewWidget.currentItem()
-            pathObj = self.browser.XNATView.getXNATPathObject(currItem)
-            remoteURI = self.browser.settings.getAddress(self.browser.XNATLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryPaths'][0]
-
-            # Check path string if at the scan level
-            if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
-                remoteURI += '/files'
-
-            # Construct dst (local)
-            dst = os.path.join(self.browser.utils.downloadPath, 
-                               currItem.text(self.browser.XNATView.column_name))
+        loader = XNATLoadWorkflow(self.browser)
+        loader.beginWorkflow()
 
 
             
-            #------------------------
-            # Determine loader based on currItem
-            #------------------------
-            loader = None
-            
-            # Slicer files
-            if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
-                loader = self.browser.SceneLoader
-                
-            # Other readable files
-            elif ('files' in remoteURI and '/resources/' in remoteURI):
-                loader =  self.browser.FileLoader
-                
-            #  DICOMS
-            else:      
-                loader =  self.browser.DICOMLoader
+          
+    def addProjClicked(self):
+        """ Adds a project folder to the server.
+        """
 
-
-
-            #------------------------
-            # Call load
-            #------------------------
-            args = {"xnatSrc": remoteURI, 
-                    "localDst":dst, 
-                    "folderContents": None}
-            loadSuccessful = loader.load(args)  
-            
-
-            
-        #------------------------
-        # Enable TreeView
-        #------------------------
-        self.browser.XNATView.viewWidget.setEnabled(True)
-        self.lastButtonClicked = None
-    
+        self.addProjEditor = XNATAddProjEditor(self, self.browser, self.browser.XNATCommunicator)
+        self.addProjEditor.show()
