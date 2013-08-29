@@ -1,9 +1,14 @@
 from __main__ import vtk, qt, ctk, slicer
 
+
 import os
 import glob
 import sys
+
+
 from XNATUtils import *
+
+
 
 hostTag = 'Hosts/'
 hostNameTag = 'FullName/'
@@ -15,11 +20,12 @@ hostCurrUserTag = 'CurrUser/'
 RESTPathTag = 'RESTPath/'
 pathTag = 'Paths/'
 
-#=================================================================
-# XNATSettings is the class that manages storable settings for the
-# XNATSlicer module.  The class is activated by clicking the wrench
-# icon in the XNATSlicer browser.
-#=================================================================
+
+comment = """
+XNATSettings is the class that manages storable settings for the
+XNATSlicer module.  The class is activated by clicking the wrench
+icon in the XNATSlicer browser.
+"""
 
 class SettingsPopup:
     def __init__(self, browser, settings):        
@@ -482,7 +488,9 @@ class XNATSettings:
 
     
   def isDefault(self, hostName):
-    if "1" in (self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, "").strip()): 
+
+    dbVal =  '%s'%(self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, ""))
+    if '1' in dbVal or 'True' in dbVal: 
         return True
     return False 
 
