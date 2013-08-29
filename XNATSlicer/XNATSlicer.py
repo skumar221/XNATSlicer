@@ -22,13 +22,19 @@ from XNATLoginMenu import *
 from XNATButtons import *
 from XNATView import *
 from XNATPopup import *
+from DICOMLoadWorkflow import *
+from SceneLoadWorkflow import *
+from FileLoadWorkflow import *
 
-from DICOMLoader import *
-from SceneLoader import *
-from FileLoader import *
 
 
-#import XNATUtils
+comment = """
+"""
+
+
+
+
+
 
 class XNATSlicer:
   def __init__(self, parent):
@@ -126,11 +132,11 @@ class XNATSlicerWidget:
 
 
       #--------------------------------
-      # Loaders
+      # LoadWorkflows
       #--------------------------------
-      self.SceneLoader = SceneLoader(self)
-      self.FileLoader = FileLoader(self)
-      self.DICOMLoader = DICOMLoader(self)
+      self.SceneLoadWorkflow = SceneLoadWorkflow(self)
+      self.FileLoadWorkflow = FileLoadWorkflow(self)
+      self.DICOMLoadWorkflow = DICOMLoadWorkflow(self)
 
       
       

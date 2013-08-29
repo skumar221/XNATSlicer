@@ -8,6 +8,7 @@ import zipfile
 from XNATFileInfo import *
 from XNATScenePackager import *
 from XNATTimer import *
+from XNATSaveDialog import *
 
 
 
@@ -21,7 +22,6 @@ a file to XNAT.  Packaging scenes and uploaded are conducted here.
 
 
 
-
     
 class XNATSaveWorkflow(object):
     """ Descriptor above.
@@ -30,18 +30,47 @@ class XNATSaveWorkflow(object):
 
 
     
-    def __init__(self, browser, XNATCommunicator, sessionArgs):
+    def __init__(self, browser):
         """ Parent class of any load workflow
         """
+        
         self.browser = browser
         self.scenePackager = XNATScenePackager(self.browser)
-        self.sessionArgs = sessionArgs
+
 
         # Set wait window
         self.waitWindow = qt.QMessageBox(0, "Uploading", "Please wait while file uploads...")
 
 
+
         
+    def beginWorkflow(self):
+        """ Descriptor
+        """
+
+        # If Scene originated from XNAT (i.e. the session manager is active)...
+        if self.browser.XNATView.sessionManager.sessionArgs:
+            self.browser.XNATView.setEnabled(False)
+            FileSaveDialog(self.browser, self)
+            
+         
+        # If scene is local, or of non-XNAT origin
+        elif (not self.browser.XNATView.sessionManager.sessionArgs):
+
+            
+            # Construct new sessionArgs
+            fullPath = self.browser.XNATView.getXNATDir(self.browser.XNATView.getParents(self.browser.XNATView.viewWidget.currentItem()))
+            remoteURI = self.browser.settings.getAddress(self.browser.XNATLoginMenu.hostDropdown.currentText) + fullPath
+            sessionArgs = XNATSessionArgs(browser = self.browser, srcPath = fullPath)
+            sessionArgs['sessionType'] = "scene upload - unlinked"
+            sessionArgs.printAll()
+
+            
+            # Call unlinked dialog
+            SaveUnlinkedDialog(self.browser, self, fullPath)
+
+
+
         
     def saveScene(self):    
         """  Main command scene
@@ -56,7 +85,7 @@ class XNATSaveWorkflow(object):
 
 
         # Package scene
-        package = self.scenePackager.bundleScene(self.sessionArgs)
+        package = self.scenePackager.bundleScene(self.browser.XNATView.sessionManager.sessionArgs)
         projectDir =         package['path']
         mrmlFile =           package['mrml']  
         
@@ -70,15 +99,15 @@ class XNATSaveWorkflow(object):
 
         
         # Upload package     
-        uploadStr = self.sessionArgs['saveDir'] + "/" + os.path.basename(packageFileName)    
+        uploadStr = self.browser.XNATView.sessionManager.sessionArgs['saveDir'] + "/" + os.path.basename(packageFileName)    
         self.browser.XNATCommunicator.upload(packageFileName, uploadStr)
         slicer.app.processEvents()
   
             
         # Update viewer
         baseName = os.path.basename(packageFileName)
-        self.sessionArgs['sessionType'] = "scene upload"
-        self.browser.XNATView.startNewSession(self.sessionArgs)
+        self.browser.XNATView.sessionManager.sessionArgs['sessionType'] = "scene upload"
+        self.browser.XNATView.startNewSession(self.browser.XNATView.sessionManager.sessionArgs)
         self.browser.XNATView.setCurrItemToChild(item = None, childFileName = baseName)
         self.browser.XNATView.setEnabled(True)
         print "\nUpload of '%s' complete."%(baseName)
@@ -88,6 +117,7 @@ class XNATSaveWorkflow(object):
         self.waitWindow.hide()
 
 
+        
         
     def determineSaveLocation(self, itemType, selectedDir, saveLevel = None):
         """ Method goes through various steps to determine the optimal XNAT 

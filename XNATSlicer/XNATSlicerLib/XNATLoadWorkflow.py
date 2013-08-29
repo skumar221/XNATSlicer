@@ -15,14 +15,6 @@ from XNATSessionManager import *
 from XNATMRMLParser import *
 from XNATPopup import *
 
-
-
-def getLoader(loaderType, browser):
-    if   loaderType == "scene": return SceneLoader(browser)
-    elif loaderType == "dicom": return DICOMLoader(browser)
-    elif loaderType == "file":  return FileLoader(browser)
-    elif loaderType == "mass_dicom":  return DICOMLoader(browser)
-
     
 
 comment = """
@@ -30,6 +22,9 @@ XNATLoadWorkflow is a parent class to various loader types
 (Slicer files, DICOM folders, individual files, etc.).  Loader types
 are determined by the treeView item being clicked. 
 """
+
+
+
 
 
 
@@ -120,8 +115,84 @@ class XNATLoadWorkflow(object):
         return {'MRMLS':mrmls, 'ALLIMAGES': allImages, 'DICOMS': dicoms, 'OTHERS': others, 'ALLNONMRML': allImages + dicoms + others}
    
 
-
-
-
-
     
+
+    def beginWorkflow(self, button = None):
+        """ Descriptor   
+        """
+
+        
+        #------------------------
+        # Clear Scene
+        #------------------------
+        if not button and not self.browser.utils.isCurrSceneEmpty():           
+            self.browser.XNATView.initClearDialog()
+            self.browser.XNATView.clearSceneDialog.connect('buttonClicked(QAbstractButton*)', self.beginWorkflow) 
+            self.browser.XNATView.clearSceneDialog.show()
+            return
+        
+        
+        
+        #------------------------
+        # Begin Workflow once Clear Scene accepted
+        #------------------------
+        if (button and 'yes' in button.text.lower()) or self.browser.utils.isCurrSceneEmpty():
+
+
+            # Clear the scene and current session
+            self.browser.XNATView.sessionManager.clearCurrentSession()
+            slicer.app.mrmlScene().Clear(0)
+
+            
+            # Acquire vars
+            currItem = self.browser.XNATView.viewWidget.currentItem()
+            pathObj = self.browser.XNATView.getXNATPathObject(currItem)
+            remoteURI = self.browser.settings.getAddress(self.browser.XNATLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryPaths'][0]
+
+            
+            # Check path string if at the scan level
+            if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
+                remoteURI += '/files'
+
+                
+            # Construct dst (local)
+            dst = os.path.join(self.browser.utils.downloadPath, 
+                               currItem.text(self.browser.XNATView.column_name))
+
+
+            
+            #------------------------
+            # Determine loader based on currItem
+            #------------------------
+            
+            # Slicer files
+            if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
+                loader = self.browser.SceneLoadWorkflow
+                
+                # Other readable files
+            elif ('files' in remoteURI and '/resources/' in remoteURI):
+                loader =  self.browser.FileLoadWorkflow
+                
+                #  DICOMS
+            else:      
+                loader =  self.browser.DICOMLoadWorkflow
+                    
+                    
+                
+            #------------------------
+            # Call load
+            #------------------------
+            args = {"xnatSrc": remoteURI, 
+                    "localDst":dst, 
+                    "folderContents": None}
+            loadSuccessful = loader.load(args)  
+            
+            
+            
+            #------------------------
+            # Enable TreeView
+            #------------------------
+            self.browser.XNATView.viewWidget.setEnabled(True)
+            self.lastButtonClicked = None
+    
+        

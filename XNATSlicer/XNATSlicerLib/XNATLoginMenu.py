@@ -205,7 +205,7 @@ class XNATLoginMenu(object):
             if len(currUser) > 0:  
                 self.usernameLine.setText(currUser)
             else: 
-                self.usernameline.settext(self.defaultusernametext)
+                self.usernameLine.settext(self.defaultusernametext)
 
                 
         # If not, populate with default line
