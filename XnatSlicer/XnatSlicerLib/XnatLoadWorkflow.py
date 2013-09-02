@@ -20,7 +20,8 @@ from XnatPopup import *
 comment = """
 XnatLoadWorkflow is a parent class to various loader types
 (Slicer files, DICOM folders, individual files, etc.).  Loader types
-are determined by the treeView item being clicked. 
+are determined by the treeViewItem being clicked in the 
+XnatLoadWorkflow function 'beginWorkflow'. 
 """
 
 
@@ -29,14 +30,15 @@ are determined by the treeView item being clicked.
 
 
 class XnatLoadWorkflow(object):
-    """ Descriptor
+    """ Parent Load workflow class to: XnatDicomLoadWorkflow, 
+        XnatSceneLoadWorkflow, and XnatFileLoadWorkflow.
     """
 
 
 
     
     def __init__(self, browser):
-        """ Parent class of any load workflow
+        """ Parent init.
         """
         self.utils = XnatUtils()
         self.browser = browser       
@@ -46,9 +48,14 @@ class XnatLoadWorkflow(object):
 
 
         
+    def initLoad(self):
+        """ As stated.
+        """
+
+
         
     def load(self, args):
-        """ Parent class of any load workflow
+        """ As stated.
         """
         self.xnatSrc = args["xnatSrc"]
         self.localDst = args["localDst"]
@@ -57,13 +64,15 @@ class XnatLoadWorkflow(object):
 
         
     def setup(self):
+        """ As stated.
+        """
         pass
 
 
 
      
     def loadFinish(self):
-        """ Parent class of any load workflow
+        """ As stated.
         """
         pass
 
@@ -71,7 +80,7 @@ class XnatLoadWorkflow(object):
 
     
     def terminateLoad(self, warnStr):
-        """ Parent class of any load workflow
+        """ As stated.
         """
         qt.QMessageBox.warning( None, warnStr[0], warnStr[1])
         self.browser.XnatView.setEnabled(True)
@@ -80,7 +89,8 @@ class XnatLoadWorkflow(object):
 
         
     def getLoadables_byDir(self, rootDir):
-        """Returns the loadable filenames (determined by filetype) in a dir"""
+        """Returns the loadable filenames (determined by filetype) in a dir.
+        """
         allImages = []
         mrmls = []
         dicoms = []   
@@ -97,7 +107,9 @@ class XnatLoadWorkflow(object):
 
     
     def getLoadables_byList(self, fileList):
-        """Returns the loadable filenames (determined by filetype) in filename list"""
+        """Returns the loadable filenames (determined by filetype) 
+           in filename list.
+        """
         allImages = []
         mrmls = []
         dicoms = []
@@ -118,7 +130,7 @@ class XnatLoadWorkflow(object):
     
 
     def beginWorkflow(self, button = None):
-        """ Descriptor   
+        """ As stated. 
         """
 
         
@@ -156,8 +168,7 @@ class XnatLoadWorkflow(object):
 
                 
             # Construct dst (local)
-            dst = os.path.join(self.browser.utils.downloadPath, 
-                               currItem.text(self.browser.XnatView.column_name))
+            dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.column_name))
 
 
             
@@ -185,7 +196,7 @@ class XnatLoadWorkflow(object):
             args = {"xnatSrc": remoteURI, 
                     "localDst":dst, 
                     "folderContents": None}
-            loadSuccessful = loader.load(args)  
+            loadSuccessful = loader.initLoad(args)  
             
             
             

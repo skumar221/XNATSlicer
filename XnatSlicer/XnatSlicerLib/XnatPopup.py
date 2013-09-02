@@ -130,14 +130,11 @@ class XnatDownloadPopup(XnatPopup):
 
         self.downloadFileSize = 0
         self.downloadedBytes = 0
-
-
         
         
     def setDownloadFilename(self, filename):
         """ Descriptor
         """
-        self.reset()
         
         # Truncate filename
         filename = '...' + filename.split('/experiments')[1] if len(filename) > 33 else filename
@@ -163,7 +160,6 @@ class XnatDownloadPopup(XnatPopup):
         """ Descriptor
         """
         if size:
-            
             self.downloadFileSize = size
             self.progBar.setMinimum(0)
             self.progBar.setMaximum(100)
@@ -173,6 +169,7 @@ class XnatDownloadPopup(XnatPopup):
 
             # Update display
             self.lines[1].setText(self.lines[1].text.replace('[Unknown total]', str(size)))
+
 
 
             

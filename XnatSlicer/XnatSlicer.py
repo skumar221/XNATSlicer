@@ -1,11 +1,14 @@
 import os, inspect, sys
 
 
-# Widget path needs to be globally recognized by python
+# Widget path needs to be globally recognized by Python.
+# Appending to global path here.
 WIDGETPATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
 WIDGETPATH = os.path.join(WIDGETPATH, "XnatSlicerLib")
 sys.path.append(WIDGETPATH)
 sys.path.append(os.path.join(WIDGETPATH, 'UI'))
+
+
 
 
 from XnatFileInfo import *
@@ -44,7 +47,7 @@ class XnatSlicer:
       parent.dependencies = []
       parent.contributors = ["Sunil Kumar (Moka Creative, LLC), Dan Marcus (WashU-St. Louis), Steve Pieper (Isomics)"] 
       parent.helpText = """ The XNATSlicer Browser 1.0"""
-      parent.acknowledgementText = """Sunil Kumar via the Neuroinformatics Research Group - sunilk@mokacreativellc.com""" 
+      parent.acknowledgementText = """Sunil Kumar for the Neuroinformatics Research Group - sunilk@mokacreativellc.com""" 
       self.parent = parent
       
       # Add this test to the SelfTest module's list for discovery when the module
@@ -59,6 +62,11 @@ class XnatSlicer:
       def runTest(self):
           tester = XnatSlicerTest()
           tester.runTest()
+
+
+
+
+          
 
 #
 # qXnatSlicerWidget

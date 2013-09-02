@@ -16,16 +16,17 @@ import inspect
 
 
 
-
-#########################################################
 comment = """
   XnatUtils is the class that owns many of the default 
   directory strings and path manipulation efforts of the module.
 
 # TODO : 
 """
-#
-#########################################################
+
+
+
+
+
 
 class XnatUtils(object):
     
@@ -876,36 +877,27 @@ class XnatUtils(object):
         mb = str(bytes/(1024*1024.0)).split(".")[0] + "." + str(bytes/(1024*1024.0)).split(".")[1][:2]
         return mb
 
-     
-class textStatusBar(object):
-    def __init__(self, parent = None, overwriteMode = False, size = 7):
+
+
+
+    def repositionToMainSlicerWindow(self, positionable, location = "center"):
+
+        # Make sure positionable is open.
+        positionable.show()
+
+        # Get main window and its position.
+        mainWindow = slicer.util.mainWindow()
+        screenMainPos = mainWindow.pos
+
         
-        self.textField = qt.QTextEdit()
-        self.textField.setReadOnly(True)
-        self.textField.setAcceptRichText(True)
-        #self.textField.setFixedHeight(60)
-        self.size = size 
-        self.textField.setFont(qt.QFont("Arial", self.size, 0, False))
-        self.overwriteMode = overwriteMode
-        self.textField.setFixedHeight(60)
-    
-    def showMessage(self, text, italAll = False, boldAll = False, fontSize = 7):
-        
-#        if fontSize != self.size:
-#            text = "<font size = " + str(fontSize) +  ">" + text + "</font>"        
-#        if italAll: text = "<i>" +  text + "</i>"
-#        if boldAll: text = "<b>" + text + "</b>"
-
-        newText = text#.replace(" ", "")      
-        if not self.overwriteMode: self.textField.append(newText)
-        else: self.textField.setText(newText)
-
-
-        #except Exception, e:
-#    print ("PRINT FILE SIZE ERROR: %s"%(str(e)))
-#raise
-
-    def go(self, fileURIs):
-        #print "GOING!"
-        t = Thread(target=self.printFileSize, args=(fileURIs[0],))
-        t.start()
+        # Derive coordinates
+        location = location.lower().strip()
+        if location == 'upperleftcorner':
+            x = screenMainPos.x()
+            y = screenMainPos.y()          
+        # location = 'center'
+        else :
+            x = screenMainPos.x() + mainWindow.width/2 - positionable.width/2
+            y = screenMainPos.y() + mainWindow.height/2 - positionable.height/2
+            
+        positionable.move(qt.QPoint(x,y))
