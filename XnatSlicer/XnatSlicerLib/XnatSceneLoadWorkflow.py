@@ -12,18 +12,19 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
     """
 
 
-    
-    def load(self, args):
-        """ Descriptor
-        """
-            
-        super(XnatSceneLoadWorkflow, self).load(args)
+
+    def initLoad(self, args):
+        self.load(args)
+
 
 
         
-        # Display indicators
-        self.browser.downloadPopup.setDownloadFilename(self.xnatSrc)
-        self.browser.downloadPopup.show()
+    def load(self, args):
+        """ Descriptor
+        """
+
+        # Superclass call.
+        super(XnatSceneLoadWorkflow, self).load(args)
 
         
         

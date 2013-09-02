@@ -1,5 +1,6 @@
 from __main__ import vtk, ctk, qt, slicer
 
+
 import os
 import sys
 import shutil
@@ -16,14 +17,9 @@ import json
 
 
 comment = """
-XnatCommunicator uses PyXnat to send/receive commands and files to an Xnat host
+XnatCommunicator uses httplib to send/receive commands and files to an Xnat host
 Since input is usually string-based, there are several utility methods in this
-class to clean up strings for input to PyXnat. 
-
-
-  The Neuroinformatics Research Group
-  Author: Sunil Kumar (kumar.sunil.p@gmail.com)
-  Date: 8/2013
+class to clean up strings for input to httplib. 
 """
 
 
@@ -70,11 +66,11 @@ class XnatCommunicator(object):
 
 
     
-    def getFiles_URL(self, srcDstMap, withProgressBar = True, fileOrFolder = None): 
+    def getFilesByUrl(self, srcDstMap, withProgressBar = True, fileOrFolder = None): 
 
         
         #--------------------
-        # Get total size of downloads for all files
+        # Reset total size of downloads for all files
         #-------------------------
         self.downloadTracker['totalDownloadSize']['bytes'] = 0
         self.downloadTracker['downloadedSize']['bytes'] = 0
@@ -101,17 +97,8 @@ class XnatCommunicator(object):
 
                 fName = os.path.basename(src)
                 fPath = "/projects/" + src.split("/projects/")[1]
-                #print fPath
-                
-                #self.downloadTracker['totalDownloadSize']['bytes'] = int(0)
-                #if fName in self.fileDict and 'Size' in self.fileDict[fName]:
-                #    print "GOT SIZE: ! %s"%(int(self.fileDict[fName]['Size']))
-                #    self.downloadTracker['totalDownloadSize']['bytes'] = int(self.fileDict[fName]['Size'])
- 
-                if withProgressBar: 
-                    self.getFileWithProgress(src, dst)
-                else: 
-                    f.get(dst) 
+                self.get(src, dst)
+
                                     
         elif fileOrFolder == "folder":
             import tempfile
@@ -150,7 +137,7 @@ class XnatCommunicator(object):
                         
                     # Init download
                     print("%s folder downloading %s to %s"%(self.browser.utils.lf(), src, dst))
-                    self.getFileWithProgress(src, dst)
+                    self.get(src, dst)
 
                     
                    
@@ -284,7 +271,7 @@ class XnatCommunicator(object):
     def getFile(self, srcDstMap, withProgressBar = True):
         """ Description
         """
-        return self.getFiles_URL(srcDstMap, fileOrFolder = "file")
+        return self.getFilesByUrl(srcDstMap, fileOrFolder = "file")
 
 
 
@@ -292,12 +279,12 @@ class XnatCommunicator(object):
     def getFiles(self, srcDstMap, withProgressBar = True):
         """ Description
         """
-        return self.getFiles_URL(srcDstMap, fileOrFolder = "folder")
+        return self.getFilesByUrl(srcDstMap, fileOrFolder = "folder")
     
 
 
     
-    def getFileWithProgress(self, XnatSrc, dst, groupSize = None, sizeTracker = 0):
+    def get(self, XnatSrc, dst, showProgressIndicator = True):
         """ Descriptor
         """
 
@@ -324,7 +311,6 @@ class XnatCommunicator(object):
         # Begin to open the file to read in bytes
         #-------------------- 
         XnatFile = open(dst, "wb")
-        #print ("\nDownloading %s...\n"%(XnatSrc))
       
 
 
@@ -340,21 +326,13 @@ class XnatCommunicator(object):
         #-------------------- 
         self.downloadTracker['downloadedSize']['bytes'] = 0   
         self.downloadTracker['totalDownloadSize'] = self.getSize(XnatSrc)
+  
         if not self.downloadTracker['totalDownloadSize']['bytes']:
-
-            
+          
             # If not in log, read the header
             if "Content-Length" in response.headers:
                 self.downloadTracker['totalDownloadSize']['bytes'] = int(response.headers["Content-Length"])  
                 self.downloadTracker['totalDownloadSize']['MB'] = self.browser.utils.bytesToMB(self.downloadTracker['totalDownloadSize']['bytes'])
-
-
-                
-        #-------------------- 
-        # Update the download popup
-        #-------------------- 
-        if self.downloadTracker['totalDownloadSize']['bytes'] and self.browser.downloadPopup:
-            self.browser.downloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
 
 
             
@@ -362,29 +340,77 @@ class XnatCommunicator(object):
         # Adjust browser UI
         #-------------------- 
         self.browser.XnatView.setEnabled(False)
+
+
         
 
+        #-------------------- 
+        # Define buffer read function
+        #-------------------- 
+        def buffer_read(response, fileToWrite, buffer_size=8192, currSrc = "", fileDisplayName = ""):
+            """Downloads files by a constant buffer size.
+            """
 
-        # DEPRECATED: Window adjustments
-        """
-        mainWindow = slicer.util.mainWindow()
-        screenMainPos = mainWindow.pos
-        x = screenMainPos.x() + mainWindow.width/2 - self.browser.generalProgressBar.width/2
-        y = screenMainPos.y() + mainWindow.height/2 - self.browser.generalProgressBar.height/2
-        self.browser.generalProgressBar.move(qt.QPoint(x,y))
-        """
+            
+            if showProgressIndicator:
+                
+                # Reset popup
+                self.browser.downloadPopup.reset()
+                
+                # Set filename
+                self.browser.downloadPopup.setDownloadFilename(fileDisplayName) 
+                
+                # Update the download popup file size
+                if self.downloadTracker['totalDownloadSize']['bytes']:
+                    self.browser.downloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
+                    # Wait for threads to catch up 
+                    slicer.app.processEvents()
+
+                    # show popup
+                self.browser.downloadPopup.show()
 
 
+                
+            self.browser.XnatView.viewWidget.setEnabled(False)
 
+        
+            # Read loop
+            while 1:            
+                
+                
+                # Read buffer
+                buffer = response.read(buffer_size)
+                if not buffer: 
+                    if self.browser.downloadPopup:
+                        self.browser.downloadPopup.hide()
+                        break 
+                    
+                    
+                # Write buffer to file
+                fileToWrite.write(buffer)
+                    
+                    
+                # Update progress indicators
+                self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
+                if showProgressIndicator and self.browser.downloadPopup:
+                    self.browser.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
+
+                    
+                # Wait for threads to catch up      
+                slicer.app.processEvents()
+
+
+                
+            return self.downloadTracker['downloadedSize']['bytes']
+
+
+        
         #-------------------- 
         # Read buffers (cyclical)
         #-------------------- 
-        fileDisplayName = os.path.basename(XnatSrc) if not 'format=zip' in XnatSrc else XnatSrc.split("/subjects/")[1]
-        a = self.buffer_read(response = response, 
-                             fileToWrite = XnatFile, 
-                             buffer_size = 8192, 
-                             currSrc = XnatSrc,
-                             fileDisplayName = fileDisplayName)
+        fileDisplayName = os.path.basename(XnatSrc) if not 'format=zip' in XnatSrc else XnatSrc.split("/subjects/")[1]  
+        bytesRead = buffer_read(response = response, fileToWrite = XnatFile, 
+                                buffer_size = 8192, currSrc = XnatSrc, fileDisplayName = fileDisplayName)
 
 
         
@@ -393,35 +419,6 @@ class XnatCommunicator(object):
         #-------------------- 
         self.browser.XnatView.setEnabled(True)
         XnatFile.close()
-
-
-
-        
-    def buffer_read(self, response, fileToWrite, buffer_size=8192, currSrc = "", fileDisplayName = ""):
-        """Descriptor
-        """
-        
-        while 1:            
-
-            
-            # Read buffer
-            buffer = response.read(buffer_size)
-            if not buffer: 
-                if self.browser.downloadPopup:
-                    self.browser.downloadPopup.hide()
-                break 
-            
-            
-            # Write buffer to file
-            fileToWrite.write(buffer)
-
-            
-            # Update progress indicators
-            self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
-            if self.browser.downloadPopup:
-                self.browser.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
-            
-        return self.downloadTracker['downloadedSize']['bytes']
 
     
             

@@ -107,7 +107,7 @@ class XnatHostEditor:
     """
 
     # Get host dictionary from XnatSettings
-    hostDictionary = self.browser.settings.hostNameAddressDictionary()  
+    hostDictionary = self.browser.settings.getHostNameAddressDictionary()  
 
     # Empty hostList
     self.hostLister.setText("")

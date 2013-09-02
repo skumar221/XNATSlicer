@@ -38,7 +38,7 @@ pathTag = 'Paths/'
 
 class XnatSettings:
   """ Manager for handing the settings file.  Stored in QSettings standard through
-      a file ('XnatSettings.ini')
+      'XnatSettings.ini')
   """
 
 
@@ -61,6 +61,8 @@ class XnatSettings:
 
     
   def setup(self):
+    """ Determine if there is an XnatSettings.ini file.
+    """
     if not os.path.exists(self.filepath): 
         print 'No Xnat settings found...creating new settings file: ' + self.filepath
         self.createDefaultSettings()
@@ -69,6 +71,8 @@ class XnatSettings:
 
         
   def createDefaultSettings(self):  
+    """ Constructs a default database from the code.
+    """
     restPaths = ['']
     for name in self.defaultHosts:
          setDefault = True if name == 'Central' else False
@@ -78,7 +82,10 @@ class XnatSettings:
 
     
   
-  def hostNameAddressDictionary(self):
+  def getHostNameAddressDictionary(self):
+    """ Queries the database for hosts and creates
+        a dictionary of key 'name' and value 'address'
+    """
     self.database.beginGroup(hostTag)
     hostDict = {}        
     for childName in self.database.childGroups():
@@ -90,17 +97,30 @@ class XnatSettings:
 
   
   def saveHost(self, hostName, hostAddress, isModifiable=True, isDefault=False):
-    hostDict = self.hostNameAddressDictionary()
+    """ Writes host to the QSettings.ini database.
+    """
+    
+    hostDict = self.getHostNameAddressDictionary()
     hostNameFound = False
+
+    
+    # Check to see if its a valid http URL, modify if not
     if not hostAddress.startswith("http://") and not hostAddress.startswith("https://"):
         hostAddress ="http://" + hostAddress
+
+        
+    # Check if the host name exists.
     for name in hostDict:
         hostNameFound = True if str(name).lower() == str(hostName).lower() else False 
+
         
+    # Check for blanks, return warning window if there are any.
     if hostName == "" or hostAddress == "":
        blanks = [] 
-       if hostName =="": blanks.append("Name")
-       if hostAddress =="": blanks.append("URI")
+       if hostName == "": 
+           blanks.append("Name")
+       if hostAddress == "": 
+           blanks.append("URI")
        
        blankTxt = ""
        for i in range(0, len(blanks)):
@@ -109,19 +129,33 @@ class XnatSettings:
             
        qt.QMessageBox.warning( None, "Save Host", "Please leave no text field blank (%s)"%(blankTxt))
        return False    
+
+    
+    # Return warning window if host name already used.
     elif hostNameFound == True:
        qt.QMessageBox.warning( None, "Save Host", hostName + " is a name that's already in use.")
        hostFound = False
        return False
+
+    
+    # Otherwise, save.
     else:
        self.database.setValue(hostTag + hostName + "/" + hostNameTag, hostName)
-       self.database.setValue(hostTag + hostName + "/" + hostAddressTag, hostAddress)      
-       for item in self.defaultHosts:
-           if hostName.strip("") == item.strip(""):
+       self.database.setValue(hostTag + hostName + "/" + hostAddressTag, hostAddress)
+
+       # Don't write over default hosts.
+       for defaultHostName in self.defaultHosts:
+           if hostName.strip("") == defaltHostName.strip(""):
                isModifiable = False
                break
+
+       # Is modifiable.
        self.database.setValue(hostTag + hostName + "/" + hostIsModifiableTag, isModifiable)
+
+       # Is default.
        self.database.setValue(hostTag + hostName + "/" + hostIsDefaultTag, isDefault)
+
+       # Curr user.
        self.database.setValue(hostTag + hostName + "/" + hostCurrUserTag, "")
        return True
 
@@ -161,6 +195,8 @@ class XnatSettings:
 
     
   def setDefault(self, hostName):
+    """ As stated.
+    """
     self.database.beginGroup(hostTag)      
     for childName in self.database.childGroups():
         self.database.setValue(childName +"/"+ hostIsDefaultTag, False)
@@ -171,7 +207,8 @@ class XnatSettings:
 
     
   def isDefault(self, hostName):
-
+    """ As stated.
+    """   
     dbVal =  '%s'%(self.database.value(hostTag + hostName + "/" + hostIsDefaultTag, ""))
     if '1' in dbVal or 'True' in dbVal: 
         return True
@@ -181,6 +218,8 @@ class XnatSettings:
 
   
   def isModifiable(self, hostName):
+    """ As stated.
+    """
     title = unicode(str(self.database.value(hostTag + hostName + "/" + hostIsModifiableTag, "")))
     import unicodedata
     return unicodedata.normalize('NFKD', title).encode('ascii','ignore')
@@ -189,12 +228,16 @@ class XnatSettings:
 
   
   def getAddress(self, hostName):
+    """ As stated.
+    """
     return self.database.value(hostTag + hostName + "/" + hostAddressTag, "")
 
 
 
   
   def setCurrUsername(self, hostName, username):
+    """ As stated.
+    """
     self.database.beginGroup(hostTag)  
     self.database.setValue(hostName +"/" + hostCurrUserTag, username)
     self.database.endGroup()
@@ -203,6 +246,8 @@ class XnatSettings:
 
     
   def getCurrUsername(self, hostName):
+    """ As stated.
+    """
     return self.database.value(hostTag + hostName + "/" + hostCurrUserTag, "")
 
   
@@ -211,8 +256,12 @@ class XnatSettings:
   def addHosts(self):
       """ Adds and stores the entered host
       """
+
+      # Clear drowpdown.
       self.browser.XnatLoginMenu.hostDropdown.clear()
-      hostDict = self.browser.settings.hostNameAddressDictionary()
+
+      # Populate dropdown.
+      hostDict = self.browser.settings.getHostNameAddressDictionary()
       for name in hostDict:     
           self.browser.XnatLoginMenu.hostDropdown.addItem(name)
           
