@@ -49,4 +49,11 @@ def makeButtons(XnatButtons):
                                                   size = XnatButtons.browser.utils.buttonSizeSmall, 
                                                   enabled = False)
 
+
+    buttons['test'] = generateButton(XnatButtons = XnatButtons, iconFile = 'test.gif', 
+                                                  toolTip = "Run XNATSlicer tests...", 
+                                                  font = XnatButtons.browser.utils.labelFont,
+                                                  size = XnatButtons.browser.utils.buttonSizeSmall, 
+                                                  enabled = False)
+
     return buttons

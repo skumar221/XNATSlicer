@@ -6,7 +6,7 @@ import glob
 import sys
 
 
-from XnatSettingsPopup import *
+from XnatSettingsWindow import *
 
 
 

@@ -47,6 +47,10 @@ class XnatButtons(object):
         self.buttons['delete'].connect('clicked()', self.deleteClicked)
         self.buttons['addProj'].connect('clicked()', self.addProjClicked)
 
+        # Testing button
+        self.buttons['test'].connect('clicked()', self.testClicked)
+        self.setEnabled('test', True)
+
 
 
         
@@ -82,6 +86,14 @@ class XnatButtons(object):
         saver = XnatSaveWorkflow(self.browser)
         saver.beginWorkflow()
 
+
+
+    def testClicked(self):        
+        """ Starts Save workflow.
+        """     
+        self.lastButtonClicked = "test" 
+        self.browser.XnatView.setEnabled(True)
+        self.browser.tester.runTest()
 
 
         

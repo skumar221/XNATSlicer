@@ -36,14 +36,12 @@ class XnatCommunicator(object):
     def __init__(self, browser, 
                        server, 
                        user, 
-                       password, 
-                       cachedir):
+                       password):
         
         self.browser = browser
         self.server = server
         self.user = user
         self.password = password
-        self.cachedir = cachedir
 
 
         self.setup()
