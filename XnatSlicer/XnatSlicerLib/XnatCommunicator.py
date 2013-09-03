@@ -315,7 +315,12 @@ class XnatCommunicator(object):
         #-------------------- 
         # Get the response URL
         #-------------------- 
-        response = urllib2.urlopen(XnatSrc)
+        try:
+            response = urllib2.urlopen(XnatSrc)
+        except Exception, e:
+            qt.QMessageBox.warning( None, "Xnat Error", str(e))
+            self.browser.XnatView.setEnabled(True)
+            return
 
 
         

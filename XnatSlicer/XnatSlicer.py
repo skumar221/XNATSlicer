@@ -109,7 +109,7 @@ class XnatSlicerWidget:
       # Login Menu
       #--------------------------------
       self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, browser = self)
-      self.settings.addHosts()   
+      self.XnatLoginMenu.loadDefaultHost()   
 
 
       

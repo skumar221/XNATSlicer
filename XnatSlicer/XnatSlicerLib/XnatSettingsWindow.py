@@ -77,7 +77,7 @@ class XnatSettingsWindow:
         # Buttons
         self.doneButton = qt.QPushButton("Done")
         self.windowLayout.addRow(self.doneButton)#, 5, 5)
-        self.doneButton.connect('clicked()', self.donePressed)
+        self.doneButton.connect('clicked()', self.doneClicked)
 
 
         # qt show
@@ -100,6 +100,7 @@ class XnatSettingsWindow:
 
 
         
-    def donePressed(self):
+    def doneClicked(self):
+        self.browser.XnatLoginMenu.loadDefaultHost()
         self.setupWindow()
         self.window.hide()
