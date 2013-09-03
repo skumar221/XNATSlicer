@@ -39,7 +39,6 @@ def makeHostDropdown(XnatLoginMenu):
     hostDropdown = qt.QComboBox()
     hostDropdown.setFont(XnatLoginMenu.browser.utils.labelFont)
     hostDropdown.toolTip = "Select Xnat host"
-    currHostUrl = qt.QUrl(hostDropdown.currentText)
 
 
     return hostDropdown

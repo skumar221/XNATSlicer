@@ -4,9 +4,14 @@ import os, inspect, sys
 # Widget path needs to be globally recognized by Python.
 # Appending to global path here.
 WIDGETPATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
+# Inlcude testing folders.
+sys.path.append(os.path.join(WIDGETPATH, 'Testing'))
+# Include lib folder.
 WIDGETPATH = os.path.join(WIDGETPATH, "XnatSlicerLib")
 sys.path.append(WIDGETPATH)
+# Include UI folder.
 sys.path.append(os.path.join(WIDGETPATH, 'UI'))
+
 
 
 
@@ -28,10 +33,15 @@ from XnatPopup import *
 from XnatDicomLoadWorkflow import *
 from XnatSceneLoadWorkflow import *
 from XnatFileLoadWorkflow import *
-
+from XnatSlicerTest import *
 
 
 comment = """
+XnatSlicer.py contains the central classes for managing 
+all of the XnatSlicer functions and abilities.  XnatSlicer.py
+is the point where the module talks to slicer, arranges the gui, and
+registers it to the Slicer modules list.  It is where all of the 
+XnatSlicerLib classes and methods come together.
 """
 
 
@@ -92,7 +102,7 @@ class XnatSlicerWidget:
       # Xnat settings
       #--------------------------------
       self.settings = XnatSettings(slicer.qMRMLWidget(), self.utils.utilPath, self)
-      self.settingsPopup = XnatSettingsPopup(self)
+      self.settingsPopup = XnatSettingsWindow(self)
 
       
       #--------------------------------
@@ -120,8 +130,6 @@ class XnatSlicerWidget:
       #--------------------------------
       # Popups
       #--------------------------------
-      self.statusPopup = None
-      self.progressPopup = None
       self.downloadPopup = XnatDownloadPopup(browser = self)
       #self.uploadPopup = XnatDownloadPopup(browser = self)
 
@@ -153,10 +161,20 @@ class XnatSlicerWidget:
 
       
       #--------------------------------
-      # Listeners/observers from gui interaction
+      # Listeners/observers from gui
       #--------------------------------
       slicer.mrmlScene.AddObserver(slicer.mrmlScene.EndCloseEvent, self.sceneClosedListener)
       slicer.mrmlScene.AddObserver(slicer.mrmlScene.EndImportEvent, self.sceneImportedListener)
+
+
+
+      #--------------------------------
+      # Tester
+      #--------------------------------
+      self.tester = XnatSlicerTest(self)
+
+      
+      
       self.parent.show()
 
 
@@ -166,11 +184,16 @@ class XnatSlicerWidget:
     def onReload(self,moduleName="XnatSlicer"):
       """Generic reload method for any scripted module.
       ModuleWizard will subsitute correct default moduleName.
+      Provided by Slicer.
       """
+      
       import imp, sys, os, slicer
-    
+
+      
       widgetName = moduleName + "Widget"
-    
+
+
+      
       # reload the source code
       # - set source file path
       # - load the module to the global space
@@ -182,7 +205,9 @@ class XnatSlicerWidget:
       globals()[moduleName] = imp.load_module(
           moduleName, fp, filePath, ('.py', 'r', imp.PY_SOURCE))
       fp.close()
-    
+
+
+      
       # rebuild the widget
       # - find and hide the existing widget
       # - create a new widget in the existing parent
@@ -192,11 +217,13 @@ class XnatSlicerWidget:
           child.hide()
         except AttributeError:
           pass
+        
       # Remove spacer items
       item = parent.layout().itemAt(0)
       while item:
         parent.layout().removeItem(item)
         item = parent.layout().itemAt(0)
+        
       # create new widget inside existing parent
       globals()[widgetName.lower()] = eval(
           'globals()["%s"].%s(parent)' % (moduleName, widgetName))
@@ -206,11 +233,13 @@ class XnatSlicerWidget:
 
       
     def onReloadAndTest(self,moduleName="ScriptedExample"):
+        
       try:
         self.onReload()
         evalString = 'globals()["%s"].%sTest()' % (moduleName, moduleName)
         tester = eval(evalString)
         tester.runTest()
+        
       except Exception, e:
         import traceback
         traceback.print_exc()
@@ -278,7 +307,13 @@ class XnatSlicerWidget:
         # Xnat Window
         #--------------------------------
         self.viewerLayout = qt.QVBoxLayout()
-        self.cleanTempDir(500)
+
+        
+
+        #--------------------------------
+        # Clean the temp dir
+        #--------------------------------
+        self.cleanTempDir(200)
 
 
         
@@ -292,6 +327,8 @@ class XnatSlicerWidget:
         self.buttonRowLayout.addWidget(self.XnatButtons.buttons['delete'])
         self.buttonRowLayout.addSpacing(15)
         self.buttonRowLayout.addWidget(self.XnatButtons.buttons['addProj'])
+        self.buttonRowLayout.addSpacing(15)
+        self.buttonRowLayout.addWidget(self.XnatButtons.buttons['test'])
         self.buttonRowLayout.addStretch()
 
 
@@ -364,8 +401,7 @@ class XnatSlicerWidget:
         # Init communicator.
         self.XnatCommunicator = XnatCommunicator(browser = self, 
                                 server = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
-                                user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text, 
-                                cachedir = self.utils.pyXnatCache)
+                                user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 
 
         # Begin communicator
@@ -375,74 +411,4 @@ class XnatSlicerWidget:
             print("XnatSlicer Module: %s"%(str(e)))
             qt.QMessageBox.warning(slicer.util.mainWindow(), "Login error!", "%s"%('There appears to be a login error.'))
 
-
-
-    
-class XnatSlicerTest(unittest.TestCase):
-    """
-    This is the test case for your scripted module.
-    """
-    
-    def delayDisplay(self,message,msec=1000):
-      """This utility method displays a small dialog and waits.
-      This does two things: 1) it lets the event loop catch up
-      to the state of the test so that rendering and widget updates
-      have all taken place before the test continues and 2) it
-      shows the user/developer/tester the state of the test
-      so that we'll know when it breaks.
-      """
-      print(message)
-      self.info = qt.QDialog()
-      self.infoLayout = qt.QVBoxLayout()
-      self.info.setLayout(self.infoLayout)
-      self.label = qt.QLabel(message,self.info)
-      self.infoLayout.addWidget(self.label)
-      qt.QTimer.singleShot(msec, self.info.close)
-      self.info.exec_()
-    
-    def setUp(self):
-      """ Do whatever is needed to reset the state - typically a scene clear will be enough.
-      """
-      slicer.mrmlScene.Clear(0)
-    
-    def runTest(self):
-      """Run as few or as many tests as needed here.
-      """
-      self.setUp()
-      self.test_XnatSlicer1()
-    
-    def test_XnatSlicer1(self):
-      """ Ideally you should have several levels of tests.  At the lowest level
-      tests sould exercise the functionality of the logic with different inputs
-      (both valid and invalid).  At higher levels your tests should emulate the
-      way the user would interact with your code and confirm that it still works
-      the way you intended.
-      One of the most important features of the tests is that it should alert other
-      developers when their changes will have an impact on the behavior of your
-      module.  For example, if a developer removes a feature that you depend on,
-      your test should break so they know that the feature is needed.
-      """
-    
-      self.delayDisplay("Starting the test")
-      #
-      # first, get some data
-      #
-      import urllib
-      downloads = (
-          ('http://slicer.kitware.com/midas3/download?items=5767', 'FA.nrrd', slicer.util.loadVolume),
-          )
-    
-      for url,name,loader in downloads:
-        filePath = slicer.app.temporaryPath + '/' + name
-        if not os.path.exists(filePath) or os.stat(filePath).st_size == 0:
-          print('Requesting download %s from %s...\n' % (name, url))
-          urllib.urlretrieve(url, filePath)
-        if loader:
-          print('Loading %s...\n' % (name,))
-          loader(filePath)
-      self.delayDisplay('Finished with download and loading\n')
-    
-      volumeNode = slicer.util.getNode(pattern="FA")
-      logic = XnatSlicerLogic()
-      self.assertTrue( logic.hasImageData(volumeNode) )
-      self.delayDisplay('Test passed!')
+      
