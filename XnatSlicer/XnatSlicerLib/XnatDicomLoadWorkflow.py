@@ -111,7 +111,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
 
             # Check to see if the file extensions are valid
             for filename in fileNames:
-                if '.' in filename and self.utils.isDICOM(filename.split(".")[1].lower()):
+                if self.utils.isDICOM(filename):
 
                     # Add to "downloadables" if good
                     self.downloadables.append(filePath + "/" + filename)

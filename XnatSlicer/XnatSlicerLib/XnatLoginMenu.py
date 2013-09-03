@@ -64,6 +64,7 @@ class XnatLoginMenu(object):
         self.hostDropdown.connect('currentIndexChanged(const QString&)', self.hostDropdownClicked)
 
 
+
         # Settings button
         self.settingsButton = XnatLoginMenuUI.makeSettingsButton(self)  
         self.settingsButton.connect('pressed()', self.settingsButtonClicked)
@@ -72,21 +73,65 @@ class XnatLoginMenu(object):
         # Login layout
         self.loginLayout = XnatLoginMenuUI.makeLoginLayout(self)
 
+
+
         
-        # Load the previously stored user
+    def resetHostDropdown(self):
+        """ As stated.
+        """
+ 
+        # Clear host dropdown
+        self.hostDropdown.clear()
+
+        
+        # Get the dictionary from settings
+        hostDict = self.browser.settings.getHostNameAddressDictionary()
+        for name in hostDict:     
+            self.browser.XnatLoginMenu.hostDropdown.addItem(name)       
+
+        
+
+            
+    def loadDefaultHost(self):
+        """ As stated.
+        """
+
+        # Reset.
+        self.resetHostDropdown()
+
+
+        # Set host Dropdown to default stored hostName
+        defaultName = self.browser.settings.getDefault()
+        self.setHostDropdownByName(defaultName)
+
+        
+        # This will populate the stored user
+        self.hostDropdownClicked(defaultName)
         self.populateCurrUser()
 
-                
-                
+        
 
+
+    def setHostDropdownByName(self, hostName):
+        """ As stated.
+        """
+        for i in range(0, self.hostDropdown.maxVisibleItems):
+            if self.hostDropdown.itemText(i).strip().lower() == hostName.strip().lower():
+                self.hostDropdown.setCurrentIndex(i)
+                self.currHostName = self.hostDropdown.itemText(i)
+                break
+            
+
+            
+        
     def populateCurrUser(self):
         """ If "Remember username" is clicked, queries the settings file to bring up 
         the username saved.
         """
 
         # Does the username exist in the settings file?
-        if self.currHostName:    
-            currUser = self.browser.settings.getCurrUsername(self.currHostName).strip("").strip(" ")
+        if self.currHostName: 
+            currUser = self.browser.settings.getCurrUsername(self.currHostName).strip()
             if len(currUser) > 0:  
                 self.usernameLine.setText(currUser)
             else: 

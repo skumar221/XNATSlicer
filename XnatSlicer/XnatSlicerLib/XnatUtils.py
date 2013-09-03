@@ -61,6 +61,8 @@ class XnatUtils(object):
         return self.dicomExtensions + [".nii", 
                                        ".nrrd", 
                                        ".img", 
+                                       ".ima",
+                                       ".IMA",
                                        ".nhdr", 
                                        ".dc", 
                                        ".raw.gz", 
@@ -479,9 +481,10 @@ class XnatUtils(object):
 
 
     def isExtension(self, ext, extList):      
-        if len(ext) > 0 and ext[0] != '.':    ext = "." + ext
+        ext = "." + ext
         for val in extList:
-            if ext.lower().find(val.lower())>-1: return True
+            if ext.lower().endswith(val.lower()): 
+                return True
         return False
 
 

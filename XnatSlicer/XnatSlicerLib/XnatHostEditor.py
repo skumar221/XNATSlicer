@@ -108,7 +108,7 @@ class XnatHostEditor:
 
     # Get host dictionary from XnatSettings
     hostDictionary = self.browser.settings.getHostNameAddressDictionary()  
-
+    
     # Empty hostList
     self.hostLister.setText("")
 
@@ -154,7 +154,7 @@ class XnatHostEditor:
     
     if deleted: 
         self.loadHosts()
-        self.browser.settings.addHosts()
+        self.browser.XnatLoginMenu.loadDefaultHost()
 
     # Close popup
     self.currPopup.close()
@@ -185,7 +185,7 @@ class XnatHostEditor:
         self.browser.settings.setCurrUsername(self.nameLine.text, self.usernameLine.text)
 
     # Reload hosts
-    self.browser.settings.addHosts()
+    self.browser.XnatLoginMenu.loadDefaultHost()
     self.loadHosts() 
 
     # Close popup
@@ -200,6 +200,7 @@ class XnatHostEditor:
     """ As described
     """
     self.currPopup = XnatHostEditorUI.makeEditPopup(self)
+    self.currPopup.setWindowModality(2)
     self.currPopup.show()  
 
 
