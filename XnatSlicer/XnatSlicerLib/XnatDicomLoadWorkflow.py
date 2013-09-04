@@ -209,6 +209,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         if not os.path.exists(self.localDst):
             os.mkdir(self.localDst)  
 
+            
         zipFolders = self.browser.XnatCommunicator.getFiles(dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables])))
 
 

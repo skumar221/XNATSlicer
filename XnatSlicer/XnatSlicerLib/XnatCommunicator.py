@@ -66,6 +66,7 @@ class XnatCommunicator(object):
     
     def getFilesByUrl(self, srcDstMap, withProgressBar = True, fileOrFolder = None): 
 
+        print self.browser.utils.lf(), srcDstMap
         
         #--------------------
         # Reset total size of downloads for all files
@@ -108,7 +109,7 @@ class XnatCommunicator(object):
             # Determine source folders, create new dict based on basename
             #---------------------
             for src, dst in srcDstMap.iteritems():
-                #print("FOLDER D/L src:%s\tdst:%s"%(src, dst))
+                print("FOLDER D/L src:%s\tdst:%s"%(src, dst))
                 srcFolder = os.path.dirname(src)
                 if not srcFolder in xnatFileFolders:
                     xnatFileFolders.append(srcFolder)
@@ -315,12 +316,74 @@ class XnatCommunicator(object):
         #-------------------- 
         # Get the response URL
         #-------------------- 
+        errorString = ""
         try:
+            print self.browser.utils.lf(), "XnatSrc: ", XnatSrc
             response = urllib2.urlopen(XnatSrc)
         except Exception, e:
-            qt.QMessageBox.warning( None, "Xnat Error", str(e))
-            self.browser.XnatView.setEnabled(True)
-            return
+            errorString += str(e) + "\n"
+
+            #-------------------
+            # If the urllib2 version fails, try the httplib version
+            #-------------------
+            try:
+                print self.browser.utils.lf(), "urllib2 get failed.  Attempting httplib version."
+                #------------
+                # HTTP LIB VERSION
+                #-----------
+
+                
+                # Reset popup
+                self.browser.downloadPopup.reset()
+                self.browser.downloadPopup.setDownloadFilename(XnatSrc) 
+                self.browser.downloadPopup.show()
+
+
+                
+                url = XnatSrc
+                userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
+                authenticationHeader = { 'Authorization' : 'Basic %s' %(userAndPass) }
+                
+                # Clean REST method
+                restMethod = 'GET'
+                
+                # Clean url
+                url = url.encode("utf-8")
+                
+                # Get request
+                req = urllib2.Request (url)
+                
+                # Get connection
+                connection = httplib.HTTPSConnection (req.get_host ()) 
+                
+                # Merge the authentication header with any other headers
+                headerAdditions={}
+                header = dict(authenticationHeader.items() + headerAdditions.items())
+                
+                # REST call
+                connection.request (restMethod, req.get_selector (), body= '', headers=header)
+                
+                print "Xnat request - %s %s"%(restMethod, url)
+
+                
+                # Return response
+                response = connection.getresponse()
+                data = response.read()           
+                XnatFile.close()
+
+                
+                # write to file
+                with open(dst, 'wb') as f:
+                    f.write(data)
+                self.browser.XnatView.setEnabled(True)
+                self.browser.downloadPopup.hide()
+                return
+                
+            except Exception, e2:
+                errorString += str(e2)
+                qt.QMessageBox.warning( None, "Xnat Error", errorStrings)
+                self.browser.XnatView.setEnabled(True)
+                return
 
 
         
@@ -333,7 +396,7 @@ class XnatCommunicator(object):
         if not self.downloadTracker['totalDownloadSize']['bytes']:
           
             # If not in log, read the header
-            if "Content-Length" in response.headers:
+            if response.headers and "Content-Length" in response.headers:
                 self.downloadTracker['totalDownloadSize']['bytes'] = int(response.headers["Content-Length"])  
                 self.downloadTracker['totalDownloadSize']['MB'] = self.browser.utils.bytesToMB(self.downloadTracker['totalDownloadSize']['bytes'])
 
