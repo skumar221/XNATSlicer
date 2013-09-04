@@ -1,8 +1,9 @@
 import json
 
-def httpsRequest(restMethod, url, body = '', headerAdditions={}):
+def httpsRequest(restMethod, url = '', body = '', headerAdditions={}):
 
-    userAndPass = b64encode(b"%s:%s"%('sunilk', 'ambuSa5t')).decode("ascii")
+    url = 'https://cnda.wustl.edu/data/projects/Jon_temp/subjects/kqa778/experiments/kqa778_mMRtest/scans/1/resources/DICOM/files?format=zip'
+    userAndPass = b64encode(b"%s:%s"%('Sunilk', 'ambuSa5t')).decode("ascii")
     authenticationHeader = { 'Authorization' : 'Basic %s' %(userAndPass) }
         
     # Clean REST method
@@ -23,10 +24,13 @@ def httpsRequest(restMethod, url, body = '', headerAdditions={}):
     # REST call
     connection.request (restMethod, req.get_selector (), body=body, headers=header)
     
-    print utils.lf() + "Xnat request - %s %s"%(restMethod, url)
+    print "Xnat request - %s %s"%(restMethod, url)
     # Return response
-    return connection.getresponse ()
+    response = connection.getresponse()
+    print response
+    return response
 
+httpsRequest('GET')
 
 
 fileUrl = 'https://central.xnat.org/data/archive/projects/XnatSlicerTest/subjects/DE-IDENTIFIED/experiments/UCLA_1297/resources/Slicer/files/test3a.mrb'
@@ -47,3 +51,20 @@ def getSize(fileUrl):
 
 
 getSize(fileUrl);
+
+
+
+
+def cndaDownload():
+    XnatSrc =  'https://cnda.wustl.edu/data/projects/Jon_temp/subjects/kqa778/experiments/kqa778_mMRtest/scans/1/resources/DICOM/files?format=zip'
+    username = 'Sunilk'
+    password = 'ambuSa5t'
+    password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    top_level_url = "https://cnda.wustl.edu"
+    password_mgr.add_password(None, top_level_url, username, password)
+    handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+    opener = urllib2.build_opener(handler)
+    opener.open(XnatSrc)
+    urllib2.install_opener(opener)
+
+cndaDownload()
