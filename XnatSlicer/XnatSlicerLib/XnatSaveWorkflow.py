@@ -67,7 +67,8 @@ class XnatSaveWorkflow(object):
 
             
             # Call unlinked dialog
-            SaveUnlinkedDialog(self.browser, self, fullPath)
+            return
+        #SaveUnlinkedDialog(self.browser, self, fullPath)
 
 
 
