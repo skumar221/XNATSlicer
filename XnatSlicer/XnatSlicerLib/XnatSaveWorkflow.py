@@ -39,7 +39,10 @@ class XnatSaveWorkflow(object):
 
 
         # Set wait window
-        self.waitWindow = qt.QMessageBox(0, "Uploading", "Please wait while file uploads...")
+        self.waitWindow = qt.QMessageBox(1, "Uploading", "Please wait while file uploads...")
+        self.waitWindow.setWindowModality(2)
+        # This removes the OK button.
+        self.waitWindow.setStandardButtons(0)
 
 
 

@@ -30,7 +30,7 @@ def httpsRequest(restMethod, url = '', body = '', headerAdditions={}):
     print response
     return response
 
-httpsRequest('GET')
+a = httpsRequest('GET')
 
 
 fileUrl = 'https://central.xnat.org/data/archive/projects/XnatSlicerTest/subjects/DE-IDENTIFIED/experiments/UCLA_1297/resources/Slicer/files/test3a.mrb'
@@ -68,3 +68,33 @@ def cndaDownload():
     urllib2.install_opener(opener)
 
 cndaDownload()
+
+
+
+
+            url = XnatSrc
+            userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
+            authenticationHeader = { 'Authorization' : 'Basic %s' %(userAndPass) }
+            
+            # Clean REST method
+            restMethod = 'GET'
+            
+            # Clean url
+            url = url.encode("utf-8")
+            
+            # Get request
+            req = urllib2.Request (url)
+            
+            # Get connection
+            connection = httplib.HTTPSConnection (req.get_host ()) 
+            
+            # Merge the authentication header with any other headers
+            headerAdditions={}
+            header = dict(authenticationHeader.items() + headerAdditions.items())
+            
+            # REST call
+            connection.request (restMethod, req.get_selector (), body= '', headers=header)
+            
+            print "Xnat request - %s %s"%(restMethod, url)
+            # Return response
+            response = connection.getresponse()

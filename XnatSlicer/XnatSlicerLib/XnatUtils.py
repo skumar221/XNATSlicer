@@ -116,7 +116,6 @@ class XnatUtils(object):
             "home" : self.MASTERPATH,
             "util": os.path.join(self.MASTERPATH, "Utils"),
             "utilShared": os.path.join(self.MASTERPATH, "Utils" + os.sep + "SlicerShared"),
-            "remoteFile" : os.path.join(self.MASTERPATH, "RemoteFileCache"),
             "project" : os.path.join(self.MASTERPATH, "Projects"),
             "download" : os.path.join(self.MASTERPATH, "temp"),
             "temp" : os.path.join(self.MASTERPATH, "temp"),
@@ -269,7 +268,92 @@ class XnatUtils(object):
 
 
 
+
+    @property
+    def XnatMetadataTags_projects(self):
+        return ['secondary_ID',
+                'pi_lastname',
+                'pi_firstname',
+                'description',
+                'name',
+                'ID',
+                'URI'
+                ]
+
+
+    @property
+    def XnatMetadataTags_subjects(self):
+        return ['project',
+                'insert_user',
+                'ID',
+                'insert_date',
+                'label',
+                'URI',
+                'totalRecords'
+                ]
+
+
+    @property
+    def XnatMetadataTags_experiments(self):
+        return ['project',
+                'xsiType',
+                'ID',
+                'xnat:subjectassessordata/id',
+                'insert_date',
+                'label',
+                'date',
+                'URI',
+                'totalRecords'
+                ]
+
+    @property
+    def XnatMetadataTags_resources(self):
+        return ['cat_id',
+                'element_name',
+                'category',
+                'xnat_abstractresource_id',
+                'label'
+                'cat_desc'
+                ]
+
+
+    @property
+    def XnatMetadataTags_scans(self):
+        return ['xsiType',
+                'quality',
+                'series_description',
+                'xnat_imagescandata_id',
+                'URI',
+                'note',
+                'type',
+                'ID'
+                ]
+
+
     
+    @property
+    def XnatMetadataTags_files(self):
+        return ['Name', 
+                'file_content',
+                'collection',
+                'file_format',
+                'file_tags',
+                'cat_ID',
+                'URI'
+                'Size'
+                ]
+
+
+    def XnatMetadataTagsByLevel(self, level):
+        if level == 'projects': return self.XnatMetadataTags_projects
+        elif level == 'subjects' : return self.XnatMetadataTags_subjects
+        elif level == 'experiments' : return self.XnatMetadataTags_experiments
+        elif level == 'scans' : return self.XnatMetadataTags_scans
+        elif level == 'resources' : return self.XnatMetadataTags_resources
+        elif level == 'files' : return self.XnatMetadataTags_files
+
+        
+            
     def removeDirsAndFiles(self, path):
         if os.path.exists(path):
             self.removeDir(path)
@@ -483,7 +567,7 @@ class XnatUtils(object):
     def isExtension(self, ext, extList):      
         ext = "." + ext
         for val in extList:
-            if ext.lower().endswith(val.lower()): 
+            if val.lower() in ext.lower(): 
                 return True
         return False
 

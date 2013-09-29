@@ -109,3 +109,47 @@ window.show()
     
 
 makeWindow()
+
+
+
+
+import DICOMScalarVolumePlugin
+path = '/Users/sunilkumar/Desktop/Work/XNATSlicer/XnatSlicer/XnatSlicerLib/data/temp/XnatDownload5skMYx/UCLA_1297/scans/6-SAG_MPRAGE_8_CHANNEL/resources/DICOM'
+downloadedDICOMS = []
+for root, dirs, files in os.walk(path):
+    for relFileName in files:          
+        downloadedDICOMS.append(os.path.join(root, relFileName))
+
+i = ctk.ctkDICOMIndexer()
+i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
+#for dicomFile in downloadedDICOMS:          
+#    i.addFile(slicer.dicomDatabase, dicomFile)
+
+
+from DICOM import DICOMWidget
+aDICOMWidget = DICOMWidget()         
+aDICOMWidget.parent.hide()
+
+        
+recentSeries = []
+files = []
+series = []
+for patient in slicer.dicomDatabase.patients():
+    #files = slicer.dicomDatabase.filesForPateitn()
+    for study in slicer.dicomDatabase.studiesForPatient(patient):
+        #files = slicer.dicomDatabase.filesForStudy()
+        for series in slicer.dicomDatabase.seriesForStudy(study):
+            print series
+            files = slicer.dicomDatabase.filesForSeries(series)
+
+
+
+c = DICOMScalarVolumePluginClass()
+loadables = c.examine([files])
+        
+
+loadables.sort(lambda x,y: c.seriesSorter(x,y))
+
+    
+loadables = c.examine(files)
+

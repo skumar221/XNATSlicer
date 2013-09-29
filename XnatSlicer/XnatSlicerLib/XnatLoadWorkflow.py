@@ -135,7 +135,7 @@ class XnatLoadWorkflow(object):
 
         
         #------------------------
-        # Clear Scene
+        # Show clearSceneDialog
         #------------------------
         if not button and not self.browser.utils.isCurrSceneEmpty():           
             self.browser.XnatView.initClearDialog()
@@ -146,64 +146,64 @@ class XnatLoadWorkflow(object):
         
         
         #------------------------
-        # Begin Workflow once Clear Scene accepted
+        # Begin Workflow one button is pressed.
         #------------------------
-        if (button and 'yes' in button.text.lower()) or self.browser.utils.isCurrSceneEmpty():
 
-
-            # Clear the scene and current session
+        # Clear the scene and current session if button was 'yes'.
+        if (button and 'yes' in button.text.lower()):
             self.browser.XnatView.sessionManager.clearCurrentSession()
             slicer.app.mrmlScene().Clear(0)
 
             
-            # Acquire vars
-            currItem = self.browser.XnatView.viewWidget.currentItem()
-            pathObj = self.browser.XnatView.getXnatPathObject(currItem)
-            remoteURI = self.browser.settings.getAddress(self.browser.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryPaths'][0]
+        # Acquire vars: current treeItem, the XnatPath, and the remote URI for 
+        # getting the file.
+        currItem = self.browser.XnatView.viewWidget.currentItem()
+        pathObj = self.browser.XnatView.getXnatPathObject(currItem)
+        remoteURI = self.browser.settings.getAddress(self.browser.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryPaths'][0]
 
             
-            # Check path string if at the scan level
-            if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
-                remoteURI += '/files'
+        # Check path string if at the scan level.
+        if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
+            remoteURI += '/files'
 
                 
-            # Construct dst (local)
-            dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.column_name))
-
+        # Construct dst (local).
+        dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.column_name))
+            
 
             
-            #------------------------
-            # Determine loader based on currItem
-            #------------------------
+        #------------------------
+        # Determine loader based on currItem
+        #------------------------
+        
+        # Slicer files
+        if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
+            loader = self.browser.XnatSceneLoadWorkflow
             
-            # Slicer files
-            if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
-                loader = self.browser.XnatSceneLoadWorkflow
-                
-                # Other readable files
-            elif ('files' in remoteURI and '/resources/' in remoteURI):
-                loader =  self.browser.XnatFileLoadWorkflow
-                
-                #  DICOMS
-            else:      
-                loader =  self.browser.XnatDicomLoadWorkflow
+            # Other readable files
+        elif ('files' in remoteURI and '/resources/' in remoteURI):
+            loader =  self.browser.XnatFileLoadWorkflow
+            
+            #  DICOMS
+        else:      
+            loader =  self.browser.XnatDicomLoadWorkflow
                     
                     
                 
-            #------------------------
-            # Call load
-            #------------------------
-            args = {"xnatSrc": remoteURI, 
-                    "localDst":dst, 
-                    "folderContents": None}
-            loadSuccessful = loader.initLoad(args)  
+        #------------------------
+        # Call load
+        #------------------------
+        args = {"xnatSrc": remoteURI, 
+                "localDst":dst, 
+                "folderContents": None}
+        loadSuccessful = loader.initLoad(args)  
             
             
             
-            #------------------------
-            # Enable TreeView
-            #------------------------
-            self.browser.XnatView.viewWidget.setEnabled(True)
-            self.lastButtonClicked = None
+        #------------------------
+        # Enable TreeView
+        #------------------------
+        self.browser.XnatView.viewWidget.setEnabled(True)
+        self.lastButtonClicked = None
     
         

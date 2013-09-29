@@ -97,7 +97,8 @@ class XnatSlicerWidget:
       self.layout = self.parent.layout()
 
 
-      
+
+        
       #--------------------------------
       # Xnat settings
       #--------------------------------
