@@ -24,33 +24,33 @@ def makeButtons(XnatButtons):
 
     buttons = {}
     
-    buttons['load'] = generateButton(XnatButtons = XnatButtons, iconFile = 'load.jpg', 
+    buttons['load'] = generateButton(XnatButtons = XnatButtons, iconFile = 'load.png', 
                                                toolTip = "Load file, image folder or scene from Xnat to Slicer.", 
                                                font = XnatButtons.browser.utils.labelFont,
                                                size = XnatButtons.browser.utils.buttonSizeMed, 
                                                enabled = False)
     
     
-    buttons['save'] = generateButton(XnatButtons = XnatButtons, iconFile = 'save.jpg', 
+    buttons['save'] = generateButton(XnatButtons = XnatButtons, iconFile = 'save.png', 
                                                toolTip ="Upload current scene to Xnat.", 
                                                font = XnatButtons.browser.utils.labelFont,
                                                size = XnatButtons.browser.utils.buttonSizeMed, 
                                                enabled = False)
     
-    buttons['delete'] = generateButton(XnatButtons = XnatButtons, iconFile = 'delete.jpg', 
+    buttons['delete'] = generateButton(XnatButtons = XnatButtons, iconFile = 'delete.png', 
                                                  toolTip = "Delete Xnat file or folder.", 
                                                  font = XnatButtons.browser.utils.labelFont,
                                                  size = XnatButtons.browser.utils.buttonSizeSmall, 
                                                  enabled = False)
     
-    buttons['addProj'] = generateButton(XnatButtons = XnatButtons, iconFile = 'addproj.jpg', 
+    buttons['addProj'] = generateButton(XnatButtons = XnatButtons, iconFile = 'addproj.png', 
                                                   toolTip = "Add Project, Subject, or Experiment to Xnat.", 
                                                   font = XnatButtons.browser.utils.labelFont,
                                                   size = XnatButtons.browser.utils.buttonSizeSmall, 
                                                   enabled = False)
 
 
-    buttons['test'] = generateButton(XnatButtons = XnatButtons, iconFile = 'test.gif', 
+    buttons['test'] = generateButton(XnatButtons = XnatButtons, iconFile = 'test.png', 
                                                   toolTip = "Run XNATSlicer tests...", 
                                                   font = XnatButtons.browser.utils.labelFont,
                                                   size = XnatButtons.browser.utils.buttonSizeSmall, 

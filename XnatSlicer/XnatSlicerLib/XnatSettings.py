@@ -82,8 +82,10 @@ class XnatSettings:
     """
     restPaths = ['']
     for name in self.defaultHosts:
-         setDefault = True if name == 'Central' else False
-         self.saveHost(name, self.defaultHosts[name], False, setDefault)    
+         default = True if name == 'Central' else False
+         modifiable = True if name != 'Central' else False
+         print modifiable, name
+         self.saveHost(name, self.defaultHosts[name], isModifiable = modifiable, isDefault = default)    
     self.savePaths(restPaths, "REST")
 
 
@@ -106,6 +108,7 @@ class XnatSettings:
   def saveHost(self, hostName, hostAddress, isModifiable=True, isDefault=False):
     """ Writes host to the QSettings.ini database.
     """
+
     
     hostDict = self.getHostNameAddressDictionary()
     hostNameFound = False
@@ -155,17 +158,12 @@ class XnatSettings:
 
        # start group
        self.database.beginGroup(hostName)
-       
        self.database.setValue(hostNameTag, hostName)
        self.database.setValue(hostAddressTag, hostAddress)
 
-       # Don't write over default hosts.
-       for defaultHostName in self.defaultHosts:
-           if hostName.strip() == defaultHostName.strip():
-               isModifiable = False
-               break
 
        # Is modifiable.
+       print ("IS MOD", hostName, hostIsModifiableTag, str(isModifiable))
        self.database.setValue(hostIsModifiableTag, str(isModifiable))
 
        # Curr user.

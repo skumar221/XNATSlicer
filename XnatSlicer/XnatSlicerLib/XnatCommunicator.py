@@ -67,6 +67,8 @@ class XnatCommunicator(object):
     def getFilesByUrl(self, srcDstMap, withProgressBar = True, fileOrFolder = None): 
 
         print self.browser.utils.lf(), srcDstMap
+
+        timeStart = time.time()
         
         #--------------------
         # Reset total size of downloads for all files
@@ -75,17 +77,22 @@ class XnatCommunicator(object):
         self.downloadTracker['downloadedSize']['bytes'] = 0
         downloadFolders = []
 
-        
-        
+
+        t = time.time()
+        print (self.browser.utils.lf(), t, "Remove existing - start")
         #-------------------------
         # Remove existing dst files
         #-------------------------
+        clearedDirs = []
         for src, dst in srcDstMap.iteritems(): 
-            if os.path.exists(dst): 
-                self.browser.utils.removeFile(dst)
-        timeStart = time.time()
+            basename = os.path.basename(dst)
+            if not any(basename in s for s in clearedDirs):
+                if os.path.exists(basename):
+                    self.browser.utils.removeFileInDir(basename)
+                    clearedDirs.append(basename)
+                    
+        print (self.browser.utils.lf(), t-time.time(), "Remove existing - end")
 
-        
         
         #-------------------------
         # Download files
@@ -104,7 +111,9 @@ class XnatCommunicator(object):
             xnatFileFolders = []
 
 
-            
+            t = time.time()
+            print (self.browser.utils.lf(), t, "Determine source folders - start")
+
             #---------------------
             # Determine source folders, create new dict based on basename
             #---------------------
@@ -113,8 +122,9 @@ class XnatCommunicator(object):
                 srcFolder = os.path.dirname(src)
                 if not srcFolder in xnatFileFolders:
                     xnatFileFolders.append(srcFolder)
-
-
+                    
+            print (self.browser.utils.lf(), t-time.time(), "Determine source folders - end")
+                    
                     
             #--------------------
             # Get file with progress bar
@@ -128,7 +138,6 @@ class XnatCommunicator(object):
                     dst = tempfile.mktemp('', 'XnatDownload', self.browser.utils.tempPath) + ".zip"
                     downloadFolders.append(self.browser.utils.adjustPathSlashes(dst))
 
-                    
                     # remove existing
                     if os.path.exists(dst): 
                         self.browser.utils.removeFile(dst)
@@ -490,7 +499,8 @@ class XnatCommunicator(object):
             
         
     def getJson(self, url):
-        """ Descriptor
+        """ Returns a json object from a given URL using
+            the internal method 'httpsRequest'.
         """
         #print "%s %s"%(self.browser.utils.lf(), url)
         response = self.httpsRequest('GET', url).read()
@@ -500,14 +510,14 @@ class XnatCommunicator(object):
 
     
     
-    def getLevel(self, url, level):
-        """ Descriptor
+    def getXnatPathAt(self, url, level):
+        """ Returns the XNAT path from 'url' at 'level',
         """
         #print "%s %s"%(self.browser.utils.lf(), url, level)
         if not level.startswith('/'):
             level = '/' + level
 
-        if (level) in url:
+        if level in url:
             return  url.split(level)[0] + level
         else:
             raise Exception("%s invalid get level '%s' parameter: %s"%(self.browser.utils.lf(), url, level))
@@ -527,7 +537,7 @@ class XnatCommunicator(object):
                 
         
         # Clean string
-        parentDir = self.getLevel(selStr, 'files');
+        parentDir = self.getXnatPathAt(selStr, 'files');
 
 
         # Parse result dictionary
@@ -557,10 +567,11 @@ class XnatCommunicator(object):
 
 
     
-    def getFolderContents(self, queryPaths, metadataTag = 'ID'):   
+    def getFolderContents(self, queryPaths, metadataTags):   
         """ Descriptor
         """
 
+        returnContents = {}
 
         #-------------------- 
         # Differentiate between a list of paths
@@ -586,20 +597,13 @@ class XnatCommunicator(object):
         #-------------------- 
         # Get other attributes with the contents
         #-------------------- 
-        childNames = []
-        sizes = []
         for content in contents:
-            if metadataTag in content:
-                childNames.append(content[metadataTag])
-            else:
-                #print "%s NO METADATA %s %s"%(self.browser.utils.lf(), metadataTag, content)
-                childNames.append(content['Name'])
-
-                
-            # Get size if applicable
-            if ('Size' in content):
-                sizes.append(content['Size'])
-
+            for metadataTag in metadataTags:
+                if metadataTag in content:
+                    # Create the object attribute if not there.
+                    if not metadataTag in returnContents:
+                        returnContents[metadataTag] = []
+                    returnContents[metadataTag].append(content[metadataTag])
 
 
         #-------------------- 
@@ -613,9 +617,9 @@ class XnatCommunicator(object):
                 #print "%s %s"%(self.browser.utils.lf(), self.fileDict)
 
 
-                
-        return childNames, (sizes if len(sizes) > 0 else None)
-
+              
+        #return childNames, (sizes if len(sizes) > 0 else None)
+        return returnContents
 
 
 

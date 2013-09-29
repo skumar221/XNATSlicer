@@ -36,6 +36,7 @@ def makeAddPopup(hostEditor):
     addPopup.setWindowTitle("Add Host")
     addPopup.setFixedWidth(300)
     addPopup.setLayout(masterForm)
+    addPopup.setWindowModality(2)
 
     # Clear previous host
     hostEditor.prevName = None
@@ -122,6 +123,7 @@ def makeEditPopup(hostEditor):
     editPopup.setWindowTitle("Edit Host")
     editPopup.setFixedWidth(300)
     editPopup.setLayout(masterForm)
+    editPopup.setWindowModality(2)
 
 
     
@@ -183,6 +185,7 @@ def makeDeletePopup(hostEditor):
     deletePopup = qt.QDialog(hostEditor.addButton)
     deletePopup.setWindowTitle("Delete Host")
     deletePopup.setLayout(masterForm)
+    deletePopup.setWindowModality(2)
 
 
 

@@ -91,7 +91,7 @@ class XnatHostEditor:
     """ Enables / Disables button based upon the editable
         quality of the host.  Some hosts cannot be modified.
     """
-    if not nameString in self.browser.settings.defaultHosts:
+    if self.browser.settings.isModifiable(nameString):
         self.deleteButton.setEnabled(True)
         self.editButton.setEnabled(True)
     else:

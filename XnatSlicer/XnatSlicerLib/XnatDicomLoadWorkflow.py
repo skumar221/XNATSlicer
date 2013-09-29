@@ -1,5 +1,5 @@
 from XnatLoadWorkflow import *
-
+import DICOMScalarVolumePlugin 
 
 
 comment = """
@@ -102,17 +102,18 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         """Checks if DICOM files exist at the 'resources' 
         level of a given XNAT path.
         """
-
+        print "getDownloadables"
         resources = self.browser.XnatCommunicator.getResources(parentXnatPath)     
-        #print "%s parentXnatPath: %s\nresources:%s"%(self.browser.utils.lf(), parentXnatPath, resources) 
+        print "%s parentXnatPath: %s\nresources:%s"%(self.browser.utils.lf(), parentXnatPath, resources) 
         for resource in resources:
             filePath =  "%s/resources/%s/files"%(parentXnatPath, resource) 
-            fileNames, size = self.browser.XnatCommunicator.getFolderContents(filePath, metadataTag = 'Name')
+            contents = self.browser.XnatCommunicator.getFolderContents(filePath, metadataTags = ['Name', 'Size'])
+            fileNames = contents['Name']
 
+            
             # Check to see if the file extensions are valid
             for filename in fileNames:
-                if self.utils.isDICOM(filename):
-
+                if self.utils.isDICOM(filename.rsplit('.')[1]):
                     # Add to "downloadables" if good
                     self.downloadables.append(filePath + "/" + filename)
                 else:
@@ -120,6 +121,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
 
 
 
+ 
                 
     def load(self): 
         """ MAIN function.  Function once after user clicks 
@@ -142,7 +144,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
 
 
         print(self.browser.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.") 
-        
+  
                 
         #--------------------
         # SUBJECT - get downloadables (currently not enabled and untested)
@@ -153,7 +155,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             self.getDownloadables(os.path.dirname(self.xnatSrc)) 
             
             # Get 'experiments'                               
-            experimentsList, sizes = self.browser.XnatCommunicator.getFolderContents(self.xnatSrc)
+            experimentsList, sizes = self.browser.XnatCommunicator.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_subjects)
             
             # Check for DICOMs (via 'resources') at the 'experiments' level.
             for expt in experimentsList:
@@ -162,7 +164,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             # Get 'scans'
             for expt in experimentsList:
                 parentScanFolder = self.xnatSrc + "/" + expt + "/scans"
-                scanList = self.browser.XnatCommunicator.getFolderContents(parentScanFolder)
+                scanList = self.browser.XnatCommunicator.getFolderContents(parentScanFolder, self.browser.utils.XnatMetadataTags_scans)
                 for scan in scanList:
                     self.getDownloadables(parentScanFolder + "/" + scan)
 
@@ -174,7 +176,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         elif self.XnatLevel == 'experiments':
             #print "GETTING EXPERIMENT DICOMS"
             self.getDownloadables(os.path.dirname(self.xnatSrc)) 
-            scansList, sizes = self.browser.XnatCommunicator.getFolderContents(self.xnatSrc)
+            scansList, sizes = self.browser.XnatCommunicator.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_experiments)
             for scan in scansList:
                 self.getDownloadables(self.xnatSrc + "/" + scan)
 
@@ -209,8 +211,11 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         if not os.path.exists(self.localDst):
             os.mkdir(self.localDst)  
 
-            
-        zipFolders = self.browser.XnatCommunicator.getFiles(dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables])))
+        print self.downloadables
+        self.localDst = self.localDst.replace('...', '')
+        _dict = dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables]))
+        
+        zipFolders = self.browser.XnatCommunicator.getFiles(_dict)
 
 
             
@@ -228,14 +233,13 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
                     
             # decompress zips
             self.utils.decompressFile(z, d)
-            slicer.app.processEvents()
+            #slicer.app.processEvents()
             
             # add to downloadedDICOMS list
             for root, dirs, files in os.walk(d):
                 for relFileName in files:          
                     downloadedDICOMS.append(self.utils.adjustPathSlashes(os.path.join(root, relFileName)))
            
-
 
             
         #--------------------
@@ -250,70 +254,41 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         else: 
             self.indexingDicomsWindow.show()
                
-                
-
-            
-        #--------------------
-        # Store existing slicer.dicomdatabase contents to file
-        #--------------------
-        #print(self.browser.utils.lf(), "Adding to Slicer's DICOM database...")
-        prevDICOMS = slicer.dicomDatabase.allFiles()
 
 
-            
-        #--------------------
-        # Backup the old slicer database file
-        #--------------------
-        self.prevDBFile = slicer.dicomDatabase.databaseFilename
-        self.newDBFile = os.path.join(os.path.dirname(self.utils.dicomDBBackupFN), os.path.basename(self.utils.dicomDBBackupFN))
-        self.newDBFile = self.utils.adjustPathSlashes(self.newDBFile)
-        if os.path.exists(self.newDBFile):
-            self.utils.removeFile(self.newDBFile)            
-            #print (self.utils.lf() + "COPYING %s to %s"%(self.prevDBFile, self.newDBFile))
-        shutil.copy(self.prevDBFile, self.newDBFile)
-
-
-            
-        #--------------------
-        #  Clear the slicer database file
-        #--------------------
-        slicer.dicomDatabase.initializeDatabase()
-
-            
-            
         #--------------------
         # Add dicom files to slicer dicom database
         #--------------------
         i = ctk.ctkDICOMIndexer()
-        for dicomFile in downloadedDICOMS:          
-            #print(self.browser.utils.lf(), "Adding '%s'"%(dicomFile), "to Slicer's DICOM database.", "Please wait...")  
-            #print("Adding '%s'"%(dicomFile), "to Slicer's DICOM database.", "Please wait...")  
-            i.addFile(slicer.dicomDatabase, dicomFile)#, cachedPath)
+        i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
 
-                
 
-        #--------------------
-        # Open a custum dicom module
-        #--------------------
-        from DICOM import DICOMWidget
-        self.DICOMWidget = DICOMWidget()         
-        self.DICOMWidget.parent.hide()
-        self.DICOMWidget.detailsPopup.window.setWindowTitle("Xnat DICOM LoadWorkflow (from DICOMDetailsPopup)")         
+        dlDicomObj = {}
+        for dlFile in downloadedDICOMS:
+            dlDicomObj[os.path.basename(dlFile)] = dlFile
             
-            
-            
-        #--------------------
-        # Connect button signals from dicom module
-        #--------------------
-        self.DICOMWidget.detailsPopup.loadButton.connect('clicked()', self.beginDICOMSession)
+        matchedDatabaseFiles = []
+        for patient in slicer.dicomDatabase.patients():
+            for study in slicer.dicomDatabase.studiesForPatient(patient):
+                for series in slicer.dicomDatabase.seriesForStudy(study):
+                    seriesFiles = slicer.dicomDatabase.filesForSeries(series)
+                    for sFile in seriesFiles:
+                       if os.path.basename(sFile) in dlDicomObj: 
+                           matchedDatabaseFiles.append(sFile)
 
+        print matchedDatabaseFiles
+        c = slicer.modules.dicomPlugins['DICOMScalarVolumePlugin']()
+        loadables = c.examine([matchedDatabaseFiles])
 
-            
-        #--------------------
-        # Connect all other signals, to catch if the popup window was closed by user
-        #--------------------
-        slicer.app.connect("focusChanged(QWidget *, QWidget *)", self.checkPopupOpen)
+        highFileCountIndex = 0
+        for i in range(0, len(loadables)):
+            print len(loadables[i].files), i
+            if len(loadables[i].files) > highFileCountIndex:
+                highFileCountIndex = i
 
+        print "HIGH FILE COUNT", highFileCountIndex
+        c.load(loadables[highFileCountIndex])
+                    
 
             
         #--------------------
@@ -321,17 +296,6 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         self.browser.XnatView.setEnabled(True)
 
-
-            
-        #--------------------
-        # Open details popup
-        #--------------------
-        self.DICOMWidget.detailsPopup.open()
-        # Reposition to main window.
-        self.browser.utils.repositionToMainSlicerWindow(self.DICOMWidget.detailsPopup.window)
-        # Hide indexing window.
-        self.indexingDicomsWindow.hide()
-        
 
       
         return True

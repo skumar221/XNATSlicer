@@ -111,11 +111,15 @@ class XnatSaveDialog(object):
             except Exception, e:
 
                 # Set default dialog type
-                print "EXCEPTION: SET NUM DIALOGS: " + str(e)
-                self.dialogs.append(qt.QMessageBox())   
-                self.dialogs[x].connect('buttonClicked(QAbstractButton*)', 
-                                        self.buttonClicked)
+                dialog = qt.QMessageBox()
+                self.dialogs.append(dialog)   
+                self.dialogs[x].connect('buttonClicked(QAbstractButton*)', self.buttonClicked)
                 self.dialogs[x].setTextFormat(1)
+
+                # NOTE: Need to keep the window modality
+                # always in front.  Blocking out 
+                # all other interactions.
+                self.dialogs[x].setWindowModality(2) 
 
 
 
@@ -217,7 +221,8 @@ class FileSaveDialog(XnatSaveDialog):
 
         # Window setup   
         self.setNumDialogs(1, {'0':qt.QDialog(slicer.util.mainWindow())}) 
-        self.dialogs[0].setFixedWidth(600)   
+        self.dialogs[0].setFixedWidth(600)
+        self.dialogs[0].setWindowModality(2)
 
         
         # Labeling
