@@ -31,20 +31,14 @@ class XnatCommunicator(object):
     """ Communication class to Xnat.  Urllib2 is the current library.
     """
 
-
-    
-    def __init__(self, browser, 
-                       server, 
-                       user, 
-                       password):
+        
+    def setup(self, browser, server, user, password):
         
         self.browser = browser
         self.server = server
         self.user = user
         self.password = password
 
-
-        self.setup()
 
         self.downloadTracker = {
             'totalDownloadSize': {'bytes': None, 'MB': None},
@@ -54,12 +48,6 @@ class XnatCommunicator(object):
         self.userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
         self.authenticationHeader = { 'Authorization' : 'Basic %s' %(self.userAndPass) }
         self.fileDict = {};
-
-
-
-        
-    def setup(self):
-        pass
 
 
 
@@ -265,8 +253,18 @@ class XnatCommunicator(object):
         print "%s deleting %s"%(self.browser.utils.lf(), selStr)
         self.httpsRequest('DELETE', selStr, '')
 
-        
 
+        
+    def cancelDownload(self):
+        """ Set's the download state to 0.  The open buffer in the 'get' method
+            will then read this download state, and cancel out.
+        """
+        print self.browser.utils.lf(), "Canceling download."
+        self.browser.downloadPopup.window.hide()
+        self.browser.downloadPopup.reset()
+        self.downloadState = 0
+        self.browser.XnatView.setEnabled(True)
+        
     
     def downloadFailed(self, windowTitle, msg):
         """ Description
@@ -287,6 +285,7 @@ class XnatCommunicator(object):
     def getFiles(self, srcDstMap, withProgressBar = True):
         """ Description
         """
+        # Reset popup
         return self.getFilesByUrl(srcDstMap, fileOrFolder = "folder")
     
 
@@ -296,6 +295,7 @@ class XnatCommunicator(object):
         """ Descriptor
         """
 
+        self.downloadState = 1
         
         #-------------------- 
         # Set the path
@@ -347,8 +347,7 @@ class XnatCommunicator(object):
                 self.browser.downloadPopup.setDownloadFilename(XnatSrc) 
                 self.browser.downloadPopup.show()
 
-
-                
+                # Credentials
                 url = XnatSrc
                 userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
                 authenticationHeader = { 'Authorization' : 'Basic %s' %(userAndPass) }
@@ -451,7 +450,12 @@ class XnatCommunicator(object):
         
             # Read loop
             while 1:            
-                
+
+                if self.downloadState == 0:
+                    fileToWrite.close()
+                    slicer.app.processEvents()
+                    self.browser.utils.removeFile(fileToWrite.name)
+                    break
                 
                 # Read buffer
                 buffer = response.read(buffer_size)

@@ -98,12 +98,19 @@ class XnatSlicerWidget:
 
 
 
-        
       #--------------------------------
       # Xnat settings
       #--------------------------------
       self.settings = XnatSettings(slicer.qMRMLWidget(), self.utils.utilPath, self)
       self.settingsPopup = XnatSettingsWindow(self)
+
+
+            
+      #--------------------------------
+      # Xnat Communicator
+      #--------------------------------
+      self.XnatCommunicator = XnatCommunicator()
+
 
       
       #--------------------------------
@@ -400,7 +407,7 @@ class XnatSlicerWidget:
                 
 
         # Init communicator.
-        self.XnatCommunicator = XnatCommunicator(browser = self, 
+        self.XnatCommunicator.setup(browser = self, 
                                 server = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
                                 user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 

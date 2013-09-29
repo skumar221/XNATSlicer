@@ -95,22 +95,27 @@ class XnatDownloadPopup(XnatPopup):
 
     
         # Line text
-        self.textDisp = [
-            "",
-            '[Unknown amount] ' +  self.memDisplay + ' out of [Unknown total] ' + self.memDisplay,
-        ]
-        self.lines = [qt.QLabel("") for x in range(0,2)]
+        self.textDisp = ['', '[Unknown amount] ' +  self.memDisplay + ' out of [Unknown total] ' + self.memDisplay]
+        self.lines = [qt.QLabel('') for x in range(0,2)]
         
         
         # Prog bar
         self.progBar = qt.QProgressBar()
         self.progBar.setFixedHeight(17)
 
+
+        # Cancel button
+        self.cancelButton = qt.QPushButton()
+        self.cancelButton.setText("Cancel")
+        self.cancelButton.connect('pressed()', self.browser.XnatCommunicator.cancelDownload)
+        self.cancelButton.setFixedWidth(60)
+        
         
         # Add widgets to layout
         for l in self.lines:
             self.layout.addRow(l)
         self.layout.addRow(self.progBar)
+        self.layout.addRow(self.cancelButton)
 
         
         # Clear all
