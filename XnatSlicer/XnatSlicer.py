@@ -133,7 +133,7 @@ class XnatSlicerWidget:
       #--------------------------------
       self.XnatButtons = XnatButtons(self.parent, browser=self)  
 
-
+      
       
       #--------------------------------
       # Popups
@@ -326,27 +326,49 @@ class XnatSlicerWidget:
 
         
         #--------------------------------
-        # Load/Save button
+        # Top button Row (Filters)
+        #--------------------------------
+        self.topButtonRowLayout = qt.QHBoxLayout()
+        filterLabel = qt.QLabel("Filter:")
+        self.topButtonRowLayout.addWidget(filterLabel)
+        self.topButtonRowLayout.addSpacing(15)
+        self.topButtonRowLayout.addWidget(self.XnatButtons.buttons['filter']['all'])
+        self.topButtonRowLayout.addSpacing(15)
+        self.topButtonRowLayout.addWidget(self.XnatButtons.buttons['filter']['recent'])
+        self.topButtonRowLayout.addSpacing(15)
+        self.topButtonRowLayout.addWidget(self.XnatButtons.buttons['filter']['accessed'])
+        self.topButtonRowLayout.addStretch()
+
+
+        
+        #--------------------------------
+        # Load/Save buttons
         #--------------------------------
         self.buttonColumnLayout = qt.QVBoxLayout()
-        self.buttonColumnLayout.addWidget(self.XnatButtons.buttons['load'])#, 2, 0)
-        self.buttonColumnLayout.addWidget(self.XnatButtons.buttons['save'])#, 0, 0) 
-        self.buttonRowLayout = qt.QHBoxLayout()
-        self.buttonRowLayout.addWidget(self.XnatButtons.buttons['delete'])
-        self.buttonRowLayout.addSpacing(15)
-        self.buttonRowLayout.addWidget(self.XnatButtons.buttons['addProj'])
-        self.buttonRowLayout.addSpacing(15)
-        self.buttonRowLayout.addWidget(self.XnatButtons.buttons['test'])
-        self.buttonRowLayout.addStretch()
+        self.buttonColumnLayout.addWidget(self.XnatButtons.buttons['io']['load'])#, 2, 0)
+        self.buttonColumnLayout.addWidget(self.XnatButtons.buttons['io']['save'])#, 0, 0) 
+
+
+        #--------------------------------
+        # Bottom button Row (XNAT IO)
+        #--------------------------------
+        self.bottomButtonRowLayout = qt.QHBoxLayout()
+        self.bottomButtonRowLayout.addWidget(self.XnatButtons.buttons['io']['delete'])
+        self.bottomButtonRowLayout.addSpacing(15)
+        self.bottomButtonRowLayout.addWidget(self.XnatButtons.buttons['io']['addProj'])
+        self.bottomButtonRowLayout.addSpacing(15)
+        self.bottomButtonRowLayout.addWidget(self.XnatButtons.buttons['io']['test'])
+        self.bottomButtonRowLayout.addStretch()
 
 
         
         #--------------------------------
         # XnatViewer
         #--------------------------------
-        self.XnatViewLayout.addWidget(self.XnatView.viewWidget, 0, 0)
-        self.XnatViewLayout.addLayout(self.buttonColumnLayout, 0, 1)
-        self.XnatViewLayout.addLayout(self.buttonRowLayout, 1, 0)
+        self.XnatViewLayout.addLayout(self.topButtonRowLayout, 0, 0)
+        self.XnatViewLayout.addWidget(self.XnatView.viewWidget, 1, 0)
+        self.XnatViewLayout.addLayout(self.buttonColumnLayout, 1, 1)
+        self.XnatViewLayout.addLayout(self.bottomButtonRowLayout, 2, 0)
         
 
         
@@ -367,15 +389,18 @@ class XnatSlicerWidget:
         folder = self.utils.tempPath
         folder_size = 0
         
-
+        #
         # Loop through files to get file sizes.
+        #
         for (path, dirs, files) in os.walk(folder):
           for file in files:
             folder_size += os.path.getsize(os.path.join(path, file))
         print ("XnatSlicer Data Folder = %0.1f MB" % (folder_size/(1024*1024.0)))
 
 
-        # If the folder size exceeds limit, remove contents
+        #
+        # If the folder size exceeds limit, remove contents.
+        #
         folder_size = math.ceil(folder_size/(1024*1024.0))
         if folder_size > maxSize:
             self.utils.removeFilesInDir(self.utils.tempPath)    
@@ -386,33 +411,41 @@ class XnatSlicerWidget:
 
                 
     def beginXnat(self):
-        """ Opens the view class linked to the XnatRestAPI
+        """ Opens the view class linked to the Xnat REST API.
         """
         
 
+        #
         # Can the relevant libraries be imported?
+        #
         print("XnatSlicer Module: Checking if SSL is installed...")
         try:      
             import ssl
             httplib.HTTPSConnection
             print("XnatSlicer Module: SSL is installed!")
 
-            
+
+        #
         # If not, kick back OS error
+        #
         except Exception, e:
-            strs = "XnatSlicer is currently not is supported for this operating system (%s).  XnatSlicer currently works on the following operating systems: %s."%(self.utils.osType, 'Win64')
+            strs = "XnatSlicer cannot operate on this system as SSL is not installed."%(self.utils.osType, 'Win64')
             print("XnatSlicer Module: %s"%(strs))
-            qt.QMessageBox.warning(slicer.util.mainWindow(), "Unsupported OS", "%s"%(strs))
+            qt.QMessageBox.warning(slicer.util.mainWindow(), "No SSL", "%s"%(strs))
             return
                 
 
+        #
         # Init communicator.
+        #
         self.XnatCommunicator.setup(browser = self, 
                                 server = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
                                 user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 
 
+        #
         # Begin communicator
+        #
         try:
             self.XnatView.begin()
         except Exception, e:

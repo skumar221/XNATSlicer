@@ -34,21 +34,52 @@ class XnatButtons(object):
         """  Create buttons
         """
 
+        #
         # for inserting in gui
+        #
         self.parent = parent
         self.browser = browser
 
-        # Make buttons from ButtonsUI
-        self.buttons = XnatButtonsUI.makeButtons(self)
 
-        # Set button ui
-        self.buttons['load'].connect('clicked()', self.loadClicked)
-        self.buttons['save'].connect('clicked()', self.saveClicked)
-        self.buttons['delete'].connect('clicked()', self.deleteClicked)
-        self.buttons['addProj'].connect('clicked()', self.addProjClicked)
+        #
+        # Buttons dictionary
+        #
+        self.buttons = {}
+
+
+        
+        #--------------------
+        # IO Buttons
+        #--------------------
+        self.buttons['io'] = {}
+        self.buttons['io'] = XnatButtonsUI.makeButtons_io(self)
+        #
+        # IO Button onClicks
+        #
+        self.buttons['io']['load'].connect('clicked()', self.onLoadClicked)
+        self.buttons['io']['save'].connect('clicked()', self.onSaveClicked)
+        self.buttons['io']['delete'].connect('clicked()', self.onDeleteClicked)
+        self.buttons['io']['addProj'].connect('clicked()', self.onAddProjectClicked)
+
+
+        
+        #--------------------
+        # Filter Buttons
+        #--------------------
+        self.buttons['filter'] = {}
+        self.buttons['filter'] = XnatButtonsUI.makeButtons_filter(self)
+        #
+        # Filter Button onClicks
+        #
+        for key in self.buttons['filter']:
+            self.buttons['filter'][key].connect('clicked()', self.onFilterButtonClicked)
+            if self.buttons['filter'][key].isChecked():
+                self.currentlyToggledFilterButton = self.buttons['filter'][key]
+
+
 
         # Testing button
-        self.buttons['test'].connect('clicked()', self.testClicked)
+        self.buttons['io']['test'].connect('clicked(boolean*)', self.onTestClicked)
         self.setEnabled('test', True)
 
 
@@ -59,14 +90,14 @@ class XnatButtons(object):
         """
         
         if buttonKey:
-            self.buttons[buttonKey].setEnabled(enabled)
+            self.buttons['io'][buttonKey].setEnabled(enabled)
         else:
             for k,b in self.buttons.iteritems():
                 b.setEnabled(enabled)
 
 
     
-    def deleteClicked(self, button=None):
+    def onDeleteClicked(self, button=None):
         """ Starts Delete workflow.
         """  
 
@@ -76,7 +107,7 @@ class XnatButtons(object):
 
 
             
-    def saveClicked(self):        
+    def onSaveClicked(self):        
         """ Starts Save workflow.
         """     
         
@@ -88,7 +119,7 @@ class XnatButtons(object):
 
 
 
-    def testClicked(self):        
+    def onTestClicked(self):        
         """ Starts Save workflow.
         """     
         self.lastButtonClicked = "test" 
@@ -97,7 +128,7 @@ class XnatButtons(object):
 
 
         
-    def loadClicked(self):
+    def onLoadClicked(self):
         """ Starts Load workflow.
         """
         
@@ -110,9 +141,36 @@ class XnatButtons(object):
 
             
           
-    def addProjClicked(self):
+    def onAddProjectClicked(self):
         """ Adds a project folder to the server.
         """
 
         self.addProjEditor = XnatAddProjEditor(self, self.browser, self.browser.XnatCommunicator)
         self.addProjEditor.show()
+
+
+
+    def onFilterButtonClicked(self):
+        """ Adds a project folder to the server.
+        """
+
+
+        #
+        # First pass: if a new button has been clicked
+        # then set it to self.currentlyToggledFilterButton. 
+        #
+        for key in self.buttons['filter']:
+            currButton = self.buttons['filter'][key]
+            if currButton.isChecked() and self.currentlyToggledFilterButton != currButton:
+                self.currentlyToggledFilterButton = currButton
+                break
+                #self.browser.XnatView.setFilter(self.currentlyToggledFilterButton.getText().lower())
+
+                
+        #
+        # Second pass: un-toggle previously toggled buttons.
+        #
+        for key in self.buttons['filter']:
+            currButton = self.buttons['filter'][key]
+            if currButton.isChecked() and self.currentlyToggledFilterButton != currButton:
+                currButton.click()
