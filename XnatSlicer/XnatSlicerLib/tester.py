@@ -110,9 +110,9 @@ window.show()
 
 makeWindow()
 
-
-
-
+#--------------------
+# Open DICOM without the popup
+#---------------------
 import DICOMScalarVolumePlugin
 path = '/Users/sunilkumar/Desktop/Work/XNATSlicer/XnatSlicer/XnatSlicerLib/data/temp/XnatDownload5skMYx/UCLA_1297/scans/6-SAG_MPRAGE_8_CHANNEL/resources/DICOM'
 downloadedDICOMS = []
@@ -122,13 +122,6 @@ for root, dirs, files in os.walk(path):
 
 i = ctk.ctkDICOMIndexer()
 i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
-#for dicomFile in downloadedDICOMS:          
-#    i.addFile(slicer.dicomDatabase, dicomFile)
-
-
-from DICOM import DICOMWidget
-aDICOMWidget = DICOMWidget()         
-aDICOMWidget.parent.hide()
 
         
 recentSeries = []
@@ -146,10 +139,31 @@ for patient in slicer.dicomDatabase.patients():
 
 c = DICOMScalarVolumePluginClass()
 loadables = c.examine([files])
+c.load(loadables[0])
+
+
+#--------------------
+# Assess loadables with largest file size.
+#---------------------
+matchedDatabaseFiles = []
+for patient in slicer.dicomDatabase.patients():
+    for study in slicer.dicomDatabase.studiesForPatient(patient):
+        for series in slicer.dicomDatabase.seriesForStudy(study):
+            matchedDatabaseFiles = slicer.dicomDatabase.filesForSeries(series)
+
+
+print matchedDatabaseFiles
+c = slicer.modules.dicomPlugins['DICOMScalarVolumePlugin']()
+loadables = c.examine([matchedDatabaseFiles])
+
+highestFileCount = 0
+highestFileCountIndex = 0
+for i in range(0, len(loadables)):
+    if len(loadables[i].files) > highestFileCount:
+        print ("Setting highFleCountIndex: ", highestFileCount, len(loadables[i].files), i)
+        highestFileCount = len(loadables[i].files)
+        highestFileCountIndex = i
         
 
-loadables.sort(lambda x,y: c.seriesSorter(x,y))
-
-    
-loadables = c.examine(files)
-
+def printA(): 
+    print "AG"

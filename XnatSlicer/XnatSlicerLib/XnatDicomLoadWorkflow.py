@@ -54,21 +54,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         self.folderName = os.path.basename(os.path.dirname(self.xnatSrc))
         self.downloadables = []
         self.DICOMWidget = None
-        self.newDBFile = None
-        self.prevDBFile = None
 
-
-        
-        #
-        # indexingDicomsWindow (informational window for waiting).
-        #
-        msg =  """Indexing the downloaded DICOMS.  When finished, a \'DICOM Details\' window will appear pertaining only to the images downloaded.  Your previous DICOM database is still intact."""
-        self.indexingDicomsWindow = qt.QMessageBox()
-        self.indexingDicomsWindow.setText(msg)
-        # Set icon to informational.
-        self.indexingDicomsWindow.setIcon(1)
-        # Block all input from other windows.
-        self.indexingDicomsWindow.setWindowModality(2)
 
         
 
@@ -211,8 +197,8 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         if not os.path.exists(self.localDst):
             os.mkdir(self.localDst)  
 
-        print self.downloadables
-        self.localDst = self.localDst.replace('...', '')
+        # This doesn't need to be here
+        #self.localDst = self.localDst.replace('...', '')
         _dict = dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables]))
         
         zipFolders = self.browser.XnatCommunicator.getFiles(_dict)
@@ -222,28 +208,48 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         # Inventory downloaded zipfile
         #--------------------
-        print "%s Inventorying downloaded files..."%(self.browser.utils.lf())    
+          
         downloadedDICOMS = []
-        for z in zipFolders:
-            d = z.split(".")[0]
-                
-            # remove existing unzip path if it exists
-            if os.path.exists(d): 
-                self.utils.removeDirsAndFiles(d)
-                    
-            # decompress zips
-            self.utils.decompressFile(z, d)
-            #slicer.app.processEvents()
+        for zipFile in zipFolders:
+            extractPath = zipFile.split(".")[0]
+
             
-            # add to downloadedDICOMS list
-            for root, dirs, files in os.walk(d):
+            #
+            # Remove existing extract path if it exists
+            #
+            if os.path.exists(extractPath): 
+                self.utils.removeDirsAndFiles(extractPath)
+
+                
+            #    
+            # If the zipfile does not exist, then exit.
+            # (This is the result of a Cancel) 
+            #
+            if not os.path.exists(zipFile):
+                print "%s exiting workflow..."%(self.browser.utils.lf())  
+                self.browser.XnatView.setEnabled(True) 
+                return False
+
+
+            #
+            # Decompress zips.
+            #
+            self.utils.decompressFile(zipFile, extractPath)
+
+
+            #
+            # Add to downloadedDICOMS list.
+            #
+            print "%s Inventorying downloaded files..."%(self.browser.utils.lf())  
+            for root, dirs, files in os.walk(extractPath):
                 for relFileName in files:          
                     downloadedDICOMS.append(self.utils.adjustPathSlashes(os.path.join(root, relFileName)))
            
 
             
         #--------------------
-        # Make sure Slicer's DICOMdatabase is set up
+        # Make sure Slicer's DICOMdatabase is set up.
+        # Show a popup informing the user if it's not.
         #--------------------
         self.browser.XnatView.viewWidget.setEnabled(False) 
         m = slicer.util.mainWindow()
@@ -251,43 +257,73 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             msg =  """It doesn\'t look like your DICOM database directory is setup. Please set it up in the DICOM module and try your download again."""
             self.terminateLoad(['DICOM load', msg ])
             m.moduleSelector().selectModule('DICOM')     
-        else: 
-            self.indexingDicomsWindow.show()
                
 
 
         #--------------------
-        # Add dicom files to slicer dicom database
+        # Add dicom files to slicer.dicomDataase
         #--------------------
         i = ctk.ctkDICOMIndexer()
         i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
 
 
+        
+        #--------------------
+        # Create dictionary of downloaded DICOMS
+        # for quick retrieval when comparing with files
+        # in the slicer.dicomDatabase.  Speed preferred over
+        # memory consumption here.
+        #--------------------      
         dlDicomObj = {}
         for dlFile in downloadedDICOMS:
             dlDicomObj[os.path.basename(dlFile)] = dlFile
+
+
             
+        #--------------------
+        # Parse through the slicer.dicomDatabase
+        # to get all of the files, as determined by series.
+        #--------------------
         matchedDatabaseFiles = []
         for patient in slicer.dicomDatabase.patients():
             for study in slicer.dicomDatabase.studiesForPatient(patient):
                 for series in slicer.dicomDatabase.seriesForStudy(study):
                     seriesFiles = slicer.dicomDatabase.filesForSeries(series)
+                    #
+                    # Compare files in series with what was just downloaded.
+                    # If there's a match, append to 'matchedDatabaseFiles'.
+                    #
                     for sFile in seriesFiles:
                        if os.path.basename(sFile) in dlDicomObj: 
                            matchedDatabaseFiles.append(sFile)
 
-        print matchedDatabaseFiles
-        c = slicer.modules.dicomPlugins['DICOMScalarVolumePlugin']()
-        loadables = c.examine([matchedDatabaseFiles])
 
-        highFileCountIndex = 0
+                           
+        #--------------------
+        # Acquire loadabes as determined by
+        # the 'DICOMScalarVolumePlugin' class.
+        #--------------------
+        dicomScalarVolumePlugin = slicer.modules.dicomPlugins['DICOMScalarVolumePlugin']()
+        loadables = dicomScalarVolumePlugin.examine([matchedDatabaseFiles])
+
+
+        
+        #--------------------
+        # Determine loadable with the highest file count.
+        #--------------------
+        highestFileCount = 0
+        highestFileCountIndex = 0
         for i in range(0, len(loadables)):
-            print len(loadables[i].files), i
-            if len(loadables[i].files) > highFileCountIndex:
-                highFileCountIndex = i
+            if len(loadables[i].files) > highestFileCount:
+                highestFileCount = len(loadables[i].files)
+                highestFileCountIndex = i
 
-        print "HIGH FILE COUNT", highFileCountIndex
-        c.load(loadables[highFileCountIndex])
+
+                
+        #--------------------
+        # Load loadable with the highest file count.
+        #--------------------
+        dicomScalarVolumePlugin.load(loadables[highestFileCountIndex])
                     
 
             
@@ -302,20 +338,6 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
 
 
 
-        
-    def checkPopupOpen(self):
-        """ Determines if the DICOM details popup is visible. 
-        Adjusts the XnatViewer accordingly.
-        """
-        if self.DICOMWidget and self.DICOMWidget.detailsPopup.window.isHidden():
-            slicer.app.disconnect("focusChanged(QWidget *, QWidget *)", self.checkPopupOpen)
-            #print(self.browser.utils.lf(), "Restoring original DICOM database.  Please wait.")
-            self.restorePrevDICOMDB()
-            del self.DICOMWidget
-            #print(self.browser.utils.lf(), "Finished original DICOM database.")
-            self.browser.XnatView.setEnabled(True)
-
-
 
             
     def beginDICOMSession(self):
@@ -327,10 +349,3 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         self.browser.XnatView.startNewSession(sessionArgs)
 
 
-
-        
-    def restorePrevDICOMDB(self):
-        """ As stated.
-        """
-        if os.path.exists(self.newDBFile):
-            shutil.copy(self.newDBFile, self.prevDBFile)
