@@ -23,27 +23,43 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         """ Descriptor
         """
 
+        #
         # Superclass call.
+        #
         super(XnatSceneLoadWorkflow, self).load(args)
 
         
-        
+        #
         # Get scene package
+        #
         self.browser.XnatCommunicator.getFile({self.xnatSrc : self.localDst})
         #print(self.browser.utils.lf() +  "Decompressing " + os.path.basename(self.xnatSrc))
 
         
+        #    
+        # If the package does not exist, then exit.
+        # (This is the result of a Cancel) 
+        #
+        if not os.path.exists(self.localDst):
+            print "%s exiting workflow..."%(self.browser.utils.lf())  
+            self.browser.XnatView.setEnabled(True) 
+            return False       
+
         
+        #
         #  Analyze package to determine scene type
+        #
         fileInfo = XnatFileInfo(remoteURI = self.xnatSrc, localURI = self.localDst)
         packageInfo = self.analyzePackage(fileInfo) 
         newMRMLFile = self.prepSelfContainedScene(packageInfo)
 
         
-
+        #
         # Load is good if mrml file is returned
+        #
         if newMRMLFile: 
             return self.loadFinish(newMRMLFile)    
+        
         return False
 
 
