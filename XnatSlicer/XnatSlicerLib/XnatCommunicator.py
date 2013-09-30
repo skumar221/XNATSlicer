@@ -124,8 +124,8 @@ class XnatCommunicator(object):
                     
                     # Sting cleanup
                     src = (f + "?format=zip")                 
-                    dst = tempfile.mktemp('', 'XnatDownload', self.browser.utils.tempUri) + ".zip"
-                    downloadFolders.append(self.browser.utils.adjustUriSlashes(dst))
+                    dst = tempfile.mktemp('', 'XnatDownload', self.browser.utils.tempPath) + ".zip"
+                    downloadFolders.append(self.browser.utils.adjustPathSlashes(dst))
 
                     # remove existing
                     if os.path.exists(dst): 
@@ -597,6 +597,10 @@ class XnatCommunicator(object):
                 }
 
 
+    
+
+
+    
     
     def applyQueryArgumentsToUri(self, queryUri, queryArguments):
         """ Descriptor

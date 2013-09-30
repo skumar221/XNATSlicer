@@ -146,7 +146,7 @@ class XnatLoadWorkflow(object):
         
         
         #------------------------
-        # Begin Workflow one button is pressed.
+        # Begin Workflow once button is pressed.
         #------------------------
 
         # Clear the scene and current session if button was 'yes'.
@@ -158,8 +158,8 @@ class XnatLoadWorkflow(object):
         # Acquire vars: current treeItem, the XnatPath, and the remote URI for 
         # getting the file.
         currItem = self.browser.XnatView.viewWidget.currentItem()
-        pathObj = self.browser.XnatView.getXnatPathObject(currItem)
-        remoteURI = self.browser.settings.getAddress(self.browser.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryPaths'][0]
+        pathObj = self.browser.XnatView.getXnatUriObject(currItem)
+        remoteURI = self.browser.settings.getAddress(self.browser.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
 
             
         # Check path string if at the scan level.
@@ -168,7 +168,7 @@ class XnatLoadWorkflow(object):
 
                 
         # Construct dst (local).
-        dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.column_name))
+        dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.getColumn('name')))
             
 
             

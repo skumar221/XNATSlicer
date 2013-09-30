@@ -33,7 +33,9 @@ from XnatPopup import *
 from XnatDicomLoadWorkflow import *
 from XnatSceneLoadWorkflow import *
 from XnatFileLoadWorkflow import *
+from XnatFilter import *
 from XnatSlicerTest import *
+
 
 
 comment = """
@@ -111,6 +113,12 @@ class XnatSlicerWidget:
       #--------------------------------
       self.XnatCommunicator = XnatCommunicator()
 
+
+      
+      #--------------------------------
+      # Xnat Filter
+      #--------------------------------
+      self.XnatFilter = XnatFilter(self)
 
       
       #--------------------------------
@@ -446,7 +454,8 @@ class XnatSlicerWidget:
         #--------------------
         # Begin communicator
         #--------------------
-
+        self.XnatView.begin()
+        return
         try:
             self.XnatView.begin()
         except Exception, e:
