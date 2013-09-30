@@ -48,15 +48,20 @@ class XnatTreeView(XnatView.XnatView):
         # TreeView Columns
         #----------------------
         self.columns = { 'name': {'string' : 'Name', 'location' : 0}, 
-                    'category': {'string' : 'Category', 'location' : 1}, 
-                    'description': {'string' : 'Description' , 'location' : 2}, 
-                    'size': {'string' : 'Size' , 'location' : 3} 
+                         'category': {'string' : 'Category', 'location' : 1}, 
+                         'description': {'string' : 'Description' , 'location' : 2}, 
+                         'size': {'string' : 'Size' , 'location' : 3},
+                         'creator': {'string' : 'Creator' , 'location' : 4},
+                         'pi': {'string' : 'PI' , 'location' : 5},
+                         'accessed': {'string' : 'Last Accessed' , 'location' : 6},
+                         'comments': {'string' : 'Comments' , 'location' : 7},
                    }
         self.viewWidget.setColumnCount(len(self.columns))
         headers = []
         for key in self.columns:
             headers.insert(self.columns[key]['location'], self.columns[key]['string'])
         self.viewWidget.setHeaderLabels(headers)
+        self.showColumnsByNodeLevel()
 
 
         #----------------------
@@ -100,8 +105,37 @@ class XnatTreeView(XnatView.XnatView):
         self.deleteDialog = qt.QMessageBox()       
 
 
-
+    def getColumn(self, value):
+        return self.browser.XnatView.columns[value.lower()]['location']
         
+    def showColumnsByNodeLevel(self, level = None):
+
+        # Hide all
+        for i in range(0, len(self.columns)):
+            self.viewWidget.hideColumn(i)
+
+        # Keep everything hidden if no level enetered.
+        if level == None or len(level) == 0:
+            return
+
+        # Required
+        self.viewWidget.showColumn(self.columns['name']['location'])
+        self.viewWidget.showColumn(self.columns['category']['location'])
+            
+        if level == 'projects':
+            self.viewWidget.showColumn(self.columns['accessed']['location'])
+            self.viewWidget.showColumn(self.columns['pi']['location'])
+            self.viewWidget.showColumn(self.columns['creator']['location'])
+            self.viewWidget.showColumn(self.columns['comments']['location'])
+
+
+        # Resize the columns.
+        for key in self.columns:
+            self.viewWidget.resizeColumnToContents(self.columns[key]['location'])
+            
+
+
+            
     def loadProjects(self, filters = None):
         """ Descriptor
         """
@@ -115,7 +149,6 @@ class XnatTreeView(XnatView.XnatView):
             projectContents = self.browser.XnatCommunicator.getFolderContents(queryUris = ['/projects'], 
                                                                               metadataTags = self.browser.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
-
         
         #---------------------
         # Exit if no projects can be found.
@@ -130,26 +163,40 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         # The 'ID' tag is either 'ID' or 'id' and 
         # we need to test for both.
+        nameTag = self.getNameTagByLevel('projects')
         try: 
-            projContents = projectContents[self.getNameTagByLevel('projects')]
+            projectNames = projectContents[nameTag]
         except Exception, e:
             try: 
-                projContents = projectContents[self.getNameTagByLevel('projects').lower()]
+                nameTag = nameTag.lower()
+                projectNames = projectContents[nameTag]
             except Exception, e:
                 print self.browser.utils.lf(), str(e)
                 return False
-                
 
+            
+        
+        #----------------------
+        # If there are filters, apply them
+        #----------------------
+        if filters:
+            projectNames = self.browser.XnatFilter.filter(contents = projectContents, outputTag = nameTag, filterTags = filters)
+
+
+                
             
         #----------------------
         # Make tree Items from projects
         #----------------------           
         self.makeTreeItems(parentItem = self.viewWidget, 
-                           children = projContents, 
+                           children = projectNames, 
                            metadata = {'__level' : ['projects' for p in projectContents['name']]}, 
                            expandible = [0 for p in projectContents['name']])
         self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
-        self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.processTreeNode)
+        self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
+        
+        self.showColumnsByNodeLevel('projects')
+
         return True
 
 
@@ -345,7 +392,7 @@ class XnatTreeView(XnatView.XnatView):
         """ When the user interacts with the treeView, this is a hook 
             method that gets the branches of a treeItem and expands them 
         """ 
-        self.processTreeNode(item, 0)
+        self.manageTreeNode(item, 0)
         self.viewWidget.setCurrentItem(item)
         self.currItem = item
         if not 'files' in item.text(self.columns['category']['location']):
@@ -359,7 +406,7 @@ class XnatTreeView(XnatView.XnatView):
             method that gets the branches of a treeItem and does not 
             expand them 
         """ 
-        self.processTreeNode(item, 0)
+        self.manageTreeNode(item, 0)
         self.viewWidget.setCurrentItem(item)
         self.currItem = item
         if not 'files' in item.text(self.columns['category']['location']):
@@ -368,7 +415,7 @@ class XnatTreeView(XnatView.XnatView):
 
 
             
-    def processTreeNode(self, item, col):
+    def manageTreeNode(self, item, col):
         """ The purpose of this function
         """
         if item==None:
@@ -385,6 +432,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Check if at saveable/loadable level 
         #------------------------
+        isProject = 'project' in item.text(self.columns['category']['location']).strip(" ")
         isSubject = 'subjects' in item.text(self.columns['category']['location']).strip(" ")
         isResource = 'resources' in item.text(self.columns['category']['location']).strip(" ")
         isExperiment = 'experiments' in item.text(self.columns['category']['location']).strip(" ")
@@ -393,6 +441,23 @@ class XnatTreeView(XnatView.XnatView):
         isSlicerFile = self.browser.utils.slicerDirName.replace("/","") in item.text(self.columns['category']['location']).strip(" ")
 
 
+        #-------------------------
+        # Show columns
+        #-------------------------
+        if isProject:
+            self.showColumnsByNodeLevel('projects')
+        elif isSubject:
+            self.showColumnsByNodeLevel('subjects')
+        elif isResource:
+            self.showColumnsByNodeLevel('resources')
+        elif isExperiment:
+            self.showColumnsByNodeLevel('exeperiments')
+        elif isScan:
+            self.showColumnsByNodeLevel('scans')
+        elif isFile:
+            self.showColumnsByNodeLevel('files')
+        if isSlicerFile:
+            self.showColumnsByNodeLevel('slicer')
         
         #------------------------
         # Enable load/save at the default save level

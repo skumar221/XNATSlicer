@@ -36,14 +36,14 @@ def makeButtons_io(XnatButtons):
     buttons['load'] = generateButton(XnatButtons = XnatButtons, iconOrLabel = 'load.png', 
                                                toolTip = "Load file, image folder or scene from Xnat to Slicer.", 
                                                font = XnatButtons.browser.utils.labelFont,
-                                               size = XnatButtons.browser.utils.buttonSizeMed, 
+                                               size = qt.QSize(30, 80), 
                                                enabled = False)
     
     
     buttons['save'] = generateButton(XnatButtons = XnatButtons, iconOrLabel = 'save.png', 
                                                toolTip ="Upload current scene to Xnat.", 
                                                font = XnatButtons.browser.utils.labelFont,
-                                               size = XnatButtons.browser.utils.buttonSizeMed, 
+                                               size = qt.QSize(30, 80),
                                                enabled = False)
     
     buttons['delete'] = generateButton(XnatButtons = XnatButtons, iconOrLabel = 'delete.png', 
