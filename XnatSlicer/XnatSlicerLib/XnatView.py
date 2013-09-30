@@ -47,10 +47,11 @@ class XnatView(object):
     def begin(self):
         """ Descriptor
         """
-        if self.loadProjects():
+        projectsLoaded = self.loadProjects()
+        if projectsLoaded:
             self.browser.XnatButtons.setEnabled(buttonKey='addProj', enabled=True) 
         else:
-            qt.QMessageBox.warning( None, "Login error", "Invalid login credentials for '%s'."%(self.XnatCommunicator.server))
+            qt.QMessageBox.warning( None, "Login error", "Invalid login credentials for '%s'."%(self.browser.XnatCommunicator.server))
 
 
             

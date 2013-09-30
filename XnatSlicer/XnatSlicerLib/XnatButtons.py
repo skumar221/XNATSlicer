@@ -34,16 +34,16 @@ class XnatButtons(object):
         """  Create buttons
         """
 
-        #
+        #--------------------
         # for inserting in gui
-        #
+        #--------------------
         self.parent = parent
         self.browser = browser
 
 
-        #
+        #--------------------
         # Buttons dictionary
-        #
+        #--------------------
         self.buttons = {}
 
 
@@ -150,27 +150,38 @@ class XnatButtons(object):
 
 
 
+
+   
+
+
     def onFilterButtonClicked(self):
         """ Adds a project folder to the server.
         """
 
-
-        #
+                
+        #-----------------
         # First pass: if a new button has been clicked
         # then set it to self.currentlyToggledFilterButton. 
-        #
+        #------------------
         for key in self.buttons['filter']:
             currButton = self.buttons['filter'][key]
             if currButton.isChecked() and self.currentlyToggledFilterButton != currButton:
                 self.currentlyToggledFilterButton = currButton
                 break
-                #self.browser.XnatView.setFilter(self.currentlyToggledFilterButton.getText().lower())
 
                 
-        #
+        #-----------------
         # Second pass: un-toggle previously toggled buttons.
-        #
+        #-----------------
         for key in self.buttons['filter']:
             currButton = self.buttons['filter'][key]
             if currButton.isChecked() and self.currentlyToggledFilterButton != currButton:
                 currButton.click()
+
+
+        #-----------------
+        # Third pass: apply method
+        #------------------
+        for key in self.buttons['filter']:
+            if self.currentlyToggledFilterButton == self.buttons['filter'][key]:
+                self.browser.XnatView.loadProjects([self.currentlyToggledFilterButton.text.lower()])
