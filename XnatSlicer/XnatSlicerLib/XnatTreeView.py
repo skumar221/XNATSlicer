@@ -25,7 +25,8 @@ with the load and save workflows.
 
 
 class XnatTreeView(XnatView.XnatView):
-    """ Initiate globals.
+    """ Inherits the XnatView class.  Uses a "Tree" type
+        approach to present the XNAT database hierarchy. 
     """  
 
 
@@ -46,15 +47,16 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         # TreeView Columns
         #----------------------
-        self.viewWidget.setColumnCount(3)
-        self.column_name = 0
-        self.column_category = 1
-        self.column_size = 2
-        columnLabels = []
-        columnLabels.append("Name")
-        columnLabels.append("Category")
-        columnLabels.append("Size")
-        self.viewWidget.setHeaderLabels(columnLabels)
+        self.columns = { 'name': {'string' : 'Name', 'location' : 0}, 
+                    'category': {'string' : 'Category', 'location' : 1}, 
+                    'description': {'string' : 'Description' , 'location' : 2}, 
+                    'size': {'string' : 'Size' , 'location' : 3} 
+                   }
+        self.viewWidget.setColumnCount(len(self.columns))
+        headers = []
+        for key in self.columns:
+            headers.insert(self.columns[key]['location'], self.columns[key]['string'])
+        self.viewWidget.setHeaderLabels(headers)
 
 
         #----------------------
@@ -100,26 +102,52 @@ class XnatTreeView(XnatView.XnatView):
 
 
         
-    def loadProjects(self):
+    def loadProjects(self, filters = None):
         """ Descriptor
         """
         self.viewWidget.clear()
         #print(self.browser.utils.lf(), "Retrieving projects. Please wait...","")
-        projectContents = self.browser.XnatCommunicator.getFolderContents(['/projects'], self.browser.utils.XnatMetadataTags_projects)
+
+
+        if self.browser.XnatCommunicator.projectCache != None:
+            projectContents = self.browser.XnatCommunicator.projectCache
+        else:
+            projectContents = self.browser.XnatCommunicator.getFolderContents(queryUris = ['/projects'], 
+                                                                              metadataTags = self.browser.utils.XnatMetadataTags_projects,
+                                                                              queryArguments = ['accessible'])
 
         
+        #---------------------
+        # Exit if no projects can be found.
+        #---------------------
         if not projectContents: 
             return False
 
         
+        
         #----------------------
         # Init TreeView
         #----------------------
+        # The 'ID' tag is either 'ID' or 'id' and 
+        # we need to test for both.
+        try: 
+            projContents = projectContents[self.getNameTagByLevel('projects')]
+        except Exception, e:
+            try: 
+                projContents = projectContents[self.getNameTagByLevel('projects').lower()]
+            except Exception, e:
+                print self.browser.utils.lf(), str(e)
+                return False
+                
+
+            
+        #----------------------
+        # Make tree Items from projects
+        #----------------------           
         self.makeTreeItems(parentItem = self.viewWidget, 
-                           children = projectContents[self.getNameTagByLevel('projects')], 
+                           children = projContents, 
                            metadata = {'__level' : ['projects' for p in projectContents['name']]}, 
                            expandible = [0 for p in projectContents['name']])
-
         self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
         self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.processTreeNode)
         return True
@@ -129,6 +157,8 @@ class XnatTreeView(XnatView.XnatView):
     
     
     def getNameTagByLevel(self, level):
+        """ Descriptor
+        """
         if level == 'projects':
             return 'ID'
         elif level == 'subjects':
@@ -159,7 +189,7 @@ class XnatTreeView(XnatView.XnatView):
         """
         parents = self.getParents(item)
         for p in parents:
-            if category in p.text(self.column_category):
+            if category in p.text(self.columns['category']['location']):
                 return p
         return None 
 
@@ -220,15 +250,15 @@ class XnatTreeView(XnatView.XnatView):
         XnatDepth = 0        
         for item in parents:          
             # for resource folders
-            if 'resources' in item.text(self.column_category).strip(" "): 
+            if 'resources' in item.text(self.columns['category']['location']).strip(" "): 
                 isResource = True            
             # for masked slicer folders
-            elif ((self.browser.utils.slicerDirName in item.text(self.column_category)) 
+            elif ((self.browser.utils.slicerDirName in item.text(self.columns['category']['location'])) 
                   and self.applySlicerFolderMask): 
                 isSlicerFile = True
             # construct directory string
-            dirStr += "%s/%s/"%(item.text(self.column_category).strip(" "), 
-                                item.text(self.column_name))
+            dirStr += "%s/%s/"%(item.text(self.columns['category']['location']).strip(" "), 
+                                item.text(self.columns['name']['location']))
             XnatDepth+=1
 
             
@@ -237,10 +267,10 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         if isResource:         
             # append "files" if resources folder          
-            if 'resources' in parents[-1].text(self.column_category).strip(" "):
+            if 'resources' in parents[-1].text(self.columns['category']['location']).strip(" "):
                 dirStr += "files"           
             # cleanup if at files level            
-            elif 'files'  in parents[-1].text(self.column_category).strip(" "):
+            elif 'files'  in parents[-1].text(self.columns['category']['location']).strip(" "):
                 dirStr = dirStr[:-1]          
             # if on a files          
             else:
@@ -272,18 +302,18 @@ class XnatTreeView(XnatView.XnatView):
     
     def getTreeItemInfo(self, item):   
         """Disects a given tree item and returns various useful attributes."""
-        itemText = item.text(self.column_name)
+        itemText = item.text(self.columns['name']['location'])
         itemExt = itemText.partition(".")[2]     
-        fullPath = self.getXnatDir(self.getParents(item))
-        upFolders = fullPath.split("/")
+        fullUri = self.getXnatDir(self.getParents(item))
+        upFolders = fullUri.split("/")
         upFolders = upFolders[1:]
-        upPaths = []      
-        upPaths.append("/%s"%(upFolders[0]))
+        upUris = []      
+        upUris.append("/%s"%(upFolders[0]))
         for i in range(1, len(upFolders)-1):
-            upPaths.append("%s/%s"%(upPaths[i-1], upFolders[i]))          
-        upPaths.reverse()        
+            upUris.append("%s/%s"%(upUris[i-1], upFolders[i]))          
+        upUris.reverse()        
         upFolders.reverse()   
-        return itemText, itemExt, fullPath, upPaths, upFolders   
+        return itemText, itemExt, fullUri, upUris, upFolders   
 
 
 
@@ -318,7 +348,7 @@ class XnatTreeView(XnatView.XnatView):
         self.processTreeNode(item, 0)
         self.viewWidget.setCurrentItem(item)
         self.currItem = item
-        if not 'files' in item.text(self.column_category):
+        if not 'files' in item.text(self.columns['category']['location']):
             self.getChildren(item, expanded = True) 
 
 
@@ -332,7 +362,7 @@ class XnatTreeView(XnatView.XnatView):
         self.processTreeNode(item, 0)
         self.viewWidget.setCurrentItem(item)
         self.currItem = item
-        if not 'files' in item.text(self.column_category):
+        if not 'files' in item.text(self.columns['category']['location']):
             self.getChildren(item, expanded = False)
 
 
@@ -355,12 +385,12 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Check if at saveable/loadable level 
         #------------------------
-        isSubject = 'subjects' in item.text(self.column_category).strip(" ")
-        isResource = 'resources' in item.text(self.column_category).strip(" ")
-        isExperiment = 'experiments' in item.text(self.column_category).strip(" ")
-        isScan = 'scans' in item.text(self.column_category).strip(" ")
-        isFile = 'files' in item.text(self.column_category).strip(" ")
-        isSlicerFile = self.browser.utils.slicerDirName.replace("/","") in item.text(self.column_category).strip(" ")
+        isSubject = 'subjects' in item.text(self.columns['category']['location']).strip(" ")
+        isResource = 'resources' in item.text(self.columns['category']['location']).strip(" ")
+        isExperiment = 'experiments' in item.text(self.columns['category']['location']).strip(" ")
+        isScan = 'scans' in item.text(self.columns['category']['location']).strip(" ")
+        isFile = 'files' in item.text(self.columns['category']['location']).strip(" ")
+        isSlicerFile = self.browser.utils.slicerDirName.replace("/","") in item.text(self.columns['category']['location']).strip(" ")
 
 
         
@@ -387,7 +417,7 @@ class XnatTreeView(XnatView.XnatView):
         # If mask is enabled, determine if item is a slicer file
         #------------------------
         if self.applySlicerFolderMask:
-            if item.text(self.column_category) == self.browser.utils.slicerDirName:
+            if item.text(self.columns['category']['location']) == self.browser.utils.slicerDirName:
                 isFile = True    
 
 
@@ -396,7 +426,7 @@ class XnatTreeView(XnatView.XnatView):
         # File item routines
         #------------------------
         if isFile or isSlicerFile:
-            ext = item.text(self.column_name).rsplit(".")
+            ext = item.text(self.columns['name']['location']).rsplit(".")
             # check extension
             if (len(ext)>1):
                 # recognizable extensions        
@@ -418,7 +448,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # User is at the default load/save level, default loader is dicom     
         #------------------------
-        if self.browser.utils.defaultXnatSaveLevel in item.text(self.column_category).strip(" "):
+        if self.browser.utils.defaultXnatSaveLevel in item.text(self.columns['category']['location']).strip(" "):
             self.currLoadable = "mass_dicom" 
             return
 
@@ -426,7 +456,7 @@ class XnatTreeView(XnatView.XnatView):
 
         
         
-    def getXnatPathObject(self, item):    
+    def getXnatUriObject(self, item):    
         """ Decriptor
         """
         pathObj = {}
@@ -443,15 +473,15 @@ class XnatTreeView(XnatView.XnatView):
         xnatDir = self.getXnatDir(pathObj['parents'])
 
         
-        pathObj['childQueryPaths'] = [xnatDir if not '/scans/' in xnatDir else xnatDir + "files"]
-        pathObj['currPath'] = os.path.dirname(pathObj['childQueryPaths'][0])  
+        pathObj['childQueryUris'] = [xnatDir if not '/scans/' in xnatDir else xnatDir + "files"]
+        pathObj['currUri'] = os.path.dirname(pathObj['childQueryUris'][0])  
         pathObj['currLevel'] = xnatDir.split('/')[-1] if not '/scans/' in xnatDir else 'files'
 
        
         #
         # Construct path dictionary
         #
-        splitter = [ s for s in pathObj['currPath'].split("/") if len(s) > 0 ]
+        splitter = [ s for s in pathObj['currUri'].split("/") if len(s) > 0 ]
         for i in range(0, len(splitter)):
             key = splitter[i]
             if key in pathObj['pathDict'] and i < len(splitter) - 1:
@@ -474,15 +504,15 @@ class XnatTreeView(XnatView.XnatView):
 
 
             
-        pathObj['childCategory'] = os.path.basename(pathObj['childQueryPaths'][0])
+        pathObj['childCategory'] = os.path.basename(pathObj['childQueryUris'][0])
 
         
         #-----------------------------
         # For Slicer files at the experiment level
         #-------------------------------
-        if pathObj['childQueryPaths'][0].endswith('/scans'):
-            pathObj['slicerQueryPaths'] = []
-            pathObj['slicerQueryPaths'].append(pathObj['currPath'] + '/resources/Slicer/files')
+        if pathObj['childQueryUris'][0].endswith('/scans'):
+            pathObj['slicerQueryUris'] = []
+            pathObj['slicerQueryUris'].append(pathObj['currUri'] + '/resources/Slicer/files')
             pathObj['slicerMetadataTag'] = 'Name'
 
 
@@ -497,7 +527,7 @@ class XnatTreeView(XnatView.XnatView):
         for x in range(0, item.childCount()):          
             try:
                 child = item.child(x)
-                ext = child.text(self.column_name).rsplit(".")[1]            
+                ext = child.text(self.columns['name']['location']).rsplit(".")[1]            
                 if self.browser.utils.isDICOM(ext):
                     dicomCount +=1
             except Exception, e:
@@ -516,7 +546,7 @@ class XnatTreeView(XnatView.XnatView):
         if childFileName:
             for x in range(0, item.childCount()):
                 child = item.child(x)
-                if child.text(self.column_name) == childFileName:
+                if child.text(self.columns['name']['location']) == childFileName:
                     self.viewWidget.setCurrentItem(child)
                     self.currItem = child;
                     return   
@@ -546,10 +576,10 @@ class XnatTreeView(XnatView.XnatView):
 
 
             
-    def selectItem_byPath(self, pathStr):
+    def selectItem_byUri(self, pathStr):
         def findChild(item, childName, expanded=True):
             for i in range(0, item.childCount()):
-                if str(childName) in item.child(i).text(self.column_name):
+                if str(childName) in item.child(i).text(self.columns['name']['location']):
                     if expanded:
                         self.getChildrenExpanded(item.child(i))
                     return item.child(i)
@@ -558,7 +588,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Break apart pathStr to its Xnat categories
         #------------------------
-        pathDict = self.browser.utils.makeXnatPathDictionary(pathStr)
+        pathDict = self.browser.utils.makeXnatUriDictionary(pathStr)
 
 
         #------------------------
@@ -617,13 +647,13 @@ class XnatTreeView(XnatView.XnatView):
             #--------------------
             # Get path obj
             #--------------------           
-            pathObj = self.getXnatPathObject(item)
+            pathObj = self.getXnatUriObject(item)
             currXnatLevel = pathObj['currLevel']
             
             #--------------------
             # Get folder Contents
             #--------------------      
-            metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryPaths'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel))
+            metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel))
             childNames = metadata[self.getNameTagByLevel(currXnatLevel)]
 
             # Set the categories
@@ -631,11 +661,11 @@ class XnatTreeView(XnatView.XnatView):
 
             
             #
-            # Slicer Paths
+            # Slicer Uris
             #
-            if 'slicerQueryPaths' in pathObj:
+            if 'slicerQueryUris' in pathObj:
                 # Children for slicer path
-                slicerFolderContents = self.browser.XnatCommunicator.getFolderContents(pathObj['slicerQueryPaths'], self.browser.utils.XnatMetadataTagsByLevel('files'))  
+                slicerFolderContents = self.browser.XnatCommunicator.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))  
                 slicerChildNames = slicerFolderContents[self.getNameTagByLevel('files')]
                 childNames = childNames + slicerChildNames    
                 metadata['__level'] = metadata['__level'] + ['Slicer' for x in range(len(slicerChildNames))]  
@@ -694,7 +724,7 @@ class XnatTreeView(XnatView.XnatView):
         # Get the DICOM count if at 'scans'
         #----------------
         if (metadata['__level'][0] == 'files'):
-            pathObj = self.getXnatPathObject(parentItem.parent())
+            pathObj = self.getXnatUriObject(parentItem.parent())
             parentXnatLevel = pathObj['currLevel']
             if parentXnatLevel == 'scans':
                 if self.isDICOMFolder(parentItem):                
@@ -713,7 +743,7 @@ class XnatTreeView(XnatView.XnatView):
             #
             # Set text
             #
-            rowItem.setText(self.column_name, children[i])
+            rowItem.setText(self.columns['name']['location'], children[i])
 
             #
             # Set expanded (0 = expandable, 1 = not)
@@ -723,26 +753,26 @@ class XnatTreeView(XnatView.XnatView):
             #
             # Set category
             #
-            rowItem.setText(self.column_category, metadata['__level'][i])  
+            rowItem.setText(self.columns['category']['location'], metadata['__level'][i])  
 
             #
             # Set aesthetics and metadata
             #
-            rowItem.setFont(self.column_name, self.itemFont_folder) 
-            #rowItem.setFont(self.column_size, self.itemFont_category)
-            rowItem.setFont(self.column_category, self.itemFont_category) 
+            rowItem.setFont(self.columns['name']['location'], self.itemFont_folder) 
+            #rowItem.setFont(self.columns['size']['location'], self.itemFont_category)
+            rowItem.setFont(self.columns['category']['location'], self.itemFont_category) 
             
-            #self.changeFontColor(rowItem, False, "grey", self.column_size)
-            self.changeFontColor(rowItem, False, "grey", self.column_category)
+            #self.changeFontColor(rowItem, False, "grey", self.columns['size']['location'])
+            self.changeFontColor(rowItem, False, "grey", self.columns['category']['location'])
             
             if ('Slicer' in metadata['__level'][i] or 'files' in metadata['__level'][i]):
-                self.changeFontColor(rowItem, False, "green", self.column_name)
+                self.changeFontColor(rowItem, False, "green", self.columns['name']['location'])
            
             #
             # Set size, if needed
             #
             #if sizes and isinstance(sizes, list) and len(sizes[i]) > 0:
-            #    rowItem.setText(self.column_size, self.browser.utils.bytesToMB(sizes[i]) + " MB")
+            #    rowItem.setText(self.columns['size']['location'], self.browser.utils.bytesToMB(sizes[i]) + " MB")
             
     
             # Add to array

@@ -33,7 +33,8 @@ class XnatCommunicator(object):
 
         
     def setup(self, browser, server, user, password):
-        
+
+        self.projectCache = None
         self.browser = browser
         self.server = server
         self.user = user
@@ -90,7 +91,7 @@ class XnatCommunicator(object):
                 print("%s file download\nsrc: '%s' \ndst: '%s'"%(self.browser.utils.lf(), src, dst))
 
                 fName = os.path.basename(src)
-                fPath = "/projects/" + src.split("/projects/")[1]
+                fUri = "/projects/" + src.split("/projects/")[1]
                 self.get(src, dst)
 
                                     
@@ -123,8 +124,8 @@ class XnatCommunicator(object):
                     
                     # Sting cleanup
                     src = (f + "?format=zip")                 
-                    dst = tempfile.mktemp('', 'XnatDownload', self.browser.utils.tempPath) + ".zip"
-                    downloadFolders.append(self.browser.utils.adjustPathSlashes(dst))
+                    dst = tempfile.mktemp('', 'XnatDownload', self.browser.utils.tempUri) + ".zip"
+                    downloadFolders.append(self.browser.utils.adjustUriSlashes(dst))
 
                     # remove existing
                     if os.path.exists(dst): 
@@ -214,34 +215,47 @@ class XnatCommunicator(object):
         """ Description
         """
 
-        
+        #-------------------- 
         # Clean REST method
+        #-------------------- 
         restMethod = restMethod.upper()
 
-        
+
+        #-------------------- 
         # Clean url
+        #-------------------- 
         prepender = self.server.encode("utf-8") + '/data'
         url =  prepender +  xnatSelector.encode("utf-8") if not prepender in xnatSelector else xnatSelector
 
-        
+
+        #-------------------- 
         # Get request
+        #-------------------- 
         req = urllib2.Request (url)
 
-        
+
+        #-------------------- 
         # Get connection
+        #-------------------- 
         connection = httplib.HTTPSConnection (req.get_host ()) 
 
-        
+
+        #-------------------- 
         # Merge the authentication header with any other headers
+        #-------------------- 
         header = dict(self.authenticationHeader.items() + headerAdditions.items())
 
-        
+
+        #-------------------- 
         # REST call
+        #-------------------- 
         connection.request(restMethod, req.get_selector (), body = body, headers = header)
         #print ('%s httpsRequest: %s %s')%(self.browser.utils.lf(), restMethod, url)
 
 
+        #-------------------- 
         # Return response
+        #-------------------- 
         return connection.getresponse ()
 
 
@@ -265,7 +279,9 @@ class XnatCommunicator(object):
         self.downloadState = 0
         self.browser.XnatView.setEnabled(True)
         
-    
+
+
+        
     def downloadFailed(self, windowTitle, msg):
         """ Description
         """
@@ -514,7 +530,7 @@ class XnatCommunicator(object):
 
     
     
-    def getXnatPathAt(self, url, level):
+    def getXnatUriAt(self, url, level):
         """ Returns the XNAT path from 'url' at 'level',
         """
         #print "%s %s"%(self.browser.utils.lf(), url, level)
@@ -534,17 +550,22 @@ class XnatCommunicator(object):
         """
         #print "%s %s"%(self.browser.utils.lf(), selStr)
 
-    
+        #-------------------- 
         # Query logged files before checking
+        #-------------------- 
         if (os.path.basename(selStr) in self.fileDict):
             return True
                 
-        
+
+        #-------------------- 
         # Clean string
-        parentDir = self.getXnatPathAt(selStr, 'files');
+        #-------------------- 
+        parentDir = self.getXnatUriAt(selStr, 'files');
 
 
+        #-------------------- 
         # Parse result dictionary
+        #-------------------- 
         for i in self.getJson(parentDir):
             if os.path.basename(selStr) in i['Name']:
                 return True   
@@ -568,32 +589,76 @@ class XnatCommunicator(object):
 
         return {"bytes": None, "MB" : None}
 
+    
+
+    @property
+    def queryArguments(self):
+        return {'accessible' : 'accessible=true',
+                }
 
 
     
-    def getFolderContents(self, queryPaths, metadataTags):   
+    def applyQueryArgumentsToUri(self, queryUri, queryArguments):
+        """ Descriptor
+        """
+        queryArgumentstring = ''
+        for i in range(0, len(queryArguments)):
+            if i == 0:
+                queryArgumentstring += '?'
+            else:
+                queryArgumentstring += '&'
+                
+            queryArgumentstring += self.queryArguments[queryArguments[i].lower()]
+        
+        return queryUri + queryArgumentstring
+        
+
+
+
+    
+    def getFolderContents(self, queryUris, metadataTags, queryArguments = None):   
         """ Descriptor
         """
 
         returnContents = {}
 
+
+        
         #-------------------- 
         # Differentiate between a list of paths
         # and once single path (string) -- make all a list
         #-------------------- 
-        if isinstance(queryPaths, basestring):
-           queryPaths = [queryPaths]
+        if isinstance(queryUris, basestring):
+           queryUris = [queryUris]
 
 
+           
+        #-------------------- 
+        # Differentiate between a list of queryArguments
+        # and once single queryArguments (string) -- make all a list
+        #-------------------- 
+        if isinstance(queryArguments, basestring):
+           queryArguments = [queryArguments]
+
+           
            
         #-------------------- 
         # Acquire contents
         #-------------------- 
         contents = []
-        for p in queryPaths:
-            #print "%s query path: %s"%(self.browser.utils.lf(), p)
-            contents =  contents + self.getJson(p)
-            
+        for queryUri in queryUris:
+            newQueryUri = queryUri
+            if queryArguments:
+                newQueryUri = self.applyQueryArgumentsToUri(queryUri, queryArguments)
+            print "%s query path: %s"%(self.browser.utils.lf(), newQueryUri)
+            contents =  contents + self.getJson(newQueryUri)
+            #
+            # Store projects in a dictionary. 'self.projectCache'
+            # is reset if the user logs into a new server or 
+            # logs in a again.
+            #
+            if queryUri.endswith('/projects'):
+                self.projectCache = contents
         if str(contents).startswith("<?xml"): return [] # We don't want text values
 
         
@@ -604,29 +669,33 @@ class XnatCommunicator(object):
         for content in contents:
             for metadataTag in metadataTags:
                 if metadataTag in content:
+                    #
                     # Create the object attribute if not there.
+                    #
                     if not metadataTag in returnContents:
                         returnContents[metadataTag] = []
                     returnContents[metadataTag].append(content[metadataTag])
 
 
+                    
         #-------------------- 
-        # Track files in global dict
+        # Track projects and files in global dict
         #-------------------- 
-        for q in queryPaths:
-            if q.endswith('/files'):
-                for c in contents:
+        for queryUri in queryUris:
+            if queryUri.endswith('/files'):
+                for content in contents:
                     # create a tracker in the fileDict
-                    self.fileDict[c['Name']] = c
+                    self.fileDict[content['Name']] = content
                 #print "%s %s"%(self.browser.utils.lf(), self.fileDict)
-
-
-              
+            elif queryUri.endswith('/projects'):
+                self.projectCache = returnContents
+                            
         #return childNames, (sizes if len(sizes) > 0 else None)
         return returnContents
 
 
 
+    
     def getResources(self, folder):
         """ Descriptor
         """
@@ -634,14 +703,17 @@ class XnatCommunicator(object):
         
         #print "%s %s"%(self.browser.utils.lf(), folder)
 
-        
+        #-------------------- 
         # Get the resource Json
+        #-------------------- 
         folder += "/resources"
         resources = self.getJson(folder)
         #print self.browser.utils.lf() + " Got resources: '%s'"%(str(resources))
 
 
+        #-------------------- 
         # Filter the Jsons
+        #-------------------- 
         resourceNames = []
         for r in resources:
             if 'label' in r:
@@ -660,12 +732,16 @@ class XnatCommunicator(object):
         """ Retrieve an item by one of its attributes
         """
 
+        #-------------------- 
         # Clean string
+        #-------------------- 
         XnatItem = self.cleanSelectString(XnatItem)
         #print "%s %s %s"%(self.browser.utils.lf(), XnatItem, attr)
 
 
+        #-------------------- 
         # Parse json
+        #-------------------- 
         for i in self.getJson(os.path.dirname(XnatItem)):
             for key, val in i.iteritems():
                 if val == os.path.basename(XnatItem):
@@ -694,11 +770,11 @@ class XnatCommunicator(object):
 
     
         
-    def makeDir(self, XnatPath): 
+    def makeDir(self, XnatUri): 
         """ Makes a directory in Xnat via PUT
         """ 
-        r = self.httpsRequest('PUT', XnatPath)
-        #print "%s Put Dir %s \n%s"%(self.browser.utils.lf(), XnatPath, r)
+        r = self.httpsRequest('PUT', XnatUri)
+        #print "%s Put Dir %s \n%s"%(self.browser.utils.lf(), XnatUri, r)
         return r
 
 

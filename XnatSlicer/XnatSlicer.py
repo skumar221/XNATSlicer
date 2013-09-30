@@ -415,9 +415,9 @@ class XnatSlicerWidget:
         """
         
 
-        #
+        #--------------------
         # Can the relevant libraries be imported?
-        #
+        #--------------------
         print("XnatSlicer Module: Checking if SSL is installed...")
         try:      
             import ssl
@@ -425,9 +425,9 @@ class XnatSlicerWidget:
             print("XnatSlicer Module: SSL is installed!")
 
 
-        #
+        #--------------------
         # If not, kick back OS error
-        #
+        #--------------------
         except Exception, e:
             strs = "XnatSlicer cannot operate on this system as SSL is not installed."%(self.utils.osType, 'Win64')
             print("XnatSlicer Module: %s"%(strs))
@@ -435,21 +435,22 @@ class XnatSlicerWidget:
             return
                 
 
-        #
+        #--------------------
         # Init communicator.
-        #
+        #--------------------
         self.XnatCommunicator.setup(browser = self, 
-                                server = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
-                                user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
+                                    server = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
+                                    user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 
 
-        #
+        #--------------------
         # Begin communicator
-        #
+        #--------------------
+
         try:
             self.XnatView.begin()
         except Exception, e:
-            print("XnatSlicer Module: %s"%(str(e)))
+            print("XnatSlicer Module Login Error: %s"%(str(e)))
             qt.QMessageBox.warning(slicer.util.mainWindow(), "Login error!", "%s"%('There appears to be a login error.'))
 
       

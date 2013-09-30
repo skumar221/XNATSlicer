@@ -277,7 +277,18 @@ class XnatUtils(object):
                 'description',
                 'name',
                 'ID',
-                'URI'
+                'URI',
+                # The reason for two ID keys is because the "?accessible=True" filter
+                # returns lowercase 'id'
+                'id',	
+                'pi',	
+                'project_invs',	
+                'project_access_img',	
+                'insert_date',
+                'insert_user',	
+                'user_role_497',	
+                'last_accessed_497',	
+                'quarantine_status'
                 ]
 
 
