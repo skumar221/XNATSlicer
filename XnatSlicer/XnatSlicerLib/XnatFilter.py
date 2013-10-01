@@ -59,6 +59,7 @@ class XnatFilter(object):
         sortedLists = [list(x) for x in zip(*sorted(zip(_filteredTagValues, _filteredValues), key=lambda pair:pair[0]))]
         return sortedLists[1]
 
+
     
     
     def filter(self, contents = None, outputTag = None, filterTags = None):
@@ -74,17 +75,11 @@ class XnatFilter(object):
             if filterTag == 'all': break
             elif filterTag == 'accessed' or filterTag == 'recent':
                 filteredValues, filteredTagValues = self.filterHasTag(contents, outputTag, self.metadataFilters['accessed'])
-                outputValues = intersect(outputValues, filteredValues)
-                if filterTag == 'recent':
-                    print 'Recent'
-                    for i in range(0, len(filteredValues)):
-                        print "PRESORTED", filteredValues[i], filteredTagValues[i]
-                    recents = self.filterRecent(filteredValues, filteredTagValues)
-                    outputValues = intersect(recents, outputValues)
-                    print "\n\nSORTED", (recents, outputValues)
-                    outputValues.reverse()
+                outputValues = filteredValues
+                #
+                # Latest first
+                #
+                outputValues.reverse()
                     
-
-                
         return outputValues
-            #print projectNames[projContent]#[self.browser.XnatCommunicator.metadataFilters[filterTag]] 
+

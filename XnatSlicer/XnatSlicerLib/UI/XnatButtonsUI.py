@@ -79,13 +79,7 @@ def makeButtons_filter(XnatButtons):
                                               font = XnatButtons.browser.utils.labelFont,
                                               size = qt.QSize(50, 20), 
                                               enabled = True)
-    
-    
-    buttons['recent'] = generateButton(XnatButtons = XnatButtons, iconOrLabel = 'Recent', 
-                                                 toolTip = "Recent projects (less than one month) accessed by current user.", 
-                                                 font = XnatButtons.browser.utils.labelFont,
-                                                 size = qt.QSize(50, 20), 
-                                                 enabled = True)
+
     
     buttons['accessed'] = generateButton(XnatButtons = XnatButtons, iconOrLabel = 'Accessed', 
                                                    toolTip = "Projects accessed by current user.", 

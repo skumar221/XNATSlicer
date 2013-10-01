@@ -342,8 +342,6 @@ class XnatSlicerWidget:
         self.topButtonRowLayout.addSpacing(15)
         self.topButtonRowLayout.addWidget(self.XnatButtons.buttons['filter']['all'])
         self.topButtonRowLayout.addSpacing(15)
-        self.topButtonRowLayout.addWidget(self.XnatButtons.buttons['filter']['recent'])
-        self.topButtonRowLayout.addSpacing(15)
         self.topButtonRowLayout.addWidget(self.XnatButtons.buttons['filter']['accessed'])
         self.topButtonRowLayout.addStretch()
 

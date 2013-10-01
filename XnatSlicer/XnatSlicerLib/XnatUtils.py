@@ -323,8 +323,8 @@ class XnatUtils(object):
                 'element_name',
                 'category',
                 'xnat_abstractresource_id',
-                'label'
-                'cat_desc'
+                'label',
+                'cat_desc',
                 ]
 
 
@@ -350,10 +350,33 @@ class XnatUtils(object):
                 'file_format',
                 'file_tags',
                 'cat_ID',
-                'URI'
+                'URI',
                 'Size'
                 ]
 
+    
+    @property
+    def XnatMetadataTags_all(self):
+        return self.uniqify(self.XnatMetadataTags_projects + 
+                                self.XnatMetadataTags_subjects + 
+                                self.XnatMetadataTags_experiments + 
+                                self.XnatMetadataTags_resources + 
+                                self.XnatMetadataTags_scans + 
+                                self.XnatMetadataTags_files)
+
+
+    
+    def uniqify(self, seq):
+        """ Returns only unique elements in a list, while 
+            preserving order: O(1).
+            From: http://www.peterbe.com/plog/uniqifiers-benchmark
+        """
+        seen = set()
+        seen_add = seen.add
+        return [ x for x in seq if x not in seen and not seen_add(x)]
+
+
+    
 
     def XnatMetadataTagsByLevel(self, level):
         if level == 'projects': return self.XnatMetadataTags_projects
