@@ -95,4 +95,5 @@ def makeButtons_filter(XnatButtons):
         buttons[key].setCheckable(True)
 
 
+    # &xsiType=xnat:imageSessionData
     return buttons
