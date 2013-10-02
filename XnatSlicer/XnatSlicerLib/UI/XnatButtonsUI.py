@@ -94,5 +94,5 @@ def makeButtons_filter(XnatButtons):
     for key in buttons:
         buttons[key].setCheckable(True)
 
-    buttons['all'].click()
+
     return buttons
