@@ -168,7 +168,7 @@ class XnatLoadWorkflow(object):
 
                 
         # Construct dst (local).
-        dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.getColumn('name')))
+        dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.getColumn('MERGED_LABEL')))
             
 
             
