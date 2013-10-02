@@ -395,8 +395,18 @@ class XnatTreeView(XnatView.XnatView):
         # treeNode names based on this premise.
         #----------------------
         nameTag = self.getMergedLabelTagByLevel(level = 'projects')
-        projectNames = self.browser.XnatFilter.filter(contents = projectContents, outputTag = nameTag, filterTags = filters if filters else ['all'])
 
+        if filters:
+            currFilters = filters 
+        else:
+            currFilters = ['accessed']
+            self.browser.XnatButtons.buttons['filter']['accessed'].setDown(True)
+        projectNames = self.browser.XnatFilter.filter(contents = projectContents, outputTag = nameTag, filterTags = currFilters)
+
+        
+        #----------------------
+        # Update the contents based on the filter
+        #----------------------
         updatedContents = {}
         for name in projectNames:
             for i in range(0, len(projectContents['id'])):
@@ -419,7 +429,19 @@ class XnatTreeView(XnatView.XnatView):
         self.showColumnsByNodeLevel('projects')
         self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
         self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
-        
+
+
+        #-----------------------
+        # If there are no project names on the default
+        # filter (i.e. 'accessed'), then revert to all.
+        # NOTE: this only applies when the 'filters' parameter
+        # isn't specified.  If the the 'filters' paraemter of 'accessed'
+        # is specified, but there are no project names, nothing 
+        # will display.
+        #------------------------
+        if (not filters or len(filters) == 0) and (not projectNames or len(projectNames) == 0):
+            self.browser.XnatButtons.buttons['filter']['all'].click()
+            
        
         return True
         
