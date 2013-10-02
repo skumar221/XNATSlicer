@@ -594,6 +594,7 @@ class XnatCommunicator(object):
     @property
     def queryArguments(self):
         return {'accessible' : 'accessible=true',
+                'imagesonly' : 'xsiType=xnat:imageSessionData',
                 }
 
 

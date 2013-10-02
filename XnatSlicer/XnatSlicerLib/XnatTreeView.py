@@ -382,7 +382,8 @@ class XnatTreeView(XnatView.XnatView):
             projectContents = self.browser.XnatCommunicator.getFolderContents(queryUris = ['/projects'], 
                                                                               metadataTags = self.browser.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
-        
+
+            
         #---------------------
         # Exit if no projects can be found.
         #---------------------
@@ -390,6 +391,7 @@ class XnatTreeView(XnatView.XnatView):
             return False
 
 
+        
         #----------------------
         # If there are filters, apply them.  Generate
         # treeNode names based on this premise.
@@ -402,6 +404,7 @@ class XnatTreeView(XnatView.XnatView):
             currFilters = ['accessed']
             self.browser.XnatButtons.buttons['filter']['accessed'].setDown(True)
         projectNames = self.browser.XnatFilter.filter(contents = projectContents, outputTag = nameTag, filterTags = currFilters)
+
 
         
         #----------------------
@@ -417,7 +420,8 @@ class XnatTreeView(XnatView.XnatView):
                         if i < len(projectContents[key]):
                             updatedContents[key].append(projectContents[key][i])
                     
- 
+
+                            
         #----------------------
         # Make tree Items from projects
         #----------------------                
@@ -430,6 +434,7 @@ class XnatTreeView(XnatView.XnatView):
         self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
         self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
 
+        
 
         #-----------------------
         # If there are no project names on the default
@@ -448,7 +453,9 @@ class XnatTreeView(XnatView.XnatView):
 
             
 
-    def makeRequiredSlicerFolders(self, path = None):       
+    def makeRequiredSlicerFolders(self, path = None):  
+        """
+        """     
         if self.sessionManager.sessionArgs:
             self.browser.XnatCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
             self.browser.XnatCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['sharedDir']))
@@ -458,7 +465,7 @@ class XnatTreeView(XnatView.XnatView):
             
     def getParentItemByXnatLevel(self, item, category):
         """ Returns a parent item based on it's Xnat category.  For instance, if
-           you want the 'experiments' parent of an item, returns that parent item.
+            you want the 'experiments' parent of an item, returns that parent item.
         """
         parents = self.getParents(item)
         for p in parents:
@@ -507,45 +514,58 @@ class XnatTreeView(XnatView.XnatView):
     def getXnatDir(self, parents):
         """ Constructs a directory structure based on the default Xnat 
             organizational scheme, utilizing the tree hierarchy. Critical to 
-            communication with Xnat.
-            Ex. parents = [exampleProject, testSubj, testExpt, scan1, images], 
-            then returns: 
+            communication with Xnat. Ex. parents = [exampleProject, testSubj, 
+            testExpt, scan1, images], then returns: 
             'projects/exampleProject/subjects/testSubj/experiments/testExpt/scans/scan1/resources/images'  
         """  
         isResource = False
         isSlicerFile = False
         dirStr = "/"        
 
+
         
         #------------------------
         # Construct preliminary path
         #------------------------
         XnatDepth = 0        
-        for item in parents:          
-            # for resource folders
+        for item in parents: 
+            #         
+            # For resource folders
+            #
             if 'resources' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" "): 
-                isResource = True            
-            # for masked slicer folders
+                isResource = True    
+            #
+            # For masked slicer folders
+            #
             elif ((self.browser.utils.slicerDirName in item.text(self.columns['XNAT_LEVEL']['location'])) 
                   and self.applySlicerFolderMask): 
                 isSlicerFile = True
-            # construct directory string
+            #
+            # Construct directory string
+            #
             dirStr += "%s/%s/"%(item.text(self.columns['XNAT_LEVEL']['location']).strip(" "), 
                                 item.text(self.columns['MERGED_LABEL']['location']))
             XnatDepth+=1
+
 
             
         #------------------------
         # Modify if path has 'resources' in it
         #------------------------
-        if isResource:         
-            # append "files" if resources folder          
+        if isResource:    
+            #     
+            # Append "files" if resources folder 
+            #         
             if 'resources' in parents[-1].text(self.columns['XNAT_LEVEL']['location']).strip(" "):
-                dirStr += "files"           
-            # cleanup if at files level            
+                dirStr += "files" 
+            #
+            # Cleanup if at files level 
+            #           
             elif 'files'  in parents[-1].text(self.columns['XNAT_LEVEL']['location']).strip(" "):
-                dirStr = dirStr[:-1]          
-            # if on a files          
+                dirStr = dirStr[:-1]  
+            #
+            # If on a files      
+            #    
             else:
                 dirStr =  "%s/files/%s"%(os.path.dirname(dirStr), 
                                          os.path.basename(dirStr))  
@@ -569,24 +589,6 @@ class XnatTreeView(XnatView.XnatView):
             if XnatDepth < 4: 
                 dirStr += self.browser.utils.xnatDepthDict[XnatDepth] 
         return dirStr
-
-
-
-    
-    def getTreeItemInfo(self, item):   
-        """Disects a given tree item and returns various useful attributes."""
-        itemText = item.text(self.columns['MERGED_LABEL']['location'])
-        itemExt = itemText.partition(".")[2]     
-        fullUri = self.getXnatDir(self.getParents(item))
-        upFolders = fullUri.split("/")
-        upFolders = upFolders[1:]
-        upUris = []      
-        upUris.append("/%s"%(upFolders[0]))
-        for i in range(1, len(upFolders)-1):
-            upUris.append("%s/%s"%(upUris[i-1], upFolders[i]))          
-        upUris.reverse()        
-        upFolders.reverse()   
-        return itemText, itemExt, fullUri, upUris, upFolders   
 
 
 
@@ -943,10 +945,22 @@ class XnatTreeView(XnatView.XnatView):
             pathObj = self.getXnatUriObject(item)
             currXnatLevel = pathObj['currLevel']
             
+
+            
+            #--------------------
+            # SPECIAL CASE: this filters out image
+            # folders with no images in them.
+            #-------------------- 
+            queryArguments = None
+            if currXnatLevel == 'experiments':
+                queryArguments = ['imagesonly']
+
+
+                
             #--------------------
             # Get folder Contents
-            #--------------------      
-            metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel))
+            #-------------------- 
+            metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
             childNames = metadata[self.getMergedLabelTagByLevel(currXnatLevel)]
 
             #--------------------
