@@ -69,23 +69,17 @@ def makeButtons_io(XnatButtons):
 
 
 
-def makeButtons_filter(XnatButtons):
+def makeButtons_filter(XnatButtons, buttonNames):
     
     buttons = {}
     buttons = {}
-    
-    buttons['all'] = generateButton(XnatButtons = XnatButtons, iconOrLabel = 'All', 
-                                              toolTip = "All projects available to user.", 
-                                              font = XnatButtons.browser.utils.labelFont,
-                                              size = qt.QSize(50, 20), 
-                                              enabled = True)
 
-    
-    buttons['accessed'] = generateButton(XnatButtons = XnatButtons, iconOrLabel = 'Accessed', 
-                                                   toolTip = "Projects accessed by current user.", 
-                                                   font = XnatButtons.browser.utils.labelFont,
-                                                   size = qt.QSize(50, 20), 
-                                                   enabled = True)
+    for buttonName in buttonNames:
+        buttons[buttonName.lower()] = generateButton(XnatButtons = XnatButtons, iconOrLabel = buttonName.title(), 
+                                                     toolTip = "Projects " + buttonName.lower() + " by current user.", 
+                                                     font = XnatButtons.browser.utils.labelFont,
+                                                     size = qt.QSize(50, 20), 
+                                                     enabled = True)
     
 
     #

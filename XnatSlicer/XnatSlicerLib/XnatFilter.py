@@ -72,7 +72,7 @@ class XnatFilter(object):
 
         outputValues = contents[outputTag]
         for filterTag in filterTags:                
-            if filterTag == 'all': break
+            if filterTag == 'all' or filterTag == None or filterTag == '': break
             elif filterTag == 'accessed' or filterTag == 'recent':
                 filteredValues, filteredTagValues = self.filterHasTag(contents, outputTag, self.metadataFilters['accessed'])
                 outputValues = filteredValues

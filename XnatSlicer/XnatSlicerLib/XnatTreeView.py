@@ -310,7 +310,7 @@ class XnatTreeView(XnatView.XnatView):
 
         
     def getColumn(self, value):
-        return self.browser.XnatView.columns[value.lower()]['location']
+        return self.columns[value]['location']
 
 
 
@@ -376,6 +376,13 @@ class XnatTreeView(XnatView.XnatView):
         #print(self.browser.utils.lf(), "Retrieving projects. Please wait...","")
 
 
+        defaultFilterButton = self.browser.XnatButtons.buttons['filter']['accessed']
+
+        
+        #----------------------
+        # Get the projects if they're cashed (session-based)
+        # otherwise the the projects via the REST call.
+        #----------------------
         if self.browser.XnatCommunicator.projectCache != None:
             projectContents = self.browser.XnatCommunicator.projectCache
         else:
@@ -383,26 +390,17 @@ class XnatTreeView(XnatView.XnatView):
                                                                               metadataTags = self.browser.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
 
-            
-        #---------------------
-        # Exit if no projects can be found.
-        #---------------------
-        if not projectContents: 
-            return False
-
-
         
         #----------------------
         # If there are filters, apply them.  Generate
         # treeNode names based on this premise.
         #----------------------
         nameTag = self.getMergedLabelTagByLevel(level = 'projects')
-
         if filters:
             currFilters = filters 
         else:
             currFilters = ['accessed']
-            self.browser.XnatButtons.buttons['filter']['accessed'].setDown(True)
+            self.browser.XnatButtons.setButtonDown(category = 'filter' , name = 'accessed', isDown = True, callSignals = False)
         projectNames = self.browser.XnatFilter.filter(contents = projectContents, outputTag = nameTag, filterTags = currFilters)
 
 
@@ -445,7 +443,8 @@ class XnatTreeView(XnatView.XnatView):
         # will display.
         #------------------------
         if (not filters or len(filters) == 0) and (not projectNames or len(projectNames) == 0):
-            self.browser.XnatButtons.buttons['filter']['all'].click()
+            if defaultFilterButton.isDown():
+                defaultFilterButton.click()
             
        
         return True
