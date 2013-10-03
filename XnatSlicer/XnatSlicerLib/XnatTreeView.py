@@ -269,36 +269,41 @@ class XnatTreeView(XnatView.XnatView):
         """
         level = metadata['XNAT_LEVEL']
 
-        #print "METADATA", metadata
-        
+
+        #------------------
+        # Cycle through all keys to set.
+        #------------------
         for key in metadata:
             value = metadata[key]
             self.columns[key]['value'] = value
             if 'location' in self.columns[key]:
                 treeNode.setText(self.columns[key]['location'], value)
                 treeNode.setFont(self.columns[key]['location'], self.itemFont_folder) 
-        #
-        # Set the value for MERGED_LABEL
-        #        
+
+                
+        #-------------------
+        # Set the value for MERGED_LABEL.
+        #-------------------        
         value = metadata[self.getMergedLabelTagByLevel(level)]
 
-        #
-        # return out if value is not defined.
-        #
+        
+        #-------------------
+        # Return out if value is not defined.
+        #-------------------
         if not value or value == None or len(value) == 0:
             return
 
-        
-        self.columns['MERGED_LABEL']['value'] = value
 
-        
+        #-------------------
+        # Set both values and text on widget.
+        #-------------------
+        self.columns['MERGED_LABEL']['value'] = value
         treeNode.setText(self.columns['MERGED_LABEL']['location'], value)
 
         
-        
-        #
+        #-------------------
         # Set aesthetics
-        #
+        #-------------------
         treeNode.setFont(self.columns['MERGED_LABEL']['location'], self.itemFont_folder) 
         treeNode.setFont(self.columns['XNAT_LEVEL']['location'], self.itemFont_category) 
         self.changeFontColor(treeNode, False, "grey", self.columns['XNAT_LEVEL']['location'])
@@ -310,12 +315,16 @@ class XnatTreeView(XnatView.XnatView):
 
         
     def getColumn(self, value):
+        """
+        """
         return self.columns[value]['location']
 
 
 
 
     def resizeColumns(self):
+        """
+        """
         for key in self.columns:
             if 'location' in self.columns[key]:
                 self.viewWidget.resizeColumnToContents(self.columns[key]['location'])
@@ -372,83 +381,112 @@ class XnatTreeView(XnatView.XnatView):
     def loadProjects(self, filters = None):
         """ Descriptor
         """
-        self.viewWidget.clear()
-        #print(self.browser.utils.lf(), "Retrieving projects. Please wait...","")
+        print(self.browser.utils.lf(), "Retrieving projects.", filters)
 
-
-        defaultFilterButton = self.browser.XnatButtons.buttons['filter']['accessed']
 
         
         #----------------------
-        # Get the projects if they're cashed (session-based)
-        # otherwise the the projects via the REST call.
+        # Get the projects if they're not 
+        # cashed via XnatCommunicator call.
         #----------------------
-        if self.browser.XnatCommunicator.projectCache != None:
-            projectContents = self.browser.XnatCommunicator.projectCache
-        else:
+        if self.browser.XnatCommunicator.projectCache == None:
+            self.viewWidget.clear()
             projectContents = self.browser.XnatCommunicator.getFolderContents(queryUris = ['/projects'], 
                                                                               metadataTags = self.browser.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
+            #
+            # Make tree Items from projects.
+            #               
+            projectContents['XNAT_LEVEL'] = ['projects' for p in projectContents['id']]
+            projectContents['MERGED_LABEL'] = [p for p in projectContents['id']]
+            self.makeTreeItems(parentItem = self.viewWidget, 
+                               children = projectContents['MERGED_LABEL'], 
+                               metadata = projectContents, 
+                               expandible = [0] * len(projectContents['MERGED_LABEL']))
+            self.showColumnsByNodeLevel('projects')
+            self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
+            self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
 
-        
+
+
         #----------------------
-        # If there are filters, apply them.  Generate
-        # treeNode names based on this premise.
-        #----------------------
-        nameTag = self.getMergedLabelTagByLevel(level = 'projects')
-        if filters:
-            currFilters = filters 
-        else:
-            currFilters = ['accessed']
+        # Define Filter functions
+        #----------------------            
+        def filter_accessed():
+            self.viewWidget.sortItems(self.columns['last_accessed_497']['location'], 1)
             self.browser.XnatButtons.setButtonDown(category = 'filter' , name = 'accessed', isDown = True, callSignals = False)
-        projectNames = self.browser.XnatFilter.filter(contents = projectContents, outputTag = nameTag, filterTags = currFilters)
+            def hideEmpty(child):
+                accessedText = child.text(self.columns['last_accessed_497']['location'])
+                if accessedText == '': 
+                    child.setHidden(True)  
+            self.loopProjectNodes(hideEmpty)
+
+
+        def filter_all():
+            self.viewWidget.sortItems(self.columns['MERGED_LABEL']['location'], 0)
+            def showChild(child):
+                child.setHidden(False)
+            self.loopProjectNodes(showChild)           
 
 
         
-        #----------------------
-        # Update the contents based on the filter
-        #----------------------
-        updatedContents = {}
-        for name in projectNames:
-            for i in range(0, len(projectContents['id'])):
-                if projectContents['id'][i] == name:
-                    for key in projectContents:
-                        if not key in updatedContents:
-                            updatedContents[key] = []
-                        if i < len(projectContents[key]):
-                            updatedContents[key].append(projectContents[key][i])
-                    
-
-                            
-        #----------------------
-        # Make tree Items from projects
-        #----------------------                
-        updatedContents['XNAT_LEVEL'] = ['projects' for p in projectNames]
-        self.makeTreeItems(parentItem = self.viewWidget, 
-                           children = projectNames, 
-                           metadata = updatedContents, 
-                           expandible = [0 for p in projectNames])
-        self.showColumnsByNodeLevel('projects')
-        self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
-        self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
-
-        
-
-        #-----------------------
-        # If there are no project names on the default
-        # filter (i.e. 'accessed'), then revert to all.
-        # NOTE: this only applies when the 'filters' parameter
-        # isn't specified.  If the the 'filters' paraemter of 'accessed'
-        # is specified, but there are no project names, nothing 
-        # will display.
-        #------------------------
-        if (not filters or len(filters) == 0) and (not projectNames or len(projectNames) == 0):
-            if defaultFilterButton.isDown():
-                defaultFilterButton.click()
             
-       
-        return True
+        #----------------------
+        # If no 'filters'...
+        #----------------------
+        defaultFilterButton = self.browser.XnatButtons.buttons['filter']['accessed']
+        defaultFilterFunction = filter_accessed
+        if not filters or len(filters) == 0:
+            #
+            # Run the default filter mechanism
+            #
+            defaultFilterFunction()
+            #
+            # Count and compare hidden nodes with all nodes
+            #
+            self.nodeCount = 0
+            self.hiddenNodeCount = 0
+            def checkEmpty(child):
+                if child.isHidden():
+                    self.hiddenNodeCount += 1
+                self.nodeCount += 1
+            self.loopProjectNodes(checkEmpty) 
+            #
+            # If hiddenNodeCount == nodeCount, uncheck the default filter button.
+            #
+            if self.nodeCount > 0 and self.nodeCount == self.hiddenNodeCount:
+                defaultFilterButton.click()
+            return True
+
         
+        #----------------------
+        # Filters: Accessed
+        #----------------------        
+        elif filters[0] == 'accessed':
+            filter_accessed()
+            return True
+
+        
+        #----------------------
+        # Filters: All
+        #----------------------        
+        elif filters[0] == 'all':
+            filter_all()
+            return True
+        return True
+
+    
+
+    def loopProjectNodes(self, callback):
+        """
+        """
+        ind = 0
+        currChild = self.viewWidget.topLevelItem(ind)
+        while currChild:
+            callback(currChild)
+            ind += 1
+            currChild = self.viewWidget.topLevelItem(ind)
+
 
             
 
