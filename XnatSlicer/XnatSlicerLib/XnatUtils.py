@@ -929,6 +929,8 @@ class XnatUtils(object):
 
     
     def removeZeroLenStrVals(self, arr):
+        """
+        """
         for p in arr: 
             if (len(p)==0):
                 arr.remove(p)
@@ -939,6 +941,8 @@ class XnatUtils(object):
 
     
     def splitXnatPath(self, path):
+        """
+        """
         dirNames = []
         dirTypes = []
         pathArr = self.removeZeroLenStrVals(path.strip().split("/"))
@@ -958,6 +962,8 @@ class XnatUtils(object):
 
     
     def getSaveTuple(self, filepath=None):
+        """
+        """
         saveLevelDir = None
         sharedDir = None
         slicerDir = None
@@ -972,6 +978,8 @@ class XnatUtils(object):
 
     
     def checkArrayElementsAreEqual(self, iterator):
+        """
+        """
       try:
          iterator = iter(iterator)
          first = next(iterator)
@@ -983,6 +991,8 @@ class XnatUtils(object):
 
       
     def makeXnatPathDictionary(self, path):
+        """
+        """
         pathDict = {"projects":None, "subjects":None, "experiments":None, "scans":None, "resources":None, "files":None}
         pathList = path.split("/")
         for i in range(0, len(pathList)):
@@ -994,15 +1004,18 @@ class XnatUtils(object):
 
 
     def bytesToMB(self, bytes):
+        """
+        """
         bytes = int(bytes)
         mb = str(bytes/(1024*1024.0)).split(".")[0] + "." + str(bytes/(1024*1024.0)).split(".")[1][:2]
-        return mb
+        return float(mb)
 
 
 
 
     def repositionToMainSlicerWindow(self, positionable, location = "center"):
-
+        """
+        """
         # Make sure positionable is open.
         positionable.show()
 

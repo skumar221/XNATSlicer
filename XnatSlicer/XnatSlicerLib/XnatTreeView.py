@@ -29,11 +29,8 @@ class XnatTreeView(XnatView.XnatView):
         approach to present the XNAT database hierarchy. 
     """  
 
-
-
     
     def setup(self):
-
         
         #----------------------
         # TreeView
@@ -44,11 +41,13 @@ class XnatTreeView(XnatView.XnatView):
         self.viewWidget.setBaseSize(treeWidgetSize)
 
 
+        
         #----------------------
         # TreeView Columns
         #----------------------
         self.initColumns()
 
+        
 
         #----------------------
         # Fonts
@@ -58,12 +57,14 @@ class XnatTreeView(XnatView.XnatView):
         self.itemFont_category = qt.QFont("Arial", self.browser.utils.fontSize, 25, True)
 
         
+        
         #----------------------
         # Tree-related globals
         #----------------------
         self.dirText = None     
         self.currItem = None
         self.currLoadable = None        
+
 
         
         #----------------------
@@ -72,10 +73,12 @@ class XnatTreeView(XnatView.XnatView):
         self.lastButtonClicked = None 
 
         
+        
         #----------------------
         # Clear Scene dialog
         #----------------------
         self.initClearDialog()
+
 
         
         #----------------------
@@ -83,6 +86,7 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         self.applySlicerFolderMask = True
         self.hideSlicerHelperFolders = True
+
 
         
         #----------------------
@@ -100,11 +104,11 @@ class XnatTreeView(XnatView.XnatView):
         for key in self.browser.utils.XnatMetadataTags_all:
             self.columns[key] = {}
 
-        #
+        #-----------------------
         # Apply metadata key to the columns.  Manuplulate
         # the string values of the tags to make them more
         # human-readable.
-        #
+        #----------------------
         for key in self.columns:
             strVal = key.replace('_',' ').title()
             strVal = strVal.replace('Pi', 'PI')
@@ -114,23 +118,25 @@ class XnatTreeView(XnatView.XnatView):
             self.columns[key]['displayname'] = strVal
 
             
-        #
+        #----------------------
         # XnatLevel column is not part of the metadata set
         # so we're adding it.
-        #  
+        #---------------------- 
         self.columns['MERGED_LABEL'] = {}  
         self.columns['MERGED_LABEL']['displayname'] = 'Name/ID/Label'   
         self.columns['XNAT_LEVEL'] = {}  
         self.columns['XNAT_LEVEL']['displayname'] = 'Level'      
 
 
-        self.columnKeyOrder = {}
         
+        #----------------------
+        # Define column keys based on XNAT_LEVEL
+        #---------------------- 
+        self.columnKeyOrder = {}
         self.columnKeyOrder['ALL'] = [
             'MERGED_LABEL',
             'XNAT_LEVEL',
         ]
-
         self.columnKeyOrder['LABELS'] = [
             'ID',
             'id',
@@ -138,14 +144,12 @@ class XnatTreeView(XnatView.XnatView):
             'Name',
             'label',
         ]
-
-        
         self.columnKeyOrder['projects'] = [
             'last_accessed_497',
-            'insert_user',
-            'pi',
-            'insert_date',
-            'description',
+        #    'insert_user',
+        #    'pi',
+        #    'insert_date',
+        #    'description',
         #    'secondary_ID',
         #    'pi_lastname',
         #    'pi_firstname',
@@ -157,18 +161,18 @@ class XnatTreeView(XnatView.XnatView):
         ]
 
         self.columnKeyOrder['subjects'] = [
-            'insert_date',
-            'insert_user',
-            'totalRecords'
+        #    'insert_date',
+        #    'insert_user',
+        #    'totalRecords'
         #    'project',
         #    'URI',
         ]
 
         
         self.columnKeyOrder['experiments'] = [
-            'insert_date',
-            'totalRecords',
-            'date',
+        #    'insert_date',
+        #    'totalRecords',
+        #    'date',
         #   'project',
         #   'xsiType',
         #   'ID',
@@ -178,8 +182,8 @@ class XnatTreeView(XnatView.XnatView):
 
         self.columnKeyOrder['scans'] = [
             'series_description',
-            'note',
-            'type',
+        #    'note',
+        #    'type',
         #   'xsiType',
         #   'quality',
         #   'xnat_imagescandata_id',
@@ -187,8 +191,8 @@ class XnatTreeView(XnatView.XnatView):
         ]
 
         self.columnKeyOrder['resources'] = [
-            'element_name',
-            'category',
+        #    'element_name',
+        #    'category',
         #    'cat_id',
         #    'xnat_abstractresource_id',
         #    'cat_desc'
@@ -196,7 +200,7 @@ class XnatTreeView(XnatView.XnatView):
 
         self.columnKeyOrder['files'] = [
             'Size',
-            'file_format',
+        #    'file_format',
         #    'file_content',
         #    'collection',
         #    'file_tags',
@@ -207,7 +211,7 @@ class XnatTreeView(XnatView.XnatView):
 
         self.columnKeyOrder['slicer'] = [
             'Size',
-            'file_format',
+        #    'file_format',
         #    'file_content',
         #    'collection',
         #    'file_tags',
@@ -216,9 +220,11 @@ class XnatTreeView(XnatView.XnatView):
         ]
 
 
-        #
-        # Create a union of all the self.columnKeyOrder arrays.
-        #
+
+        #---------------------- 
+        # Create a union of all the self.columnKeyOrder 
+        # arrays (i.e. 'allHeaders')
+        #---------------------- 
         allHeaders = self.browser.utils.uniqify(self.columnKeyOrder['ALL'] + 
                                                 # Leaving this out as it will become part of MERGED_LABELS
                                                 #  self.columnKeyOrder['LABELS'] + 
@@ -231,12 +237,22 @@ class XnatTreeView(XnatView.XnatView):
                                                 self.columnKeyOrder['slicer']
                                                 )
 
+
+        
+        #---------------------- 
+        # Create columns based on 'allHeaders'
+        #----------------------         
         self.viewWidget.setColumnCount(len(allHeaders))
         headerLabels = []
         for header in allHeaders:
+            #
+            # Set other column key/values.
+            #
             self.columns[header]['location'] = len(headerLabels)
+            #
+            # Set the headerLabels.
+            #
             headerLabels.append( self.columns[header]['displayname'])
-            
         self.viewWidget.setHeaderLabels(headerLabels)
         self.showColumnsByNodeLevel()
 
@@ -270,6 +286,7 @@ class XnatTreeView(XnatView.XnatView):
         level = metadata['XNAT_LEVEL']
 
 
+        
         #------------------
         # Cycle through all keys to set.
         #------------------
@@ -281,11 +298,13 @@ class XnatTreeView(XnatView.XnatView):
                 treeNode.setFont(self.columns[key]['location'], self.itemFont_folder) 
 
                 
+                
         #-------------------
         # Set the value for MERGED_LABEL.
         #-------------------        
         value = metadata[self.getMergedLabelTagByLevel(level)]
 
+        
         
         #-------------------
         # Return out if value is not defined.
@@ -293,12 +312,14 @@ class XnatTreeView(XnatView.XnatView):
         if not value or value == None or len(value) == 0:
             return
 
+        
 
         #-------------------
         # Set both values and text on widget.
         #-------------------
         self.columns['MERGED_LABEL']['value'] = value
         treeNode.setText(self.columns['MERGED_LABEL']['location'], value)
+
 
         
         #-------------------
@@ -313,6 +334,7 @@ class XnatTreeView(XnatView.XnatView):
         return treeNode
 
 
+    
         
     def getColumn(self, value):
         """
@@ -330,10 +352,12 @@ class XnatTreeView(XnatView.XnatView):
                 self.viewWidget.resizeColumnToContents(self.columns[key]['location'])
 
 
-            
-    def showColumnsByNodeLevel(self, level = None):
+
+                
+    def showColumnsByNodeLevel(self, levels = None):
         """
         """
+        
         #----------------------
         # Hide all
         #----------------------
@@ -341,19 +365,26 @@ class XnatTreeView(XnatView.XnatView):
             self.viewWidget.hideColumn(i)
 
 
+            
         #----------------------
         # Keep everything hidden if no level enetered.
         #----------------------
-        if level == None or len(level) == 0:
+        if levels == None or len(levels) == 0:
             return
 
+
+        
+        #----------------------
+        # Internal function: shows column based 
+        # on the 'location' key.
+        #----------------------
         def showByKeys(keys):
             for key in keys:
-                #print key
                 if key in self.columns and 'location' in self.columns[key]:
                     location = self.columns[key]['location']
                     self.viewWidget.showColumn(location)
-                
+
+                    
 
         #----------------------
         # Required columns
@@ -361,19 +392,20 @@ class XnatTreeView(XnatView.XnatView):
         showByKeys(self.columnKeyOrder['ALL'])
 
 
+        
         #----------------------
-        # Show columns by level
+        # Show columns by levels
         #----------------------
-        showByKeys(self.columnKeyOrder[level])
+        print levels
+        for level in levels:
+            showByKeys(self.columnKeyOrder[level])
 
-
+        
 
         #----------------------
         # Resize columns
         #----------------------
         self.resizeColumns()
-
-
             
 
 
@@ -403,7 +435,7 @@ class XnatTreeView(XnatView.XnatView):
                                children = projectContents['MERGED_LABEL'], 
                                metadata = projectContents, 
                                expandible = [0] * len(projectContents['MERGED_LABEL']))
-            self.showColumnsByNodeLevel('projects')
+            self.showColumnsByNodeLevel(['projects', 'subjects'])
             self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
             self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
 
@@ -427,7 +459,6 @@ class XnatTreeView(XnatView.XnatView):
             def showChild(child):
                 child.setHidden(False)
             self.loopProjectNodes(showChild)           
-
 
         
             
@@ -459,12 +490,14 @@ class XnatTreeView(XnatView.XnatView):
             return True
 
         
+        
         #----------------------
         # Filters: Accessed
         #----------------------        
         elif filters[0] == 'accessed':
             filter_accessed()
             return True
+
 
         
         #----------------------
@@ -476,9 +509,12 @@ class XnatTreeView(XnatView.XnatView):
         return True
 
     
+    
 
     def loopProjectNodes(self, callback):
-        """
+        """ Loops through all of the top level
+            treeItems (i.e. 'projects') and allows the user
+            to run a callback.
         """
         ind = 0
         currChild = self.viewWidget.topLevelItem(ind)
@@ -514,7 +550,8 @@ class XnatTreeView(XnatView.XnatView):
             
             
     def setEnabled(self, bool):
-        """ (INHERITED from XnatView)  Enables or disables the view widget.
+        """ (INHERITED from XnatView)  Enables or disables 
+            the view widget.
         """
         self.viewWidget.setEnabled(bool)
 
@@ -522,7 +559,8 @@ class XnatTreeView(XnatView.XnatView):
 
             
     def initClearDialog(self):
-        """ Initiates/resets dialog for window to clear the current scene.
+        """ Initiates/resets dialog for window to clear 
+            the current scene.
         """
         try: 
             self.clearSceneDialog.delete()
@@ -536,8 +574,8 @@ class XnatTreeView(XnatView.XnatView):
         
         
     def getIndentByItemDepth(self, item):
-        """Returns an indent for labeling purposes based on depth of item in 
-           the treeView.
+        """Returns an indent for labeling purposes based on 
+           depth of item in the treeView.
         """
         parents= self.getParents(item)
         spaceStr = ""        
@@ -654,22 +692,24 @@ class XnatTreeView(XnatView.XnatView):
 
             
     def getChildrenExpanded(self, item):
-        """ When the user interacts with the treeView, this is a hook 
-            method that gets the branches of a treeItem and expands them 
+        """ When the user interacts with the treeView, 
+            this is a hook method that gets the branches 
+            of a treeItem and expands them.
         """ 
         self.manageTreeNode(item, 0)
         self.viewWidget.setCurrentItem(item)
         self.currItem = item
         if not 'files' in item.text(self.columns['XNAT_LEVEL']['location']):
             self.getChildren(item, expanded = True) 
+        self.resizeColumns()
 
 
             
             
     def getChildrenNotExpanded(self, item):
-        """ When the user interacts with the treeView, this is a hook 
-            method that gets the branches of a treeItem and does not 
-            expand them 
+        """ When the user interacts with the treeView, this 
+            is a hook method that gets the branches of a treeItem 
+            and does not expand them 
         """ 
         self.manageTreeNode(item, 0)
         self.viewWidget.setCurrentItem(item)
@@ -705,24 +745,24 @@ class XnatTreeView(XnatView.XnatView):
         isFile = 'files' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
         isSlicerFile = self.browser.utils.slicerDirName.replace("/","") in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
 
+        
 
         #-------------------------
         # Show columns
         #-------------------------
         if isProject:
-            self.showColumnsByNodeLevel('projects')
+            self.showColumnsByNodeLevel(['projects', 'subjects'])
+                
         elif isSubject:
-            self.showColumnsByNodeLevel('subjects')
-        elif isResource:
-            self.showColumnsByNodeLevel('resources')
+            self.showColumnsByNodeLevel(['subjects', 'experiments'])
+                
         elif isExperiment:
-            self.showColumnsByNodeLevel('experiments')
-        elif isScan:
-            self.showColumnsByNodeLevel('scans')
-        elif isFile:
-            self.showColumnsByNodeLevel('files')
-        if isSlicerFile:
-            self.showColumnsByNodeLevel('slicer')
+            self.showColumnsByNodeLevel(['experiments', 'scans', 'files'])
+
+        elif isScan or isFile or isSlicerFile:
+            self.showColumnsByNodeLevel(['scans', 'files'])
+
+                
 
 
             
@@ -733,11 +773,9 @@ class XnatTreeView(XnatView.XnatView):
         self.browser.XnatButtons.setEnabled('load', False)
         self.browser.XnatButtons.setEnabled('delete', False)
         self.browser.XnatButtons.setEnabled('addProj', True)
-        
         if isExperiment or isScan:
             self.browser.XnatButtons.setEnabled('save', True)
             self.browser.XnatButtons.setEnabled('load', True)
-            
         elif isFile or isSlicerFile or isResource:
             self.browser.XnatButtons.setEnabled('save', True)
             self.browser.XnatButtons.setEnabled('load', True)
@@ -759,19 +797,28 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         if isFile or isSlicerFile:
             ext = item.text(self.columns['MERGED_LABEL']['location']).rsplit(".")
-            # check extension
+            #
+            # Check extension
+            #
             if (len(ext)>1):
-                # recognizable extensions        
+                #
+                # Recognizable extensions  
+                #      
                 if self.browser.utils.isRecognizedFileExt(ext[1]):
-                    # scene package
+                    #
+                    # Scene package
+                    #
                     for ext_ in self.browser.utils.packageExtensions:
                         if ext_.replace(".","") in ext[1]: 
-                            # set currloadable to scene                        
+                            #
+                            # Set currloadable to scene   
+                            #                     
                             self.currLoadable = "scene"
                             return
-                    # generic file
+                    #
+                    # Generic file
+                    #
                     else:
-                        # set currloadable to file
                         self.currLoadable = "file"
                         return   
 
@@ -785,6 +832,7 @@ class XnatTreeView(XnatView.XnatView):
             return
 
 
+        self.resizeColumns()
 
         
         
@@ -810,9 +858,9 @@ class XnatTreeView(XnatView.XnatView):
         pathObj['currLevel'] = xnatDir.split('/')[-1] if not '/scans/' in xnatDir else 'files'
 
        
-        #
+        #------------------------
         # Construct path dictionary
-        #
+        #------------------------
         splitter = [ s for s in pathObj['currUri'].split("/") if len(s) > 0 ]
         for i in range(0, len(splitter)):
             key = splitter[i]
@@ -854,7 +902,9 @@ class XnatTreeView(XnatView.XnatView):
 
         
             
-    def isDICOMFolder(self, item):       
+    def isDICOMFolder(self, item):  
+        """
+        """     
         dicomCount = 0
         for x in range(0, item.childCount()):          
             try:
@@ -872,6 +922,8 @@ class XnatTreeView(XnatView.XnatView):
 
     
     def setCurrItemToChild(self, item = None, childFileName = None):
+        """
+        """
         if not item:
             item = self.currItem     
         self.getChildrenExpanded(item)
@@ -887,6 +939,8 @@ class XnatTreeView(XnatView.XnatView):
 
                 
     def changeFontColor(self, item, bold = True, color = "black", column = 0):
+        """
+        """
         b = qt.QBrush()
         c = qt.QColor(color)
         b.setColor(c)
@@ -896,6 +950,8 @@ class XnatTreeView(XnatView.XnatView):
 
         
     def startNewSession(self, sessionArgs, method="currItem"):
+        """
+        """
         if method=="currItem":            
             
             # Sometimes we have to reset the curr item
@@ -909,6 +965,8 @@ class XnatTreeView(XnatView.XnatView):
 
             
     def selectItem_byUri(self, pathStr):
+        """
+        """
         def findChild(item, childName, expanded=True):
             for i in range(0, item.childCount()):
                 if str(childName) in item.child(i).text(self.columns['MERGED_LABEL']['location']):
@@ -958,98 +1016,108 @@ class XnatTreeView(XnatView.XnatView):
     
         
     def getChildren(self, item, expanded, setCurrItem = True):
-            """ Gets the branches of a particular treeItem via an XnatCommunicator 
-            Get call.
-            """       
-    
-            #--------------------
-            # Selected Item management
-            #--------------------  
-            if not item: return
-            if setCurrItem: self.currItem = item
-            self.viewWidget.setCurrentItem(item)              
+        """ Gets the branches of a particular treeItem 
+            via an XnatCommunicator.  Get call.
+        """       
 
-            
-            #--------------------
-            # Remove existing children for reload
-            #--------------------
-            item.takeChildren()
-
-            
-            #--------------------
-            # Get path obj
-            #--------------------           
-            pathObj = self.getXnatUriObject(item)
-            currXnatLevel = pathObj['currLevel']
-            
-
-            
-            #--------------------
-            # SPECIAL CASE: this filters out image
-            # folders with no images in them.
-            #-------------------- 
-            queryArguments = None
-            if currXnatLevel == 'experiments':
-                queryArguments = ['imagesonly']
+        #--------------------
+        # Selected Item management
+        #--------------------  
+        if not item: return
+        if setCurrItem: self.currItem = item
+        self.viewWidget.setCurrentItem(item)              
 
 
-                
-            #--------------------
-            # Get folder Contents
-            #-------------------- 
-            metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
-            childNames = metadata[self.getMergedLabelTagByLevel(currXnatLevel)]
-
-            #--------------------
-            # Set the categories
-            #--------------------
-            metadata['XNAT_LEVEL'] = [pathObj['childXnatLevel'] for x in range(len(childNames))]
-
-            
-            #--------------------
-            # Slicer URIs
-            #--------------------
-            if 'slicerQueryUris' in pathObj:
-                slicerMetadata = self.browser.XnatCommunicator.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))
-                slicerChildNames = slicerMetadata[self.getMergedLabelTagByLevel('files')]
-                prevLen = len(childNames)
-                childNames = childNames + slicerChildNames  
-                #
-                # Merge slicerMetadata with metadata
-                #
-                for key in slicerMetadata:
-                    if not key in metadata:
-                        metadata[key] = [''] * prevLen
-                    metadata[key] += metadata[key] + slicerMetadata[key]
-                    if (key == 'Size'):
-                        for i in range(0, len(metadata[key])):
-                            if metadata[key][i]:
-                                metadata[key][i] = '%s MB'%(self.browser.utils.bytesToMB(metadata[key][i])) 
-                metadata['XNAT_LEVEL'] = metadata['XNAT_LEVEL'] + ['Slicer' for x in range(len(slicerChildNames))]  
-                
         
+        #--------------------
+        # Remove existing children for reload
+        #--------------------
+        item.takeChildren()
+
+        
+            
+        #--------------------
+        # Get path obj
+        #--------------------           
+        pathObj = self.getXnatUriObject(item)
+        currXnatLevel = pathObj['currLevel']
+
+        
+            
+        #--------------------
+        # SPECIAL CASE: this filters out image
+        # folders with no images in them.
+        #-------------------- 
+        queryArguments = None
+        if currXnatLevel == 'experiments':
+            queryArguments = ['imagesonly']
+
+
+                
+        #--------------------
+        # Get folder Contents
+        #-------------------- 
+        metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
+        childNames = metadata[self.getMergedLabelTagByLevel(currXnatLevel)]
+
+        
+        
+        #--------------------
+        # Set the categories
+        #--------------------
+        metadata['XNAT_LEVEL'] = [pathObj['childXnatLevel'] for x in range(len(childNames))]
+
+
+        
+        #--------------------
+        # Slicer URIs
+        #--------------------
+        if 'slicerQueryUris' in pathObj:
+            slicerMetadata = self.browser.XnatCommunicator.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))
+            slicerChildNames = slicerMetadata[self.getMergedLabelTagByLevel('files')]
+            prevLen = len(childNames)
+            childNames = childNames + slicerChildNames  
             #
-            # Determine expandibility
-            #    
-            expandible = []
-            for i in range(0, len(metadata['XNAT_LEVEL'])):
-                 level = metadata['XNAT_LEVEL'][i]
-                 #
-                 # 'files' and 'Slicer' category
-                 # immediately ruled as unexpandable (1).
-                 #
-                 if (level == 'files' or level == 'Slicer') :
-                     expandible.append(1)
-                 else:
-                     expandible.append(0)
+            # Merge slicerMetadata with metadata
+            #
+            for key in slicerMetadata:
+                if not key in metadata:
+                    metadata[key] = [''] * prevLen
+                metadata[key] += metadata[key] + slicerMetadata[key]
+                if (key == 'Size'):
+                    for i in range(0, len(metadata[key])):
+                        if metadata[key][i]:
+                            metadata[key][i] = '%i MB'%(int(round(self.browser.utils.bytesToMB(metadata[key][i]))))
+            metadata['XNAT_LEVEL'] = metadata['XNAT_LEVEL'] + ['Slicer' for x in range(len(slicerChildNames))]  
+                
 
-                     
-            self.makeTreeItems(parentItem = item, children = childNames, metadata = metadata, expandible = expandible)
             
-            item.setExpanded(True)
-            self.viewWidget.setCurrentItem(item) 
+        #--------------------
+        # Determine expandibility
+        #--------------------    
+        expandible = []
+        for i in range(0, len(metadata['XNAT_LEVEL'])):
+            level = metadata['XNAT_LEVEL'][i]
+            #
+            # 'files' and 'Slicer' category
+            # immediately ruled as unexpandable (1).
+            #
+            if (level == 'files' or level == 'Slicer') :
+                expandible.append(1)
+            else:
+                expandible.append(0)
+
+
+                
+        #--------------------
+        # Make the treeItems
+        #--------------------  
+        self.makeTreeItems(parentItem = item, children = childNames, metadata = metadata, expandible = expandible)
+        item.setExpanded(True)
+        self.viewWidget.setCurrentItem(item) 
             
 
+        
             
     def condenseDicomsToOneName(self, names):
         """
@@ -1059,7 +1127,9 @@ class XnatTreeView(XnatView.XnatView):
 
         
         for i in range(1, len(names)):
-            # cycle through characters in name.
+            #
+            # Cycle through characters in name.
+            #
             for j in range(0, len(names[i])):
                 #print (j, names[i], returnName, len(names[i]), len(returnName))
                 if j > len(returnName) - 1:
@@ -1073,13 +1143,15 @@ class XnatTreeView(XnatView.XnatView):
     
     
     def makeTreeItems(self, parentItem, children = [],  metadata = {}, expandible = None):
-        """Creates a set of items to be put into the QTreeWidget based
-           upon its parents, its children and the Xnat.
+        """Creates a set of items to be put into the 
+           QTreeWidget based upon its parents, its children 
+           and the Xnat.
         """
         
         if len(children) == 0: return
 
 
+        
         #----------------
         # Get the DICOM count if at 'scans'
         #----------------
@@ -1090,7 +1162,6 @@ class XnatTreeView(XnatView.XnatView):
                 if self.isDICOMFolder(parentItem):                
                     children = self.condenseDicomsToOneName(children)
                     
-
         
         
         #------------------------
@@ -1117,10 +1188,11 @@ class XnatTreeView(XnatView.XnatView):
             if treeNode:
                 treeItems.append(treeNode) 
 
-            
-        #    
+
+                
+        #------------------------    
         # For projects only
-        #
+        #------------------------
         if str(parentItem.__class__) == "<class 'PythonQt.QtGui.QTreeWidget'>":
             parentItem.addTopLevelItems(treeItems)
             return
