@@ -1,8 +1,6 @@
 from __main__ import vtk, ctk, qt, slicer
 
-
 import os
-
 
 from XnatLoadWorkflow import *
 from XnatSaveWorkflow import *
@@ -20,15 +18,9 @@ comment = """
 
 
 
-
-
-
 class XnatButtons(object):
     """ Creates buttons for the GUI and calls respective workflows.
     """
-
-
-    
     
     def __init__(self, parent = None, browser = None):
         """  Create buttons
@@ -68,16 +60,20 @@ class XnatButtons(object):
         #--------------------
         self.buttons['filter'] = {}
         self.buttons['filter'] = XnatButtonsUI.makeButtons_filter(self, ['accessed'])
-        #
+
+
+        
+        #--------------------
         # Filter Button onClicks
-        #
+        #--------------------
         self.currentlyToggledFilterButton = None
         for key in self.buttons['filter']:
             self.buttons['filter'][key].connect('clicked()', self.onFilterButtonClicked)
 
-        #
+            
+        #--------------------
         # Testing button
-        #
+        #--------------------
         self.buttons['io']['test'].connect('clicked(boolean*)', self.onTestClicked)
         self.setEnabled('test', True)
 
