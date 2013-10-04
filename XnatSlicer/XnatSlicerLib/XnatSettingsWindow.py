@@ -1,10 +1,8 @@
 from __main__ import vtk, qt, ctk, slicer
 
-
 import os
 import glob
 import sys
-
 
 from XnatHostEditor import *
 
@@ -13,12 +11,7 @@ from XnatHostEditor import *
 comment = """
   XnatSettingsWindow is the window for user-inputted XNAT settings, 
   such as host names and default users.
-
-  TODO:
 """
-
-
-
 
 
 
@@ -26,15 +19,12 @@ class XnatSettingsWindow:
     """ Popup window for managing user-inputted XnatSettings, 
         such as host names and default users.
     """
-
-
     
     def __init__(self, browser):  
         """ Descriptor
         """      
         self.browser = browser
         self.spacer = qt.QLabel("\n\n\n")
-
 
 
 
@@ -51,22 +41,28 @@ class XnatSettingsWindow:
 
 
 
-
         
     def showWindow(self, position = True):
         """ Creates a new window, adjusts aesthetics, then shows.
         """ 
 
-        
+        #--------------------
         # Create new window
+        #--------------------
         self.setupWindow()
 
+
         
-        # Create a host manager (communicates to XnatSettings)
+        #--------------------
+        # Create an XnatHostEditor (communicates to XnatSettings)
+        #--------------------
         self.hostEditor = XnatHostEditor(self.browser, parent = self)
         
+
         
-        # Aesthetics
+        #--------------------
+        # Add hostEditor and some spaces.
+        #--------------------
         self.windowLayout.addRow(self.hostEditor.frame)
         self.windowLayout.addRow(self.spacer)
         self.windowLayout.addRow(self.spacer)
@@ -74,17 +70,26 @@ class XnatSettingsWindow:
         self.windowLayout.addRow(self.spacer)
 
 
-        # Buttons
+        
+        #--------------------
+        # Add buttons.
+        #--------------------
         self.doneButton = qt.QPushButton("Done")
         self.windowLayout.addRow(self.doneButton)#, 5, 5)
         self.doneButton.connect('clicked()', self.doneClicked)
 
 
-        # qt show
+        
+        #--------------------
+        # Show the window.
+        #--------------------
         self.window.show()
 
         
-        # Reposition if argument is true
+
+        #--------------------
+        # Reposition window if argument is true.
+        #--------------------
         if position:
             self.window.show()
             mainWindow = slicer.util.mainWindow()
@@ -97,10 +102,10 @@ class XnatSettingsWindow:
         
 
 
-
-
         
     def doneClicked(self):
+        """ Hide window if done was clicked.
+        """
         self.browser.XnatLoginMenu.loadDefaultHost()
         self.setupWindow()
         self.window.hide()

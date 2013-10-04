@@ -13,18 +13,20 @@ import inspect
 import datetime
 import time 
 import inspect
+from contextlib import closing
+from zipfile import ZipFile, ZIP_DEFLATED
 
 
 
 comment = """
-  XnatUtils is the class that owns many of the default 
-  directory strings and path manipulation efforts of the module.
+XnatUtils is the class that owns many of the default 
+directory strings and string manipulation efforts of the 
+module.  It's a generic utility class with a variety of 
+methods to serve a number of general purposes.  It contains
+see
 
-# TODO : 
+TODO : 
 """
-
-
-
 
 
 
@@ -34,15 +36,19 @@ class XnatUtils(object):
         pass
 
 
+    
+
     @property
     def otherExtensions(self):
         return []
 
 
     
+    
     @property
     def doNotCache(self):
         return [".raw"]
+
 
 
     
@@ -51,13 +57,17 @@ class XnatUtils(object):
         return [".dcm", ".ima"]
 
 
+    
 
     @property
     def decompressibles(self):
         return  [".gz", ".zip", ".tar"]
+
+
+
     
     @property
-    def sharableExtensions(self):
+    def otherReadableExtensions(self):
         return self.dicomExtensions + [".nii", 
                                        ".nrrd", 
                                        ".img", 
@@ -73,11 +83,15 @@ class XnatUtils(object):
     def mrmlExtensions(self):
         return [".mrml"]
 
+
+
+    
     @property
     def fontName(self):
         return "Arial"
 
 
+    
     
     @property
     def fontSize(self):
@@ -85,9 +99,11 @@ class XnatUtils(object):
 
 
     
+    
     @property
     def buttonSizeMed(self):
         return qt.QSize(45, 45)
+
 
 
     
@@ -97,9 +113,11 @@ class XnatUtils(object):
 
 
     
+    
     @property
     def XnatRootDir(self):
         return "data"
+
 
 
     
@@ -108,29 +126,26 @@ class XnatUtils(object):
         return os.path.join(os.path.dirname(os.path.abspath( __file__ )), self.XnatRootDir)
 
 
-
+    
     
     @property
     def MODULEPATHS(self):
         mPaths = {
             "home" : self.MASTERPATH,
             "util": os.path.join(self.MASTERPATH, "Utils"),
-            "utilShared": os.path.join(self.MASTERPATH, "Utils" + os.sep + "SlicerShared"),
             "project" : os.path.join(self.MASTERPATH, "Projects"),
             "download" : os.path.join(self.MASTERPATH, "temp"),
             "temp" : os.path.join(self.MASTERPATH, "temp"),
             "tempUpload" : os.path.join(os.path.join(self.MASTERPATH, "temp"), "upload"),  
-            "icons" : os.path.join(os.path.dirname(os.path.abspath( __file__ )), "icons"), 
-            "pythonMods_Win64" : os.path.join(os.path.dirname(os.path.abspath( __file__ )), 
-            "python_mod" + os.sep + "win64"),
-            "pyXnatCache" : os.path.join(self.MASTERPATH, "temp/pyxnatcache"),                        
+            "icons" : os.path.join(os.path.dirname(os.path.abspath( __file__ )), "icons"),                       
         }
 
         for key, val in mPaths.iteritems():
             if not os.path.exists(val):       
                 os.makedirs(val)
-
         return mPaths
+
+    
 
     
     @property
@@ -140,6 +155,9 @@ class XnatUtils(object):
                 2:"experiments",
                 3:"scans"}
 
+    
+
+    
     @property
     def osType(self):
         if slicer.app.os.lower() == "win":
@@ -148,119 +166,182 @@ class XnatUtils(object):
             return "mac"
         elif slicer.app.os.lower() == "linux": 
             return "linux"
+
+
         
 
     @property
     def labelFontBold(self):
         return qt.QFont(self.fontName, self.fontSize, 100, False)
+
+
+    
    
     @property
     def labelFont(self):
         return qt.QFont(self.fontName, self.fontSize, 10, False)
+
+
+    
     
     @property
     def labelFontItalic(self):
         return qt.QFont(self.fontName, self.fontSize, 10, True)
+
+
+    
      
     @property
     def XnatRoot(self):
         return "/data/archive"
+
+
+
     
     @property
     def homePath(self):
         return self.MODULEPATHS["home"]
+
+
+    
     
     @property
     def utilSharedPath(self):
         return self.MODULEPATHS["utilShared"]
+
+    
     
     @property
     def iconPath(self):
         return self.MODULEPATHS["icons"]
+
+    
     
     @property
     def utilPath(self):
         return self.MODULEPATHS["util"]
+
+
+    
     
     @property
     def downloadPath(self):
         return self.MODULEPATHS["download"]
+
+
+    
     
     @property
     def tempPath(self):
         return self.MODULEPATHS["temp"]
+
+
+    
     
     @property
     def tempUploadPath(self):
         return self.MODULEPATHS["tempUpload"]
+
+
+    
     
     @property
     def projectPath(self):
         return self.MODULEPATHS["project"]
+
+
+    
     
     @property
     def remoteFilePath(self):
         return self.MODULEPATHS["remoteFile"] 
+
+
+    
     
     @property
     def localizedMRMLExtension(self):
         return "-LOCALIZED"
+
+
+    
     
     @property
     def referencedMRMLExtension(self):
         return ""
+
+
+
     
     @property
     def condensedMRMLExtension(self):
         return ""
 
+
+    
+
     @property
     def defaultSceneName(self):
         return "SlicerScene_"
+
+
+    
     
     @property
     def referenceDirName(self):
         return "reference/"
+
+
+    
     
     @property
-    def sharedDirName(self):
-        return "Slicer-Shared"
-    
-    @property
-    def slicerDirName(self):
+    def slicerFolderName(self):
         return "Slicer"
 
+
+
+    
     @property
     def defaultXnatSaveLevel(self):
         return "experiments"
+
+
+    
     
     @property
     def requiredSlicerFolders(self):
-        return [self.sharedDirName, self.slicerDirName]
+        return [self.sharedDirName, self.slicerFolderName]
+
+
+    
     
     @property
     def slicerHelperFolders(self):
         return [self.sharedDirName]
+
+
     
-    @property
-    def pythonMods_Win64(self):
-        return self.MODULEPATHS["pythonMods_Win64"]
-    
-    @property
-    def pyXnatCache(self):
-        return self.MODULEPATHS["pyXnatCache"]
     
     @property
     def metadataFileName(self):
         return ".metadata"
+
+
+    
     
     @property
     def defaultPackageExtension(self):
         return ".mrb"
+
+
+
     
     @property
     def packageExtensions(self):
         return  [".zip", ".mrb"]
+
+
+
     
     @property
     def dicomDBBackupFN(self):
@@ -292,6 +373,8 @@ class XnatUtils(object):
                 ]
 
 
+
+    
     @property
     def XnatMetadataTags_subjects(self):
         return ['project',
@@ -303,6 +386,8 @@ class XnatUtils(object):
                 'totalRecords'
                 ]
 
+
+    
 
     @property
     def XnatMetadataTags_experiments(self):
@@ -317,6 +402,9 @@ class XnatUtils(object):
                 'totalRecords'
                 ]
 
+
+
+    
     @property
     def XnatMetadataTags_resources(self):
         return ['cat_id',
@@ -327,6 +415,8 @@ class XnatUtils(object):
                 'cat_desc',
                 ]
 
+
+    
 
     @property
     def XnatMetadataTags_scans(self):
@@ -340,6 +430,7 @@ class XnatUtils(object):
                 'ID'
                 ]
 
+    
 
     
     @property
@@ -354,6 +445,8 @@ class XnatUtils(object):
                 'Size'
                 ]
 
+
+    
     
     @property
     def XnatMetadataTags_all(self):
@@ -365,7 +458,8 @@ class XnatUtils(object):
                                 self.XnatMetadataTags_files)
 
 
-    
+
+
     def uniqify(self, seq):
         """ Returns only unique elements in a list, while 
             preserving order: O(1).
@@ -379,6 +473,10 @@ class XnatUtils(object):
     
 
     def XnatMetadataTagsByLevel(self, level):
+        """ Returns the relevant XNAT metadata dags that the 
+            XNAT server returns when looking at the contents of a 
+            given XNAT level at provided by the 'level' argument.
+        """
         if level == 'projects': return self.XnatMetadataTags_projects
         elif level == 'subjects' : return self.XnatMetadataTags_subjects
         elif level == 'experiments' : return self.XnatMetadataTags_experiments
@@ -386,9 +484,13 @@ class XnatUtils(object):
         elif level == 'resources' : return self.XnatMetadataTags_resources
         elif level == 'files' : return self.XnatMetadataTags_files
 
+
         
             
     def removeDirsAndFiles(self, path):
+        """ Attempts multiple approaches (they vary from OS)
+            to remove the files and directories of the path.
+        """
         if os.path.exists(path):
             self.removeDir(path)
         if os.path.exists(path):
@@ -398,8 +500,12 @@ class XnatUtils(object):
                 print self.lf() + "%s Can't remove dir '%s'"%(str(e), path)
 
 
+                
             
     def appendFile(self, fileName, appendStr):
+        """ Appends a string to a given filename by
+            splitting at the '.' to preserve the extension.
+        """
         name = os.path.splitext(fileName)[0]
         ext = os.path.splitext(fileName)[1]
         return name + appendStr + ext
@@ -408,6 +514,9 @@ class XnatUtils(object):
 
     
     def removeDir(self, path, pattern=''):
+        """ Tries various approaches to remove a directory.
+            (Approaches can vary by OS).
+        """
         import re
         pattern = re.compile(pattern)
         if os.path.exists(path):
@@ -429,13 +538,15 @@ class XnatUtils(object):
 
             
     def removeFilesInDir(self, theDir):
+        """  Removes the files within a directory but not the 
+             directory itself.
+        """
         for the_file in os.listdir(theDir):
             file_path = os.path.join(theDir, the_file)
             try:
                 os.unlink(file_path)
                 os.remove(file_path)
             except Exception, e:
-                #print "Found directory '%s'. Removing files. Ref err: %s"%(file_path, str(e))
                 if the_file.endswith("\\") or the_file.endswith("/"): 
                     self.removeFilesInDir(file_path)
 
@@ -443,6 +554,9 @@ class XnatUtils(object):
 
                     
     def shortenFileName(self, fn, maxLen = 20):
+        """ Shortens a given filename to a length provided
+            in the argument.  Appends the file with "..." string.
+        """
         basename = os.path.basename(fn)
         pre = basename.split(".")[0]
         if len(pre) > maxLen:
@@ -451,45 +565,58 @@ class XnatUtils(object):
 
 
     
+    
     def removeFile(self, theFile):
+        """ Attempts to a remove a file from disk.
+        """
         try:           
             os.unlink(theFile)
             os.remove(theFile)
         except Exception, e:
             pass
-            #print "Cannot remove '%s' or it doesn't exist."%(theFile)
 
 
 
             
     def moveDirContents(self, srcDir, destDir, deleteSrc = True):
+        """ Moves the contents of one directory to another.
+        """
+        
         newURIs = []
-        #=======================================================================
-        # MAKE DESTINATION DIR
-        #=======================================================================
+
+
+        
+        #------------------
+        # Make destination dir
+        #------------------
         if not os.path.exists(destDir): 
             os.mkdir(destDir)
-        #=======================================================================
-        # WALK THROUGH DIRECTORY       
-        #=======================================================================
+
+            
+            
+        #------------------
+        # Walk through src path.     
+        #------------------
         for root, subFolders, files in os.walk(srcDir):
             for file in files:
-                #===============================================================
-                # id source folder and current URI
-                #===============================================================
+                #
+                # Construct src folder, current uri, and dst uri
+                #
                 srcFolder = os.path.basename(srcDir)
                 currURI = os.path.join(root,file)
                 newURI = os.path.join(destDir, file)
-                #===============================================================
-                # handle subdirs
-                #===============================================================
+                #
+                # Clean up the newURI payh string.
+                #
                 try:
-                    #print (self.lf() + "ROOTSPLIT: " + str(root.split(srcFolder)))
                     folderBegin = root.split(srcFolder)[-1] 
                     if folderBegin.startswith("\\"): 
                         folderBegin = folderBegin[1:] 
                     if folderBegin.startswith("/"): 
-                        folderBegin = folderBegin[1:]                 
+                        folderBegin = folderBegin[1:] 
+                    #
+                    # Make the new URIs of the sub directory.
+                    #
                     if folderBegin and len(folderBegin) > 0:
                         newPath = os.path.join(destDir, folderBegin)
                         if not os.path.exists(newPath):
@@ -497,31 +624,34 @@ class XnatUtils(object):
                         newURI = os.path.join(newPath, file)
                 except Exception, e: 
                     print (self.lf() + "RootSplit Error: " + str(e))
-                #===============================================================
-                # send to dst                
-                #===============================================================
-                #print(self.lf() + " MOVING '%s' TO '%s'"%(currURI, newURI))
+                #
+                # Move the file, and track it             
+                #
                 shutil.move(currURI, newURI)
                 newURIs.append(self.adjustPathSlashes(newURI))
-        #=======================================================================
-        # DELETE SOURCE HANDLING
-        #=======================================================================
+
+                 
+                
+        #------------------
+        # If the src path is to be deleted...
+        #------------------
         if deleteSrc:
             if not srcDir.find(destDir) == -1:
                 self.removeDirsAndFiles(srcDir)
         
-        #print self.lf() +  "NEW URIS: " + str(newURIs)
+
         return newURIs
 
 
 
     
     def writeZip(self, packageDir, deleteFolders = False):
+        """ Writes a given path to a zip file based on the basename
+            of the 'packageDir' argument.
+            
+           from: http://stackoverflow.com/questions/296499/how-do-i-zip-the-contents-of-a-folder-using-python-version-2-5
+        """
         zipURI = packageDir + ".zip"
-        from contextlib import closing
-        from zipfile import ZipFile, ZIP_DEFLATED
-        import os
-        # from: http://stackoverflow.com/questions/296499/how-do-i-zip-the-contents-of-a-folder-using-python-version-2-5
         assert os.path.isdir(packageDir)
         with closing(ZipFile(zipURI, "w", ZIP_DEFLATED)) as z:
             for root, dirs, files in os.walk(packageDir):
@@ -529,10 +659,6 @@ class XnatUtils(object):
                     absfn = os.path.join(root, fn)
                     zfn = absfn[len(packageDir)+len(os.sep):] #XXX: relative path
                     z.write(absfn, zfn)
-
-        #slicer.app.processEvents()
-        zipSize = os.path.getsize(zipURI)
-
         return zipURI
 
 
@@ -540,24 +666,33 @@ class XnatUtils(object):
 
             
     def checkStorageNodeDirs(self, currScene):
-        """Determines if there's at least one storable node with at least one 
-           filename associated with it. 
+        """Determines if there's at least one storable node 
+           with at least one filename associated with it. 
+           Part of a series of functions to determine if a 
+           Slicer scene is empty.
         """
+        
         #------------------------
-        # GET VOLUME STORAGE NODES
+        # Get the storage nodes of volumes.
         #------------------------
         tempNode =  currScene.GetNodesByClass('vtkMRMLVolumeArchetypeStorageNode') # none GetItemAsObject(1)
         storageNode = None
+
+
+        
         #------------------------
-        # CYCLE THROUGH NODES, ID 'vtkMRMLVolumeArchetypeStorageNode', GET ONE OF THEM
+        # Cycle through nodes, identify 'vtkMRMLVolumeArchetypeStorageNode',
+        # and select one of them.
         #------------------------
         for i in range(0,tempNode.GetNumberOfItems()):            
             if tempNode.GetItemAsObject(i).GetClassName() == 'vtkMRMLVolumeArchetypeStorageNode': 
-                #print "Found the storage node!"
                 storageNode = tempNode.GetItemAsObject(i)
                 break
+
+
+            
         #------------------------
-        # GET FILENAMES ASSOCIATED WITH THE NODE
+        # Get the filenames associated with the node.
         #------------------------
         fileNames = []
         try: 
@@ -571,6 +706,8 @@ class XnatUtils(object):
 
     
     def writeDebugToFile(self, debugStr):
+        """ Writes a string to a file for debugging purposes.
+        """
         f = open(os.path.join(self.homePath, "DebugLog.txt"), 'a')
         f.write(str(datetime.datetime.now()) + ": " + debugStr + "\n")            
         f.close()
@@ -579,26 +716,28 @@ class XnatUtils(object):
 
         
     def isRecognizedFileExt(self, ext):
+        """ Determine if an extension is a readable file
+            by Slicer and/or XNATSlicer.
+        """
         if len(ext) > 0 and ext[0] != '.':   ext = "." + ext
         arr = (self.dicomExtensions + 
                self.mrmlExtensions + 
-               self.sharableExtensions + 
+               self.otherReadableExtensions + 
                self.packageExtensions + 
                self.otherExtensions)
         for item in arr:
             if ext == item:
                 return True
             elif ext.find(item)>-1:
-                return True
-            
+                return True            
         return False
-    
-#    def isSharable(self, ext = None):
-#        return self.isExtension(ext, SHARABLEEXTENSIONS)
 
 
 
-    def isExtension(self, ext, extList):      
+    def isExtension(self, ext, extList):  
+        """  Compares two strings to see if they match
+             for extension matching.
+        """    
         ext = "." + ext
         for val in extList:
             if val.lower() in ext.lower(): 
@@ -609,86 +748,92 @@ class XnatUtils(object):
 
     
     def isDICOM(self, ext = None):
+        """ As stated.
+        """
         return self.isExtension(ext, self.dicomExtensions)
 
 
 
     
-    def isMRML(self, ext = None):     
+    def isMRML(self, ext = None): 
+        """ As stated.
+        """    
         return self.isExtension(ext, self.mrmlExtensions)
 
 
-
-    
-    def isSharable(self, ext = None, fullFileName = None):
-       if ext:     
-           return self.isExtension(ext, self.sharableExtensions)
-       else:
-           for extVal in self.sharableExtensions:
-               if fullFileName.endswith(extVal): 
-                   return True
-           return False
-
-
+       
        
     def isScenePackage(self, ext = None):
-       return self.isExtension(ext, self.packageExtensions)
+        """ Determins if a given extension is a Slicer scene
+            package.
+        """
+        return self.isExtension(ext, self.packageExtensions)
    
     
 
-
     
-    def getParentPath(self, remotePath, levelName):
-        """ Returns the parent path based on the entered level
+    def getAncestorUri(self, remotePath, ancestorName = None):
+        """ Returns an ancestor path based on the provided level.
         """ 
+        
+        #---------------------
+        # Convert the path to a URL to avoid slash errors.
+        #---------------------
         remotePath = os.path.dirname(qt.QUrl(remotePath).path())
-        pathLayers = remotePath.rsplit("/")
-        i = 0
-        for layer in pathLayers:
-            if layer == levelName:
-                i+=1
-                break
-            i+=1
-        
+
+
+
+        #---------------------
+        # Split the path by the forward slashes.
+        #---------------------
+        pathLayers = remotePath.rsplit("/")        
         parentPath = ""
-        for y in range(0,i):
-            parentPath+=pathLayers[y] + "/"
-        
-        #print "PATH AT LAYER: " + parentPath
+        for pathLayer in pathLayers:
+            if pathLayer == ancestorName:
+                break
+            parentPath += pathLayer + "/"
         return parentPath
 
 
 
     
     def isCurrSceneEmpty(self):
-        """Determines if the scene is empty based on the visible node count.
+        """Determines if the scene is empty based on 
+           the visible node count.
         """
+        
         #------------------------
-        # GET PARAMS
+        # Construct path parameters.
         #------------------------
         visibleNodes = []    
         origScene = slicer.app.applicationLogic().GetMRMLScene()
         origURL = origScene.GetURL()
         origRootDirectory = origScene.GetRootDirectory()
+
+
+        
         #------------------------
-        # CYCLE THRU NODES TO GET VISIBLE NODES
+        # Cycle through nodes to get the visible ones.
         #------------------------
         for i in range(0, origScene.GetNumberOfNodes()):
             mrmlNode = origScene.GetNthNode(i);
             if mrmlNode:
                 try:
-                    #===========================================================
-                    # get visible nodes
-                    #===========================================================
+                    #
+                    # Get visible nodes
+                    #
                     if (str(mrmlNode.GetVisibility()) == "1" ):
                         #print "The %sth node of the scene is visible: %s"%(str(i), mrmlNode.GetClassName())
                         visibleNodes.append(mrmlNode)
                 except Exception, e:
                     pass
-        #print "NUMBER OF VISIBLE NODES: %s"%(str(len(visibleNodes)))        
+
+                
+             
         #------------------------
-        # RETURN TRUE IF THERE ARE NO VISIBLE NODES, ELSE RETURN FALSE
+        # Return true if there are no visible nodes.
         #------------------------
+        #print "NUMBER OF VISIBLE NODES: %s"%(str(len(visibleNodes)))   
         if (len(visibleNodes) == 1) and (visibleNodes[0].GetClassName() == "vtkMRMLViewNode"):
             return True
         elif (len(visibleNodes) < 1):
@@ -700,6 +845,8 @@ class XnatUtils(object):
 
     
     def doNotCache(self, filename):
+        """ Determine if a file is not cachable.
+        """
         for ext in self.doNotCache:
             if filename.endswith(ext):
                 return True
@@ -709,6 +856,8 @@ class XnatUtils(object):
 
     
     def isDecompressible(self, filename):
+        """ Determine if a file can be decompressed.
+        """
         for ext in self.decompressibles:
             if filename.endswith(ext):
                 return True
@@ -718,8 +867,9 @@ class XnatUtils(object):
 
     
     def decompressFile(self, filename, dest = None):
-        #print ("UNZIPPING %s"%(filename))
-        
+        """  Various methods to decompress a given file
+             based on the file extension.  
+        """
         if filename.endswith(".zip"):
             import zipfile
             z = zipfile.ZipFile(filename)      
@@ -729,85 +879,76 @@ class XnatUtils(object):
             import gzip 
             a = gzip.GzipFile(filename, 'rb')
             content = a.read()
-            a.close()                                            #open the file
+            a.close()                                          
             f = open(filename.split(".gz")[0], 'wb')
-            f.write(content) # read and print the contents of the file      
+            f.write(content) 
             f.close()
-      
-    def lowerCaseAll(self, strList):
-        for i in range(0, len(strList)):
-            strList[i] = strList[i].lower()  
-        return strList   
 
+
+
+    
     def getCurrImageNodes(self, packageDir = None):
+        """
+        """
+        
         #------------------------
-        # GET CURR SCENE AND NODES
+        # Get curr scene and its nodes.
         #------------------------
         currScene = slicer.app.mrmlScene()
         ini_nodeList = currScene.GetNodes()
+
+
+        
         #------------------------
-        # INIT PARAMS
+        # Parameters
         #------------------------
         unmodifiedImageNodes = []
         modifiedImageNodes = []
         allImageNodes = []
+
+
+        
         #------------------------
-        # IF NO DIRECTORY GIVEN...
+        # If no directory is provided...
         #------------------------
         if not packageDir:
-            
-            #===================================================================
-            # cycle through nodes
-            #===================================================================
+            #
+            # Cycle through nodes...
+            #
             for x in range(0,ini_nodeList.GetNumberOfItems()):
                 nodeFN = None
                 node = ini_nodeList.GetItemAsObject(x)
                 try:              
-                      #==============================================================
-                      # see if node has a filename
-                      #==============================================================
+                      #
+                      # See if node has a filename.
+                      #
                       nodeFN = node.GetFileName()
-                      #print "nodeFN: " + nodeFN
                 except Exception, e:
                       pass 
-                #===============================================================
-                # if there is a filename...                 
-                #===============================================================
+                #
+                # If there is a filename, get its extension.              
+                #
                 if nodeFN:
-                    #===========================================================
-                    # get extension
-                    #===========================================================
                     nodeExt = '.' + nodeFN.split(".", 1)[1]                      
-                    #print ("Determining if a modified image: %s and it's extension %s" %(nodeFN, nodeExt))
-                    #===========================================================
-                    # see if file is sharable
-                    #===========================================================
-                    if self.isSharable(nodeExt):
-                        allImageNodes.append(nodeFN)
-                        try:
-                            #===================================================
-                            # see if node has been modified since read, allocate
-                            # to unmodified.
-                            #===================================================
-                            if not node.GetModifiedSinceRead():
-                                 #print("Appending %s to unmodifiedImageNodes:" %(nodeFN))
-                                 if unmodifiedImageNodes.count(nodeFN) == 0:
-                                     unmodifiedImageNodes.append(nodeFN)
-                        except Exception, e:
-                            print "Unmodified node error: %s"%(str(e))
+
+
+                    
         #------------------------
-        # ALLOCATE FOR MODIFIED IMAGE NODES
+        # Determine if there are any modified image nodes.
         #------------------------
         for _node in allImageNodes:
             if  unmodifiedImageNodes.count(_node) == 0:
                 modifiedImageNodes.append(_node)   
-                 
+
+                
         return unmodifiedImageNodes, modifiedImageNodes, allImageNodes
+
 
 
     
     def getDateTimeStr(self):
-            
+        """ As stated.
+        """
         strList = str(datetime.datetime.today()).rsplit(" ")
         timeStr = strList[1]
         timeStr = timeStr.replace(":", " ")
@@ -817,8 +958,12 @@ class XnatUtils(object):
         return strList[0] + "_" + shortTime
 
 
+
     
     def createSceneName(self):   
+        """ For creating scene names if none is provided by the 
+            user.
+        """
         strList = str(datetime.datetime.today()).rsplit(" ")
         timeStr = strList[1]
         timeStr = timeStr.replace(":", " ")
@@ -830,12 +975,18 @@ class XnatUtils(object):
 
 
     
+    
     def adjustPathSlashes(self, str):
+        """  Replaces '\\' path
+        """
         return str.replace("\\", "/").replace("//", "/")
 
 
     
+    
     def replaceForbiddenChars(self, fn, replaceStr=None):
+        """ As stated.
+        """
         if not replaceStr: replaceStr = "_"
         fn = fn.replace(".", replaceStr)
         fn = fn.replace("/", replaceStr)
@@ -851,75 +1002,76 @@ class XnatUtils(object):
 
 
     
-    def getSlicerDirAtLevel(self, currDir, xnatLevel = None, findNearest = False):
+    
+    def constructSlicerSaveUri(self, currUri, xnatLevel = None):
+        """ Constructs a Slicer save URI (on the XNAT host) based on the provided 
+            arguments of currUri and the optional arguments of xnatLevel and findNearest.  
+            If xnatLevel is left as 'None', the Slicers save URI will be constructed based upon
+            the 'self.defaultXnatSaveLevel' value.
+        """
+
+        #-----------------------
+        # Set the default XNAT save level if 'xnatLevel' is 
+        # none (i.e. not entered by user.)
+        #------------------------
         if (not xnatLevel):
             xnatLevel = self.defaultXnatSaveLevel
+
+
+            
         #------------------------
-        # LOCAL VARS
+        # Initial parameters.
         #------------------------
-        slicerDir = ""
+        slicerSaveUri = ""
         counter = 0
-        #print self.lf() + " CURR DIR: " + currDir
-        #print self.lf() + " DEPTH DICT LENGHT: " + str(len(self.xnatDepthDict))
+
+
+                
         #------------------------
-        # METHOD 1: BASED ON CURRENT FOLDER LOCATION
+        # Build the URI and stop at xnatLevel.  
+        # This will be the start point
+        # for the Slicer path.
         #------------------------
-        if findNearest:
-            currDir = os.path.dirname(currDir)
-            pathStr = currDir.split("/")
-            findCount = False
-            counter = 0
-            depthCounter = 0
-            #===================================================================
-            # cycle through path folders
-            #===================================================================
-            for p in pathStr:
-                slicerDir += p + "/"
-                #===============================================================
-                # cycle through xnatDepthDict
-                #===============================================================
-                for key, value in self.xnatDepthDict.iteritems():
-                    if value == p: 
-                      depthCounter +=1
-                #===============================================================
-                # end of xnat hierarchy
-                #===============================================================
-                if depthCounter == len(self.xnatDepthDict):
-                    #print "SLICERDIR: " + slicerDir
-                    slicerDir += pathStr[counter+1]  
+        uriElements = currUri.split("/")
+        for uriElement in uriElements:
+            if len(uriElement) > 0:
+                slicerSaveUri += uriElement + "/"
+                if uriElement == xnatLevel:
+                    slicerSaveUri += uriElements[counter+1]
                     break
-                counter+=1
+            counter+=1   
+
+
+                
         #------------------------
-        # BASED ON XnatLEVEL (i.e., if xnatLevel = 'experiments')
+        # Append the 'slicerSaveUri' parameter with
+        # the necessary strings.
         #------------------------
-        else:
-            pathStr = currDir.split("/")
-            for val in pathStr:
-                if len(val) >0:
-                    slicerDir += val + "/"
-                    if val == xnatLevel:
-                        slicerDir += pathStr[counter+1]
-                        break
-                counter+=1   
-        #------------------------
-        # APPEND WITH THE SCICER RESOURCE
-        #------------------------
-        if not slicerDir.endswith("/"):
-            slicerDir+="/"    
-        slicerDir += "resources/%s/files/"%(self.slicerDirName) 
-        #print "SLICERDIR2: " + slicerDir
-        return slicerDir
+        if not slicerSaveUri.endswith("/"):
+            slicerSaveUri+="/"    
+        slicerSaveUri += "resources/%s/files/"%(self.slicerFolderName) 
+
+        return slicerSaveUri
 
 
 
     
     def lf(self, msg=""):
-        """Returns the current line number in our program."""
+        """For debugging purposes.  Returns the current line number and function
+           when used throughout the module.
+        """
 
-        frame,filename,line_number,function_name,lines,index= inspect.getouterframes(inspect.currentframe())[1]
-        #print(frame,filename,line_number,function_name,lines,index)
+        #---------------------------
+        # Acquire the necessary parameters from
+        # where the function is called.
+        #---------------------------
+        frame, filename, line_number, function_name, lines, index = inspect.getouterframes(inspect.currentframe())[1]
         returnStr = "\n"
         try:
+            #
+            # Construct a string based on the 
+            # above parameters.
+            #
             returnStr = "%s (%s) %s: %s"%(os.path.basename(filename), function_name, line_number, msg)
         except Exception, e:
             print "Line Print Error: " + str(e)
@@ -928,83 +1080,38 @@ class XnatUtils(object):
 
 
     
-    def removeZeroLenStrVals(self, arr):
+    def removeZeroLenStrVals(self, _list):
+        """ As stated.  Removes any string values with 
+            zero length within a list.
         """
-        """
-        for p in arr: 
-            if (len(p)==0):
-                arr.remove(p)
+        for listItem in _list: 
+            if (len(listItem)==0):
+                _list.remove(listItem)
         
-        return arr
+        return _list
 
 
 
     
-    def splitXnatPath(self, path):
-        """
-        """
-        dirNames = []
-        dirTypes = []
-        pathArr = self.removeZeroLenStrVals(path.strip().split("/"))
-        startVal = 0
-        # GET FOLDER NAMES 
-        for i in range(0, len(pathArr)): 
-            if (pathArr[i]=='project'):
-                dirTypes.append[pathArr[i]]
-                startVal = i+1
-            if ((i-startVal)%2-1 == 0):
-                dirNames.append(pathArr[i])
-            else:
-                dirTypes.append(pathArr[i])     
-        return dirNames, dirTypes
-
-
-
-    
-    def getSaveTuple(self, filepath=None):
-        """
+    def getSaveTuple(self, filepath = None):
+        """ Constructs a save URI based upon a provided
+            filePath by splitting it and then applying the default
+            locations specified in this cass.
         """
         saveLevelDir = None
-        sharedDir = None
         slicerDir = None
         if filepath:
             lSplit, rSplit = filepath.split(self.defaultXnatSaveLevel + "/")
             saveLevelDir = (lSplit + self.defaultXnatSaveLevel + "/" + rSplit.split("/")[0])
-            slicerDir = saveLevelDir + "/resources/" + self.slicerDirName + "/files"
-            sharedDir = saveLevelDir + "/resources/" + self.sharedDirName + "/files"
-        return saveLevelDir, slicerDir, sharedDir
+            slicerDir = saveLevelDir + "/resources/" + self.slicerFolderName + "/files"
+        return saveLevelDir, slicerDir
 
 
 
     
-    def checkArrayElementsAreEqual(self, iterator):
-        """
-        """
-      try:
-         iterator = iter(iterator)
-         first = next(iterator)
-         return all(first == rest for rest in iterator)
-      except StopIteration:
-         return True
-
-
-
-      
-    def makeXnatPathDictionary(self, path):
-        """
-        """
-        pathDict = {"projects":None, "subjects":None, "experiments":None, "scans":None, "resources":None, "files":None}
-        pathList = path.split("/")
-        for i in range(0, len(pathList)):
-            for k, v in self.xnatDepthDict.iteritems():
-                if pathList[i] == v:
-                    if (i+1) < len(pathList):
-                        pathDict[pathList[i]] = pathList[i+1]
-        return pathDict
-
 
     def bytesToMB(self, bytes):
-        """
+        """ Converts bytes to MB.  Returns a float.
         """
         bytes = int(bytes)
         mb = str(bytes/(1024*1024.0)).split(".")[0] + "." + str(bytes/(1024*1024.0)).split(".")[1][:2]
@@ -1014,22 +1121,35 @@ class XnatUtils(object):
 
 
     def repositionToMainSlicerWindow(self, positionable, location = "center"):
+        """ As stated.  User can provide location of window
+            within the arguments.
         """
-        """
+
+        #---------------------------
         # Make sure positionable is open.
+        #---------------------------
         positionable.show()
 
+
+
+        #---------------------------
         # Get main window and its position.
+        #---------------------------
         mainWindow = slicer.util.mainWindow()
         screenMainPos = mainWindow.pos
 
+
         
+        #---------------------------
         # Derive coordinates
+        #---------------------------
         location = location.lower().strip()
         if location == 'upperleftcorner':
             x = screenMainPos.x()
-            y = screenMainPos.y()          
-        # location = 'center'
+            y = screenMainPos.y()  
+        #
+        # If location = 'center'
+        #
         else :
             x = screenMainPos.x() + mainWindow.width/2 - positionable.width/2
             y = screenMainPos.y() + mainWindow.height/2 - positionable.height/2

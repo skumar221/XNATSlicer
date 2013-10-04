@@ -10,17 +10,15 @@ import XnatView
 
 
 comment = """
-XnatTreeView is a class of the XnatView class.  It 
+XnatTreeView is a subclass of the XnatView class.  It 
 uses QTreeWidget to describe the Xnat file system accessed,
 presenting them in a tree-node hierarchy.
 
 The view classes (and subclasses) ultimately communicate
 with the load and save workflows.   
+
+TODO:
 """
-
-
-
-
 
 
 
@@ -28,9 +26,10 @@ class XnatTreeView(XnatView.XnatView):
     """ Inherits the XnatView class.  Uses a "Tree" type
         approach to present the XNAT database hierarchy. 
     """  
-
     
     def setup(self):
+        """ Setup function for XnatTreeView.
+        """
         
         #----------------------
         # TreeView
@@ -98,12 +97,18 @@ class XnatTreeView(XnatView.XnatView):
         
 
     def initColumns(self):
-        """
+        """ Intializes the columns of the qTreeViewWidget
+            tailoring XNAT metadata to columns.  There are merged 
+            columns that blend two or more columns together
+            and there are singule columns associated with single
+            XNAT metadata values.
         """
         self.columns = {}
         for key in self.browser.utils.XnatMetadataTags_all:
             self.columns[key] = {}
 
+
+            
         #-----------------------
         # Apply metadata key to the columns.  Manuplulate
         # the string values of the tags to make them more
@@ -117,10 +122,11 @@ class XnatTreeView(XnatView.XnatView):
             strVal = strVal.replace('Id', 'ID')
             self.columns[key]['displayname'] = strVal
 
+
             
         #----------------------
-        # XnatLevel column is not part of the metadata set
-        # so we're adding it.
+        # MERGED_LABEL, and XNAT_LEVEL columns are not 
+        # part of the metadata set so we're adding them. 
         #---------------------- 
         self.columns['MERGED_LABEL'] = {}  
         self.columns['MERGED_LABEL']['displayname'] = 'Name/ID/Label'   
@@ -130,13 +136,15 @@ class XnatTreeView(XnatView.XnatView):
 
         
         #----------------------
-        # Define column keys based on XNAT_LEVEL
+        # Define column keys based on XNAT_LEVEL.  
+        # More columns can be added by uncommenting.
         #---------------------- 
         self.columnKeyOrder = {}
         self.columnKeyOrder['ALL'] = [
             'MERGED_LABEL',
             'XNAT_LEVEL',
         ]
+        
         self.columnKeyOrder['LABELS'] = [
             'ID',
             'id',
@@ -144,6 +152,7 @@ class XnatTreeView(XnatView.XnatView):
             'Name',
             'label',
         ]
+        
         self.columnKeyOrder['projects'] = [
             'last_accessed_497',
         #    'insert_user',
@@ -260,8 +269,9 @@ class XnatTreeView(XnatView.XnatView):
 
         
     def getMergedLabelTagByLevel(self, level):
-        """
-        """
+        """ Points the MERGED_LABEL column tag to the relevant
+            XNAT metadata tag.  This is for the Name/ID/Label column.
+        """ 
         level = level.lower()
         if level == 'projects': 
             #
@@ -281,14 +291,17 @@ class XnatTreeView(XnatView.XnatView):
 
         
     def setValuesToTreeNode(self, treeNode = None, metadata = None):
-        """
+        """ Fills the row values for a given set of columns for
+            a tree node.  The columns correspond to the keys of
+            the 'metadata' argument.
         """
         level = metadata['XNAT_LEVEL']
 
 
         
         #------------------
-        # Cycle through all keys to set.
+        # Cycle through all metadata keys to set their
+        # equivalents in self.columns.
         #------------------
         for key in metadata:
             value = metadata[key]
@@ -315,7 +328,7 @@ class XnatTreeView(XnatView.XnatView):
         
 
         #-------------------
-        # Set both values and text on widget.
+        # Set 'value' key in self.columns and text on qTreeWidgetItem.
         #-------------------
         self.columns['MERGED_LABEL']['value'] = value
         treeNode.setText(self.columns['MERGED_LABEL']['location'], value)
@@ -323,7 +336,7 @@ class XnatTreeView(XnatView.XnatView):
 
         
         #-------------------
-        # Set aesthetics
+        # Set aesthetics.
         #-------------------
         treeNode.setFont(self.columns['MERGED_LABEL']['location'], self.itemFont_folder) 
         treeNode.setFont(self.columns['XNAT_LEVEL']['location'], self.itemFont_category) 
@@ -336,16 +349,18 @@ class XnatTreeView(XnatView.XnatView):
 
     
         
-    def getColumn(self, value):
+    def getColumn(self, metadataKey):
+        """ Returns a column location within the qTreeWidget
+            based on it's metadata key.
         """
-        """
-        return self.columns[value]['location']
+        return self.columns[metadataKey]['location']
 
 
 
 
     def resizeColumns(self):
-        """
+        """ As stated.  Resizes the columns according to the content
+            by calling on the qt.QTreeWidget 'resizeColumnToContents' function.
         """
         for key in self.columns:
             if 'location' in self.columns[key]:
@@ -355,7 +370,8 @@ class XnatTreeView(XnatView.XnatView):
 
                 
     def showColumnsByNodeLevel(self, levels = None):
-        """
+        """ Displays the relevant treeView columns based on
+            the level of the selected treeItem node.
         """
         
         #----------------------
@@ -387,16 +403,17 @@ class XnatTreeView(XnatView.XnatView):
                     
 
         #----------------------
-        # Required columns
+        # Show the required row values for 
+        # the required columns (MERGED_LABEL, XNAT_LEVEL)
         #----------------------
         showByKeys(self.columnKeyOrder['ALL'])
 
 
         
         #----------------------
-        # Show columns by levels
+        # Show the row values pertaining specifically
+        # to the level of the tree node.
         #----------------------
-        print levels
         for level in levels:
             showByKeys(self.columnKeyOrder[level])
 
@@ -411,15 +428,14 @@ class XnatTreeView(XnatView.XnatView):
 
             
     def loadProjects(self, filters = None):
-        """ Descriptor
+        """ Specific method for loading projects.  'Project'-level
+            nodes necessiate for special handling in terms of assigning
+            parents and filtering.
         """
-        print(self.browser.utils.lf(), "Retrieving projects.", filters)
 
-
-        
         #----------------------
         # Get the projects if they're not 
-        # cashed via XnatCommunicator call.
+        # cashed in XnatCommunicator.
         #----------------------
         if self.browser.XnatCommunicator.projectCache == None:
             self.viewWidget.clear()
@@ -436,13 +452,13 @@ class XnatTreeView(XnatView.XnatView):
                                metadata = projectContents, 
                                expandible = [0] * len(projectContents['MERGED_LABEL']))
             self.showColumnsByNodeLevel(['projects', 'subjects'])
-            self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.getChildrenExpanded)
+            self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
             self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
 
 
 
         #----------------------
-        # Define Filter functions
+        # Define filter functions
         #----------------------            
         def filter_accessed():
             self.viewWidget.sortItems(self.columns['last_accessed_497']['location'], 1)
@@ -469,7 +485,7 @@ class XnatTreeView(XnatView.XnatView):
         defaultFilterFunction = filter_accessed
         if not filters or len(filters) == 0:
             #
-            # Run the default filter mechanism
+            # Run the default filter function
             #
             defaultFilterFunction()
             #
@@ -483,7 +499,8 @@ class XnatTreeView(XnatView.XnatView):
                 self.nodeCount += 1
             self.loopProjectNodes(checkEmpty) 
             #
-            # If hiddenNodeCount == nodeCount, uncheck the default filter button.
+            # If there are no visible nodes, uncheck the default filter button,
+            # so the filter reverts to 'all'.
             #
             if self.nodeCount > 0 and self.nodeCount == self.hiddenNodeCount:
                 defaultFilterButton.click()
@@ -492,7 +509,7 @@ class XnatTreeView(XnatView.XnatView):
         
         
         #----------------------
-        # Filters: Accessed
+        # If filter is 'accessed' (i.e. 'Last Accessed')
         #----------------------        
         elif filters[0] == 'accessed':
             filter_accessed()
@@ -501,7 +518,7 @@ class XnatTreeView(XnatView.XnatView):
 
         
         #----------------------
-        # Filters: All
+        # If filter is 'all'
         #----------------------        
         elif filters[0] == 'all':
             filter_all()
@@ -527,24 +544,11 @@ class XnatTreeView(XnatView.XnatView):
             
 
     def makeRequiredSlicerFolders(self, path = None):  
-        """
+        """ Puts the required 'Slicer' folders in the reuqired location
+            of the current XNAT host.
         """     
         if self.sessionManager.sessionArgs:
             self.browser.XnatCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
-            self.browser.XnatCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['sharedDir']))
-
-
-
-            
-    def getParentItemByXnatLevel(self, item, category):
-        """ Returns a parent item based on it's Xnat category.  For instance, if
-            you want the 'experiments' parent of an item, returns that parent item.
-        """
-        parents = self.getParents(item)
-        for p in parents:
-            if category in p.text(self.columns['XNAT_LEVEL']['location']):
-                return p
-        return None 
 
 
             
@@ -571,19 +575,6 @@ class XnatTreeView(XnatView.XnatView):
         self.clearSceneDialog.setText("Clear the current scene?")
 
 
-        
-        
-    def getIndentByItemDepth(self, item):
-        """Returns an indent for labeling purposes based on 
-           depth of item in the treeView.
-        """
-        parents= self.getParents(item)
-        spaceStr = ""        
-        for i in range(0, len(parents)-1): 
-            spaceStr += "  "
-        return spaceStr
-
-
 
     
     def getXnatDir(self, parents):
@@ -600,7 +591,7 @@ class XnatTreeView(XnatView.XnatView):
 
         
         #------------------------
-        # Construct preliminary path
+        # Construct preliminary URI based on the 'parents' array.
         #------------------------
         XnatDepth = 0        
         for item in parents: 
@@ -612,7 +603,7 @@ class XnatTreeView(XnatView.XnatView):
             #
             # For masked slicer folders
             #
-            elif ((self.browser.utils.slicerDirName in item.text(self.columns['XNAT_LEVEL']['location'])) 
+            elif ((self.browser.utils.slicerFolderName in item.text(self.columns['XNAT_LEVEL']['location'])) 
                   and self.applySlicerFolderMask): 
                 isSlicerFile = True
             #
@@ -625,7 +616,7 @@ class XnatTreeView(XnatView.XnatView):
 
             
         #------------------------
-        # Modify if path has 'resources' in it
+        # Modify if URI has 'resources' in it.
         #------------------------
         if isResource:    
             #     
@@ -647,18 +638,18 @@ class XnatTreeView(XnatView.XnatView):
 
                 
         #------------------------
-        # Modify for Slicer files
+        # Modify URI for Slicer files.
         #------------------------
         if isSlicerFile:
             #print self.browser.utils.lf() + "IS SLICER FILE!" 
             self.currLoadable = "scene"
             dirStr = ("%s/resources/%s/files/%s"%(os.path.dirname(os.path.dirname(os.path.dirname(dirStr))),
-                                                  self.browser.utils.slicerDirName,
+                                                  self.browser.utils.slicerFolderName,
                                                   os.path.basename(os.path.dirname(dirStr))))   
 
             
         #------------------------
-        # For all others  
+        # For all other URIs.
         #------------------------
         else:
             if XnatDepth < 4: 
@@ -669,7 +660,7 @@ class XnatTreeView(XnatView.XnatView):
 
     
     def getParents(self, item):
-        """Returns the parents of a specific treeNode 
+        """ Returns the parents of a specific treeNode 
             all the way to the "project" level
         """
         parents = []
@@ -683,7 +674,7 @@ class XnatTreeView(XnatView.XnatView):
 
     
     def determineExpanded(self, item):
-        """Determines if the current treeItem is expanded
+        """Determines if the current treeItem is expanded.
         """      
         if item.childIndicatorPolicy() == 0:
             self.getChildren(item, expanded = True) 
@@ -691,7 +682,7 @@ class XnatTreeView(XnatView.XnatView):
 
 
             
-    def getChildrenExpanded(self, item):
+    def onTreeItemExpanded(self, item):
         """ When the user interacts with the treeView, 
             this is a hook method that gets the branches 
             of a treeItem and expands them.
@@ -721,7 +712,11 @@ class XnatTreeView(XnatView.XnatView):
 
             
     def manageTreeNode(self, item, col):
-        """ The purpose of this function
+        """ Broad-scoped function. Conducts the necessary filtering, 
+            column visibility, buttonEnabling, nodeMasking and 'loadable' 
+            analysis. 
+            
+            NOTE: Consider refactoring into specific methods.
         """
         if item==None:
             item = self.currItem
@@ -743,7 +738,7 @@ class XnatTreeView(XnatView.XnatView):
         isExperiment = 'experiments' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
         isScan = 'scans' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
         isFile = 'files' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isSlicerFile = self.browser.utils.slicerDirName.replace("/","") in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
+        isSlicerFile = self.browser.utils.slicerFolderName.replace("/","") in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
 
         
 
@@ -787,13 +782,14 @@ class XnatTreeView(XnatView.XnatView):
         # If mask is enabled, determine if item is a slicer file
         #------------------------
         if self.applySlicerFolderMask:
-            if item.text(self.columns['XNAT_LEVEL']['location']) == self.browser.utils.slicerDirName:
+            if item.text(self.columns['XNAT_LEVEL']['location']) == self.browser.utils.slicerFolderName:
                 isFile = True    
 
 
                 
         #------------------------
-        # File item routines
+        # Determine how to load the file by applying a 
+        # type to the node.  This sets the self.currLoadable variable.
         #------------------------
         if isFile or isSlicerFile:
             ext = item.text(self.columns['MERGED_LABEL']['location']).rsplit(".")
@@ -825,7 +821,8 @@ class XnatTreeView(XnatView.XnatView):
 
                     
         #------------------------
-        # User is at the default load/save level, default loader is dicom     
+        # If the user is at the default load/save level, 
+        # set default loader to DICOM.     
         #------------------------
         if self.browser.utils.defaultXnatSaveLevel in item.text(self.columns['XNAT_LEVEL']['location']).strip(" "):
             self.currLoadable = "mass_dicom" 
@@ -835,9 +832,12 @@ class XnatTreeView(XnatView.XnatView):
         self.resizeColumns()
 
         
+
         
     def getXnatUriObject(self, item):    
-        """ Decriptor
+        """ Helper function that constructs a number of useful
+            key-value pairs related to a given qTreeItem, for 
+            communicating with XNAT and the qTreeWidget.
         """
         pathObj = {}
         pathObj['pathDict'] = {
@@ -848,18 +848,22 @@ class XnatTreeView(XnatView.XnatView):
             'Slicer' : None
         }
 
-        
-        pathObj['parents'] = self.getParents(item)
-        xnatDir = self.getXnatDir(pathObj['parents'])
 
         
+        #-------------------------
+        # Construct various URIs (current, and children)
+        # based on the locaiton of the treeNode.
+        #-------------------------
+        pathObj['parents'] = self.getParents(item)
+        xnatDir = self.getXnatDir(pathObj['parents'])
         pathObj['childQueryUris'] = [xnatDir if not '/scans/' in xnatDir else xnatDir + "files"]
         pathObj['currUri'] = os.path.dirname(pathObj['childQueryUris'][0])  
         pathObj['currLevel'] = xnatDir.split('/')[-1] if not '/scans/' in xnatDir else 'files'
 
-       
+
+        
         #------------------------
-        # Construct path dictionary
+        # Construct URI dictionary by splitting the currUri from slashes.
         #------------------------
         splitter = [ s for s in pathObj['currUri'].split("/") if len(s) > 0 ]
         for i in range(0, len(splitter)):
@@ -867,28 +871,17 @@ class XnatTreeView(XnatView.XnatView):
             if key in pathObj['pathDict'] and i < len(splitter) - 1:
                 pathObj['pathDict'][key] = splitter[i+1]
 
-        
-        pathObj['childMetadataTag'] = 'label'
-        pathObj['currMetadataTag'] = 'label'
-        parlen = len(pathObj['parents'])
-
-        
-        # print "\n\n%s %s"%(self.browser.utils.lf(), parlen)
-        
-        if parlen == 3: 
-            pathObj['childMetadataTag'] = "ID"  # SCAN level
-        elif parlen > 3:
-            pathObj['currMetadataTag'] = 'ID'
-            pathObj['childMetadataTag'] = 'Name'
             
 
-
-            
+        #-------------------------
+        # Construct child Xnat level.
+        #-------------------------          
         pathObj['childXnatLevel'] = os.path.basename(pathObj['childQueryUris'][0])
 
         
+        
         #-----------------------------
-        # For Slicer files at the experiment level
+        # Specific key-value pairs for Slicer files...
         #-------------------------------
         if pathObj['childQueryUris'][0].endswith('/scans'):
             pathObj['slicerQueryUris'] = []
@@ -903,7 +896,8 @@ class XnatTreeView(XnatView.XnatView):
         
             
     def isDICOMFolder(self, item):  
-        """
+        """ Probes the children of a tree item to determine if the folder
+            is a DICOM folder.
         """     
         dicomCount = 0
         for x in range(0, item.childCount()):          
@@ -922,11 +916,27 @@ class XnatTreeView(XnatView.XnatView):
 
     
     def setCurrItemToChild(self, item = None, childFileName = None):
+        """ Scans the children a given tree item for those that have 
+            'childFileName' and sets the selected qTreeViewWidget item
+            to that child.  Does nothing if a child with 'childFileName' 
+            is not found.
         """
-        """
+        #----------------------
+        # Set self.currItem to the item provided in the 
+        # argument.
+        #----------------------
         if not item:
-            item = self.currItem     
-        self.getChildrenExpanded(item)
+            item = self.currItem    
+
+        #----------------------
+        # Expand self.currItem
+        #----------------------
+        self.onTreeItemExpanded(item)
+
+
+        #----------------------
+        # Search children only if 'childFileName' is not None.
+        #----------------------
         if childFileName:
             for x in range(0, item.childCount()):
                 child = item.child(x)
@@ -939,7 +949,7 @@ class XnatTreeView(XnatView.XnatView):
 
                 
     def changeFontColor(self, item, bold = True, color = "black", column = 0):
-        """
+        """ As stated.
         """
         b = qt.QBrush()
         c = qt.QColor(color)
@@ -950,7 +960,7 @@ class XnatTreeView(XnatView.XnatView):
 
         
     def startNewSession(self, sessionArgs, method="currItem"):
-        """
+        """ Starts a new session based on XNAT interaction.  
         """
         if method=="currItem":            
             
@@ -965,22 +975,29 @@ class XnatTreeView(XnatView.XnatView):
 
             
     def selectItem_byUri(self, pathStr):
+        """  Selects a qTreeWidgetItem based on the URI.  Breaks
+             down the URI and traverses the tree for th relevant strings.
         """
-        """
+
+        #------------------------
+        # Internal function: findChild
+        #------------------------       
         def findChild(item, childName, expanded=True):
             for i in range(0, item.childCount()):
                 if str(childName) in item.child(i).text(self.columns['MERGED_LABEL']['location']):
                     if expanded:
-                        self.getChildrenExpanded(item.child(i))
+                        self.onTreeItemExpanded(item.child(i))
                     return item.child(i)
                 
 
+                
         #------------------------
         # Break apart pathStr to its Xnat categories
         #------------------------
         pathDict = self.browser.utils.makeXnatUriDictionary(pathStr)
 
 
+        
         #------------------------
         # Reload projects if it can't find the project initially
         #------------------------
@@ -988,6 +1005,7 @@ class XnatTreeView(XnatView.XnatView):
             self.loadProjects()
 
 
+            
         #------------------------
         # Start by setting the current item at the project level, get its children
         #------------------------
@@ -995,6 +1013,7 @@ class XnatTreeView(XnatView.XnatView):
         self.getChildrenExpanded(self.viewWidget.currentItem())
 
 
+        
         #------------------------
         # Proceed accordingly to its lower levels
         #------------------------
@@ -1017,7 +1036,7 @@ class XnatTreeView(XnatView.XnatView):
         
     def getChildren(self, item, expanded, setCurrItem = True):
         """ Gets the branches of a particular treeItem 
-            via an XnatCommunicator.  Get call.
+            via an XnatCommunicator.   
         """       
 
         #--------------------
@@ -1037,7 +1056,7 @@ class XnatTreeView(XnatView.XnatView):
         
             
         #--------------------
-        # Get path obj
+        # Get path 
         #--------------------           
         pathObj = self.getXnatUriObject(item)
         currXnatLevel = pathObj['currLevel']
@@ -1055,7 +1074,8 @@ class XnatTreeView(XnatView.XnatView):
 
                 
         #--------------------
-        # Get folder Contents
+        # Get folder contents via metadata.  
+        # Set nodeNames from metadata.
         #-------------------- 
         metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
         childNames = metadata[self.getMergedLabelTagByLevel(currXnatLevel)]
@@ -1063,14 +1083,14 @@ class XnatTreeView(XnatView.XnatView):
         
         
         #--------------------
-        # Set the categories
+        # Set the categories of the children.
         #--------------------
         metadata['XNAT_LEVEL'] = [pathObj['childXnatLevel'] for x in range(len(childNames))]
 
 
         
         #--------------------
-        # Slicer URIs
+        # Special case for children with Slicer URIs
         #--------------------
         if 'slicerQueryUris' in pathObj:
             slicerMetadata = self.browser.XnatCommunicator.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))
@@ -1093,13 +1113,13 @@ class XnatTreeView(XnatView.XnatView):
 
             
         #--------------------
-        # Determine expandibility
+        # Determine expandibility of the child node.
         #--------------------    
         expandible = []
         for i in range(0, len(metadata['XNAT_LEVEL'])):
             level = metadata['XNAT_LEVEL'][i]
             #
-            # 'files' and 'Slicer' category
+            # 'files' and 'Slicer' category are
             # immediately ruled as unexpandable (1).
             #
             if (level == 'files' or level == 'Slicer') :
@@ -1120,7 +1140,10 @@ class XnatTreeView(XnatView.XnatView):
         
             
     def condenseDicomsToOneName(self, names):
-        """
+        """ Takes a list of DICOM files and condenses 
+            them into one name.
+
+            NOTE: Consider moving this to XnatUtils.py.
         """
         returnName = names[0]
         stopIndex = len(returnName) - 1
@@ -1145,12 +1168,15 @@ class XnatTreeView(XnatView.XnatView):
     def makeTreeItems(self, parentItem, children = [],  metadata = {}, expandible = None):
         """Creates a set of items to be put into the 
            QTreeWidget based upon its parents, its children 
-           and the Xnat.
+           and the metadata provide.
         """
-        
+
+        #----------------
+        # Do nothing if no children.
+        #----------------
         if len(children) == 0: return
 
-
+        
         
         #----------------
         # Get the DICOM count if at 'scans'
@@ -1183,7 +1209,7 @@ class XnatTreeView(XnatView.XnatView):
                     treeNodeMetadata[key] = metadata[key][i]
             treeNode = self.setValuesToTreeNode(treeNode, treeNodeMetadata)
             #
-            # Add to array
+            # Add the items array
             #
             if treeNode:
                 treeItems.append(treeNode) 
@@ -1191,10 +1217,14 @@ class XnatTreeView(XnatView.XnatView):
 
                 
         #------------------------    
-        # For projects only
+        # SPECIAL CASE: If at project level, set parents accordingly.
         #------------------------
         if str(parentItem.__class__) == "<class 'PythonQt.QtGui.QTreeWidget'>":
             parentItem.addTopLevelItems(treeItems)
             return
+
         
+        #------------------------    
+        # Items array gets added to parentItem.
+        #------------------------
         parentItem.addChildren(treeItems)
