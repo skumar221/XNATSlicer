@@ -1,10 +1,8 @@
 from __main__ import vtk, qt, ctk, slicer
 
-
 import os
 import glob
 import sys
-
 
 from XnatSettingsWindow import *
 
@@ -13,14 +11,29 @@ from XnatSettingsWindow import *
 comment = """
 XnatSettings is the class that manages storable settings for the
 XnatSlicer module.  The class is activated by clicking the wrench
-icon in the XnatSlicer browser.
+icon in the XnatSlicer browser.  XnatSettings utilizes the qt.QSettings
+object to write to a settings database called 'XnatSettings.ini'.  As
+the formate of the database indicates, the storage method is .ini, which
+utilizes key-value pairs under a single header.
+
+
+Ex:
+
+[Central]
+FullName=Central
+Address=https://central.xnat.org
+IsModifiable=False
+CurrUser=user
+IsDefault=True
+
+
+TODO:
 """
 
 
-
-
-
-
+#--------------------
+# Global tags.  Do not Delete.
+#--------------------
 hostTag = 'Hosts'
 hostNameTag = 'FullName'
 hostAddressTag =   'Address'
@@ -33,19 +46,17 @@ pathTag = 'Paths'
 
 
 
-
-
-
 class XnatSettings:
   """ Manager for handing the settings file.  Stored in QSettings standard through
-      'XnatSettings.ini')
+      'XnatSettings.ini'
   """
 
 
 
   
-  def __init__(self, parent=None, rootDir=None, browser = None):    
-      
+  def __init__(self, parent = None, rootDir = None, browser = None):    
+    """ Init function.
+    """
     if not parent:
       self.parent = slicer.qMRMLWidget()
     else:
@@ -54,7 +65,9 @@ class XnatSettings:
     self.browser = browser
     self.filepath = os.path.join(rootDir, 'XnatSettings.ini')
 
+    #--------------------
     # OS specific database settings
+    #--------------------
     dbFormat = qt.QSettings.IniFormat 
 
         
@@ -78,7 +91,8 @@ class XnatSettings:
 
         
   def createDefaultSettings(self):  
-    """ Constructs a default database from the code.
+    """ Constructs a default database based on
+        the 'self.defaultHosts' parameter.
     """
     restPaths = ['']
     for name in self.defaultHosts:
@@ -95,7 +109,6 @@ class XnatSettings:
     """ Queries the database for hosts and creates
         a dictionary of key 'name' and value 'address'
     """
- 
     hostDict = {}        
     for key in self.database.allKeys():
         if hostAddressTag in key:
@@ -108,23 +121,32 @@ class XnatSettings:
   def saveHost(self, hostName, hostAddress, isModifiable=True, isDefault=False):
     """ Writes host to the QSettings.ini database.
     """
-
     
     hostDict = self.getHostNameAddressDictionary()
     hostNameFound = False
 
+
     
-    # Check to see if its a valid http URL, modify if not
+    #--------------------
+    # Check to see if 'hostAddress' is a valid http URL, 
+    # modify if not.
+    #--------------------
     if not hostAddress.startswith("http://") and not hostAddress.startswith("https://"):
         hostAddress ="http://" + hostAddress
 
-        
+
+
+    #--------------------
     # Check if the host name exists.
+    #--------------------
     for name in hostDict:
         hostNameFound = True if str(name).lower() == str(hostName).lower() else False 
 
-        
-    # Check for blanks, return warning window if there are any.
+
+
+    #--------------------
+    # If there are blank fields, return warning window...
+    #--------------------
     if hostName == "" or hostAddress == "":
        blanks = [] 
        if hostName == "": 
@@ -141,44 +163,49 @@ class XnatSettings:
        return False    
 
     
-    # Return warning window if host name already used, then exit.
-    # Overwrite this if modifiable (i.e. CNDA or central) because
-    # user can't edit name and url anyway.
+
+    #--------------------
+    # Else if the host name is already used, return warning window, then exit...
+    #--------------------
     elif hostNameFound == True and isModifiable == True:
        qt.QMessageBox.warning( None, "Save Host", hostName + " is a name that's already in use.")
        hostFound = False
        return False
 
-    
-    # Otherwise, save.
+
+    #--------------------
+    # Otherwise, save host.
+    #--------------------
     else:
-
-       # remove existing.
-       self.database.remove(hostName)
-
-       # start group
-       self.database.beginGroup(hostName)
-       self.database.setValue(hostNameTag, hostName)
-       self.database.setValue(hostAddressTag, hostAddress)
-
-
-       # Is modifiable.
-       print ("IS MOD", hostName, hostIsModifiableTag, str(isModifiable))
-       self.database.setValue(hostIsModifiableTag, str(isModifiable))
-
-       # Curr user.
-       self.database.setValue(hostCurrUserTag, "")
-
-       # Blank default
-       self.database.setValue(hostIsDefaultTag, str(False))
-
-       self.database.endGroup()
-
-       
-       # Is default -- need to iterate through all.
-       if isDefault: self.setDefault(hostName)
-       
-       return True
+        #
+        # Remove existing.
+        #
+        self.database.remove(hostName)
+        #
+        # Start group.
+        #
+        self.database.beginGroup(hostName)
+        self.database.setValue(hostNameTag, hostName)
+        self.database.setValue(hostAddressTag, hostAddress)
+        #
+        # Set isModifiable.
+        #
+        self.database.setValue(hostIsModifiableTag, str(isModifiable))
+        #
+        # Set currUser.
+        #
+        self.database.setValue(hostCurrUserTag, "")
+        #
+        # Set isDefault to 'False' (first pass)
+        #
+        self.database.setValue(hostIsDefaultTag, str(False))
+        self.database.endGroup()
+        #
+        # (second pass) conuct the setDefault function.
+        #
+        if isDefault: 
+            self.setDefault(hostName)
+        return True
 
 
 
@@ -218,8 +245,19 @@ class XnatSettings:
   def setDefault(self, hostName):
     """ As stated.
     """
+
+    #--------------------
+    # Cycle through database...
+    #--------------------
     for key in self.database.allKeys():
+        #
+        # Find keys that have the 'isDefault' tag (all of them)...
+        #
         if hostIsDefaultTag in key:
+            #
+            # If there's a match in with hostName, then 
+            # save the 'setDefault' to database.
+            #
             tHost = key.split("/")[0].strip()
             retVal = True if hostName == tHost else False
             self.database.beginGroup(tHost)
@@ -230,7 +268,8 @@ class XnatSettings:
 
     
   def getDefault(self):
-    """ As stated.
+    """ As stated.  Cycle through all
+        database keys to find the default hosts.
     """   
     for key in self.database.allKeys():
         if hostIsDefaultTag in key and self.database.value(key) == 'True':
@@ -240,7 +279,8 @@ class XnatSettings:
 
     
   def isDefault(self, hostName):
-    """ As stated.
+    """ As stated.  Determines if a given host name
+        is also a defaulted host name.
     """   
 
     self.database.beginGroup(hostName)
@@ -256,7 +296,8 @@ class XnatSettings:
 
   
   def isModifiable(self, hostName):
-    """ As stated.
+    """ As stated.  Determines if a given host
+        can be modified by the user.
     """
     title = unicode(str(self.database.value(hostName + "/" + hostIsModifiableTag, "")))
     import unicodedata
