@@ -51,7 +51,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
 
         
-g        #-------------------------   
+        #-------------------------   
         # If the package does not exist, then exit.
         # (This is the result of the 'Cancel' button 
         # being pressed in download modal) 

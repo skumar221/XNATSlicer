@@ -42,6 +42,7 @@ from XnatSceneLoadWorkflow import *
 from XnatFileLoadWorkflow import *
 from XnatFilter import *
 from XnatSlicerTest import *
+from XnatError import *
 
 
 
@@ -474,7 +475,7 @@ class XnatSlicerWidget:
         # Init communicator.
         #--------------------
         self.XnatCommunicator.setup(browser = self, 
-                                    server = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
+                                    host = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
                                     user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 
         

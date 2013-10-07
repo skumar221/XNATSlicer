@@ -18,14 +18,15 @@ from XnatPopup import *
     
 
 comment = """
-XnatLoadWorkflow is a parent class to various loader types
-(Slicer files, DICOM folders, individual files, etc.).  Loader types
+XnatLoadWorkflow is a parent class to various loader classes:
+XnatSceneLoadWorkflow, XnatDicomLoadWorkflow, XnatFileLoadWorkflow.  Loader types
 are determined by the treeViewItem being clicked in the 
-XnatLoadWorkflow function 'beginWorkflow'. 
+XnatLoadWorkflow function 'beginWorkflow'.  Functions of XnatLoadWorkflow
+are generic in nature and pertain to string construction for querying
+and downloading files.
+
+TODO:
 """
-
-
-
 
 
 
@@ -33,8 +34,6 @@ class XnatLoadWorkflow(object):
     """ Parent Load workflow class to: XnatDicomLoadWorkflow, 
         XnatSceneLoadWorkflow, and XnatFileLoadWorkflow.
     """
-
-
 
     
     def __init__(self, browser):
@@ -55,7 +54,7 @@ class XnatLoadWorkflow(object):
 
         
     def load(self, args):
-        """ As stated.
+        """ Sets needed variables.
         """
         self.xnatSrc = args["xnatSrc"]
         self.localDst = args["localDst"]
@@ -80,7 +79,8 @@ class XnatLoadWorkflow(object):
 
     
     def terminateLoad(self, warnStr):
-        """ As stated.
+        """ Notifies the user that they will terminate the load.
+            Reenables the viewer UI.
         """
         qt.QMessageBox.warning( None, warnStr[0], warnStr[1])
         self.browser.XnatView.setEnabled(True)
@@ -114,6 +114,12 @@ class XnatLoadWorkflow(object):
         mrmls = []
         dicoms = []
         others = []    
+
+
+        
+        #------------------------
+        # Cycle through list to determine loadability.
+        #------------------------
         for file in fileList:
             file = str(file)
             extension =  os.path.splitext(file)[1].lower() 
@@ -133,7 +139,6 @@ class XnatLoadWorkflow(object):
         """ As stated. 
         """
 
-        
         #------------------------
         # Show clearSceneDialog
         #------------------------
@@ -146,52 +151,56 @@ class XnatLoadWorkflow(object):
         
         
         #------------------------
-        # Begin Workflow once button is pressed.
+        # Begin Workflow once button in clearSceneDialog is pressed.
         #------------------------
-
+        #
         # Clear the scene and current session if button was 'yes'.
+        #
         if (button and 'yes' in button.text.lower()):
             self.browser.XnatView.sessionManager.clearCurrentSession()
             slicer.app.mrmlScene().Clear(0)
-
-            
+        #    
         # Acquire vars: current treeItem, the XnatPath, and the remote URI for 
         # getting the file.
+        #
         currItem = self.browser.XnatView.viewWidget.currentItem()
         pathObj = self.browser.XnatView.getXnatUriObject(currItem)
         remoteURI = self.browser.settings.getAddress(self.browser.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
-
-            
-        # Check path string if at the scan level.
+        #    
+        # Check path string if at the scan level -- adjust accordingly.
+        #
         if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
             remoteURI += '/files'
-
-                
-        # Construct dst (local).
+        #
+        # Construct dst string (the local file to be downloaded).
+        #
         dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.getColumn('MERGED_LABEL')))
             
 
             
         #------------------------
-        # Determine loader based on currItem
+        # Determine loader based on the XnatView's currItem
         #------------------------
-        
+        #
         # Slicer files
+        #
         if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
             loader = self.browser.XnatSceneLoadWorkflow
-            
-            # Other readable files
+        #    
+        # Other readable files
+        #
         elif ('files' in remoteURI and '/resources/' in remoteURI):
             loader =  self.browser.XnatFileLoadWorkflow
-            
-            #  DICOMS
+        #    
+        #  DICOMS
+        #
         else:      
             loader =  self.browser.XnatDicomLoadWorkflow
                     
                     
                 
         #------------------------
-        # Call load
+        # Call load of subclass loader.
         #------------------------
         args = {"xnatSrc": remoteURI, 
                 "localDst":dst, 
@@ -201,7 +210,7 @@ class XnatLoadWorkflow(object):
             
             
         #------------------------
-        # Enable TreeView
+        # Enable XnatView
         #------------------------
         self.browser.XnatView.viewWidget.setEnabled(True)
         self.lastButtonClicked = None

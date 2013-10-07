@@ -12,33 +12,27 @@ from XnatTimer import *
 
 
 comment = """
-  XnatMrmlParser handles the parsing of the MRML file (XML-based) and either changes the paths of the remotely
-  linked files to local directories, or to relative directories.
+XnatMrmlParser handles the parsing of a MRML file (XML-based) and 
+either changes the paths of the remotely linked files to local 
+directories, or to relative directories.
 
-# TODO : 
+TODO : 
 """
 
 
 
 class XnatMrmlParser(object):
-    """XnatMrmlParser is the class that parses and changes strings in a given .mrml file
+    """ Description above.
     """
 
-
-
-    
     def __init__(self, browser = None):    
         """ Initialises class variables
         """   
         self.browser = browser
-
-        
         self.useCache = True
-        
         self.tempLocalFileMap = None
         self.tempNewFilename = None
         self.cacheList = None
-        
         self.TESTWRITE = False
 
 
@@ -48,7 +42,7 @@ class XnatMrmlParser(object):
                      otherReplaceValues, removeOriginalFile = False, 
                      debug = True):
         """ Changes the string values within a given file
-        based on a provided list 'replaceValues' and 'otherReplaceValues'
+            based on a provided lists 'replaceValues' and 'otherReplaceValues'.
         """
 
         
@@ -87,17 +81,19 @@ class XnatMrmlParser(object):
 
 
         #------------------------
-        # Iterate through element tree, replace accordingly
+        # Loop through element tree, replace strings accordingly
         #------------------------
         for subelement in iterator:
             if subelement.keys():
                 for name, value in subelement.items():
-
-                    
-                    # if no strings to be changed, at least make sure filepaths are relative
+                    #
+                    # If no strings to be changed, at least make 
+                    # sure filepaths are relative
+                    #
                     if replaceValues == {}:
                         if os.path.basename(os.path.dirname(value)).lower() == "data":
-                            #print self.browser.utils.lf() + " CHANGING NAME WITH DATA FORMAT: %s\tOLD: %s\tNEW:%s"%(subelement.attrib[name], value, "./Data/" + os.path.basename(value))
+                            #print self.browser.utils.lf() + " CHANGING NAME WITH DATA FORMAT: 
+                            # %s\tOLD: %s\tNEW:%s"%(subelement.attrib[name], value, "./Data/" + os.path.basename(value))
                             subelement.attrib[name] = "./Data/%s"%(os.path.basename(value))
 
                             

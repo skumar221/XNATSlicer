@@ -8,11 +8,15 @@ import datetime
 
 
 
-
 comment = """
-  XnatFilter is the class that handles all of the UI interactions to the XnatCommunicator.
+XnatFilter is currently a placeholder class that is meant
+to provide methods for filtering out XnatView items given
+certain parameters.  Ideally, most of the filtering would be
+conducted by the XnatView's widget (a QT widget).  This class
+would be for situations where the widget does not have the
+native ability to filter.
 
-# TODO : 
+TODO: 
 """
 
 
@@ -27,19 +31,13 @@ class XnatFilter(object):
         self.browser = browser
 
 
-    @property
-    def metadataFilters(self):
-        return {'accessed' : 'last_accessed_497',
-                }
-
-
         
     def filterHasTag(self, _contents, _outputTag, filterTag):
-        """
+        """ Cycles through _contents and returns items with
+            _outputTag as filtered by filterTag.
         """
         _output = _contents[_outputTag]
         _filterset = _contents[filterTag]
-
         filteredOutputs = []
         filterTagOutputs = []
         for i in range(0, len(_output)):
@@ -49,16 +47,6 @@ class XnatFilter(object):
                 
         return filteredOutputs, filterTagOutputs
             
-            
-            
-            
-            
-    def filterRecent(self, _filteredValues, _filteredTagValues):
-        """
-        """
-        sortedLists = [list(x) for x in zip(*sorted(zip(_filteredTagValues, _filteredValues), key=lambda pair:pair[0]))]
-        return sortedLists[1]
-
 
     
     
@@ -71,15 +59,11 @@ class XnatFilter(object):
             return list(set(a) & set(b))
 
         outputValues = contents[outputTag]
-        for filterTag in filterTags:                
-            if filterTag == 'all' or filterTag == None or filterTag == '': break
-            elif filterTag == 'accessed' or filterTag == 'recent':
-                filteredValues, filteredTagValues = self.filterHasTag(contents, outputTag, self.metadataFilters['accessed'])
-                outputValues = filteredValues
-                #
-                # Latest first
-                #
-                outputValues.reverse()
+        for filterTag in filterTags:
+            #
+            # Filtering here.
+            #                
+            continue
                     
         return outputValues
 

@@ -427,21 +427,17 @@ class XnatTreeView(XnatView.XnatView):
 
 
             
-    def loadProjects(self, filters = None):
+    def loadProjects(self, filters = None, projectContents = None):
         """ Specific method for loading projects.  'Project'-level
             nodes necessiate for special handling in terms of assigning
             parents and filtering.
         """
 
         #----------------------
-        # Get the projects if they're not 
-        # cashed in XnatCommunicator.
+        # Add projects only if they are specified 
+        # in the arguments.
         #----------------------
-        if self.browser.XnatCommunicator.projectCache == None:
-            self.viewWidget.clear()
-            projectContents = self.browser.XnatCommunicator.getFolderContents(queryUris = ['/projects'], 
-                                                                              metadataTags = self.browser.utils.XnatMetadataTags_projects,
-                                                                              queryArguments = ['accessible'])
+        if projectContents:
             #
             # Make tree Items from projects.
             #               
