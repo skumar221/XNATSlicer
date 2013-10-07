@@ -14,16 +14,17 @@ from os.path import abspath, isabs, isdir, isfile, join
 from base64 import b64encode
 import json
 
+from XnatError import *
+
 
 
 comment = """
 XnatCommunicator uses httplib to send/receive commands and files to an Xnat host
 Since input is usually string-based, there are several utility methods in this
 class to clean up strings for input to httplib. 
+
+TODO:
 """
-
-
-
 
 
 
@@ -32,11 +33,11 @@ class XnatCommunicator(object):
     """
 
         
-    def setup(self, browser, server, user, password):
+    def setup(self, browser, host, user, password):
 
         self.projectCache = None
         self.browser = browser
-        self.server = server
+        self.host = host
         self.user = user
         self.password = password
 
@@ -224,7 +225,7 @@ class XnatCommunicator(object):
         #-------------------- 
         # Clean url
         #-------------------- 
-        prepender = self.server.encode("utf-8") + '/data'
+        prepender = self.host.encode("utf-8") + '/data'
         url =  prepender +  xnatSelector.encode("utf-8") if not prepender in xnatSelector else xnatSelector
 
 
@@ -316,7 +317,7 @@ class XnatCommunicator(object):
         #-------------------- 
         # Set the path
         #-------------------- 
-        XnatSrc = self.server + "/data/archive" + XnatSrc if not self.server in XnatSrc else XnatSrc
+        XnatSrc = self.host + "/data/archive" + XnatSrc if not self.host in XnatSrc else XnatSrc
 
         
 
@@ -522,10 +523,31 @@ class XnatCommunicator(object):
         """ Returns a json object from a given URL using
             the internal method 'httpsRequest'.
         """
+
+        #-------------------- 
+        # Get the response from httpRequest
+        #--------------------      
         #print "%s %s"%(self.browser.utils.lf(), url)
         response = self.httpsRequest('GET', url).read()
-        #print "GET JSON RESPONSE: %s"%(response)
-        return json.loads(response)['ResultSet']['Result']
+        #print "Get JSON Response: %s"%(response)
+
+
+        
+        #-------------------- 
+        # Try to load the response as a JSON...
+        #-------------------- 
+        try:
+            return json.loads(response)['ResultSet']['Result']
+
+
+        
+        #-------------------- 
+        # If that fails, kick back error...
+        #-------------------- 
+        except Exception, e:
+            print "%s login error to host '%s'!"%(self.browser.utils.lf(), self.host)
+            return XnatError(self.host, self.user, response)
+
 
 
     
@@ -656,10 +678,23 @@ class XnatCommunicator(object):
             if queryArguments:
                 newQueryUri = self.applyQueryArgumentsToUri(queryUri, queryArguments)
             print "%s query path: %s"%(self.browser.utils.lf(), newQueryUri)
-            contents =  contents + self.getJson(newQueryUri)
+            #
+            # Get the JSON
+            #
+            json = self.getJson(newQueryUri)
+            #
+            # If the class name of the Json is 'XnatError'
+            # return out, with the error.
+            #
+            if json.__class__.__name__ == 'XnatError':
+                return json
+            #
+            # Otherwise, concatenate to rest of contents.
+            #
+            contents =  contents + json
             #
             # Store projects in a dictionary. 'self.projectCache'
-            # is reset if the user logs into a new server or 
+            # is reset if the user logs into a new host or 
             # logs in a again.
             #
             if queryUri.endswith('/projects'):

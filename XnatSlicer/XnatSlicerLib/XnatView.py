@@ -46,11 +46,36 @@ class XnatView(object):
         """ Begins the communication process with.  Shows
             an error modal if it fails.
         """
-        projectsLoaded = self.loadProjects()
+
+        #----------------------
+        # If there's no project cache, query for 
+        # project contents...
+        #----------------------
+        projectContents = None
+        if self.browser.XnatCommunicator.projectCache == None:
+            self.viewWidget.clear()
+            projectContents = self.browser.XnatCommunicator.getFolderContents(queryUris = ['/projects'], 
+                                                                              metadataTags = self.browser.utils.XnatMetadataTags_projects,
+                                                                              queryArguments = ['accessible'])
+            #
+            # If the class name of the Json is 'XnatError'
+            # return out, with the error.
+            #
+            if projectContents.__class__.__name__ == 'XnatError':
+                qt.QMessageBox.warning( None, "Login error", projectContents.errorMsg)
+                return
+
+
+            
+        #----------------------
+        # Create XnatView items via 'loadProjects' assuming
+        # that there's projectCotnents
+        #----------------------
+        projectsLoaded = self.loadProjects(filters = None, projectContents = projectContents)
         if projectsLoaded:
             self.browser.XnatButtons.setEnabled(buttonKey='addProj', enabled=True) 
-        else:
-            qt.QMessageBox.warning( None, "Login error", "Invalid login credentials for '%s'."%(self.browser.XnatCommunicator.server))
+
+            
 
 
             
