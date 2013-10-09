@@ -13,6 +13,7 @@ import codecs
 from os.path import abspath, isabs, isdir, isfile, join
 from base64 import b64encode
 import json
+from multiprocessing import Pool
 
 from XnatError import *
 
@@ -270,6 +271,7 @@ class XnatCommunicator(object):
 
 
         
+        
     def cancelDownload(self):
         """ Set's the download state to 0.  The open buffer in the 'get' method
             will then read this download state, and cancel out.
@@ -358,46 +360,53 @@ class XnatCommunicator(object):
                 # HTTP LIB VERSION
                 #-----------
 
-                
+                #
                 # Reset popup
+                #
                 self.browser.downloadPopup.reset()
                 self.browser.downloadPopup.setDownloadFilename(XnatSrc) 
                 self.browser.downloadPopup.show()
-
+                #
                 # Credentials
+                #
                 url = XnatSrc
                 userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
                 authenticationHeader = { 'Authorization' : 'Basic %s' %(userAndPass) }
-                
+                #
                 # Clean REST method
+                #
                 restMethod = 'GET'
-                
+                #
                 # Clean url
+                #
                 url = url.encode("utf-8")
-                
+                #
                 # Get request
+                #
                 req = urllib2.Request (url)
-                
+                #
                 # Get connection
+                #
                 connection = httplib.HTTPSConnection (req.get_host ()) 
-                
+                #
                 # Merge the authentication header with any other headers
+                #
                 headerAdditions={}
                 header = dict(authenticationHeader.items() + headerAdditions.items())
-                
+                #
                 # REST call
+                #
                 connection.request (restMethod, req.get_selector (), body= '', headers=header)
-                
-                print "Xnat request - %s %s"%(restMethod, url)
-
-                
+                print "%s Xnat request - %s %s"%(self.browser.utils.lf(), restMethod, url)
+                #
                 # Return response
+                #
                 response = connection.getresponse()
                 data = response.read()           
                 XnatFile.close()
-
-                
+                #
                 # write to file
+                #
                 with open(dst, 'wb') as f:
                     f.write(data)
                 self.browser.XnatView.setEnabled(True)
@@ -432,7 +441,6 @@ class XnatCommunicator(object):
         #-------------------- 
         self.browser.XnatView.setEnabled(False)
 
-
         
 
         #-------------------- 
@@ -442,60 +450,73 @@ class XnatCommunicator(object):
             """Downloads files by a constant buffer size.
             """
 
-            
+            #-------------------- 
+            # If a progress indicator is desired,
+            # set the parameters of self.browser.downloadPopup.
+            #-------------------- 
             if showProgressIndicator:
-                
+                #
                 # Reset popup
+                #
                 self.browser.downloadPopup.reset()
-                
+                #
                 # Set filename
+                #
                 self.browser.downloadPopup.setDownloadFilename(fileDisplayName) 
-                
+                self.browser.downloadPopup.show()
+                #
                 # Update the download popup file size
+                #
                 if self.downloadTracker['totalDownloadSize']['bytes']:
                     self.browser.downloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
+                    #
                     # Wait for threads to catch up 
+                    #
                     slicer.app.processEvents()
 
-                    # show popup
-                self.browser.downloadPopup.show()
 
-
-                
+                    
+            #--------------------
+            # Disable view widget
+            #--------------------
             self.browser.XnatView.viewWidget.setEnabled(False)
 
-        
-            # Read loop
-            while 1:            
 
+            
+            #--------------------
+            # Define the buffer read loop
+            #--------------------
+            while 1:            
+                #
+                # If download cancelled.
+                #
                 if self.downloadState == 0:
                     fileToWrite.close()
                     slicer.app.processEvents()
                     self.browser.utils.removeFile(fileToWrite.name)
                     break
-                
+                #
                 # Read buffer
+                #
                 buffer = response.read(buffer_size)
                 if not buffer: 
                     if self.browser.downloadPopup:
                         self.browser.downloadPopup.hide()
                         break 
-                    
-                    
-                # Write buffer to file
+                #    
+                # Write buffer chunk to file
+                #
                 fileToWrite.write(buffer)
-                    
-                    
+                #    
                 # Update progress indicators
+                #
                 self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
                 if showProgressIndicator and self.browser.downloadPopup:
                     self.browser.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
-
-                    
+                #   
                 # Wait for threads to catch up      
+                #
                 slicer.app.processEvents()
-
-
                 
             return self.downloadTracker['downloadedSize']['bytes']
 
@@ -511,7 +532,7 @@ class XnatCommunicator(object):
 
         
         #-------------------- 
-        # Reenable Viewer and close the file
+        # When finished, reenable Viewer and close the file
         #-------------------- 
         self.browser.XnatView.setEnabled(True)
         XnatFile.close()
@@ -527,8 +548,8 @@ class XnatCommunicator(object):
         #-------------------- 
         # Get the response from httpRequest
         #--------------------      
-        #print "%s %s"%(self.browser.utils.lf(), url)
         response = self.httpsRequest('GET', url).read()
+        print "%s %s"%(self.browser.utils.lf(), url)
         #print "Get JSON Response: %s"%(response)
 
 
@@ -558,7 +579,6 @@ class XnatCommunicator(object):
         #print "%s %s"%(self.browser.utils.lf(), url, level)
         if not level.startswith('/'):
             level = '/' + level
-
         if level in url:
             return  url.split(level)[0] + level
         else:
@@ -567,44 +587,47 @@ class XnatCommunicator(object):
         
 
         
-    def fileExists(self, selStr):
-        """ Descriptor
+    def fileExists(self, fileUri):
+        """ Determines whether a file exists
+            on an XNAT host based on the 'fileUri' argument.
         """
-        #print "%s %s"%(self.browser.utils.lf(), selStr)
+        #print "%s %s"%(self.browser.utils.lf(), fileUri)
 
         #-------------------- 
         # Query logged files before checking
         #-------------------- 
-        if (os.path.basename(selStr) in self.fileDict):
+        if (os.path.basename(fileUri) in self.fileDict):
             return True
                 
 
+        
         #-------------------- 
         # Clean string
         #-------------------- 
-        parentDir = self.getXnatUriAt(selStr, 'files');
+        parentDir = self.getXnatUriAt(fileUri, 'files');
 
+        
 
         #-------------------- 
         # Parse result dictionary
         #-------------------- 
         for i in self.getJson(parentDir):
-            if os.path.basename(selStr) in i['Name']:
+            if os.path.basename(fileUri) in i['Name']:
                 return True   
         return False
     
 
 
     
-    def getSize(self, selStr):
+    def getSize(self, fileUri):
         """ Descriptor
         """
-        #print "%s %s"%(self.browser.utils.lf(), selStr)
+        #print "%s %s"%(self.browser.utils.lf(), fileUri)
         bytes = 0
        
         
         # Query logged files
-        fileName = os.path.basename(selStr)
+        fileName = os.path.basename(fileUri)
         if fileName in self.fileDict:
             bytes = int(self.fileDict[fileName]['Size'])
             return {"bytes": (bytes), "MB" : self.browser.utils.bytesToMB(bytes)}
@@ -737,22 +760,25 @@ class XnatCommunicator(object):
 
     
     def getResources(self, folder):
-        """ Descriptor
+        """ Gets the contents of a 'resources' folder
+            in a given XNAT host.  'resources' folders 
+            demand a bit mores specifity in the metadata manipulation.
+            Furthermore, 'resources' folders are frequently accessed
+            as part of the Slicer file location within an experiment.
         """
 
-        
-        #print "%s %s"%(self.browser.utils.lf(), folder)
-
         #-------------------- 
-        # Get the resource Json
+        # Get the resource JSON
         #-------------------- 
         folder += "/resources"
         resources = self.getJson(folder)
+        #print "%s %s"%(self.browser.utils.lf(), folder)
         #print self.browser.utils.lf() + " Got resources: '%s'"%(str(resources))
 
 
+        
         #-------------------- 
-        # Filter the Jsons
+        # Filter the JSONs
         #-------------------- 
         resourceNames = []
         for r in resources:
@@ -775,10 +801,11 @@ class XnatCommunicator(object):
         #-------------------- 
         # Clean string
         #-------------------- 
-        XnatItem = self.cleanSelectString(XnatItem)
+        XnatItem = self.cleanUri(XnatItem)
         #print "%s %s %s"%(self.browser.utils.lf(), XnatItem, attr)
 
 
+        
         #-------------------- 
         # Parse json
         #-------------------- 
@@ -796,33 +823,190 @@ class XnatCommunicator(object):
 
 
                     
-    def cleanSelectString(self, selStr):
-        """ As stated
+    def cleanUri(self, fileUri):
+        """ Removes any double-slashes
+            with single slashes.  Removes the 
+            last character if the string ends
+            with a '/'
         """
-        if not selStr.startswith("/"):
-            selStr = "/" + selStr
-        selStr = selStr.replace("//", "/")
-        if selStr.endswith("/"):
-            selStr = selStr[:-1]
-        return selStr
+        if not fileUri.startswith("/"):
+            fileUri = "/" + fileUri
+        fileUri = fileUri.replace("//", "/")
+        if fileUri.endswith("/"):
+            fileUri = fileUri[:-1]
+        return fileUri
 
 
 
     
         
     def makeDir(self, XnatUri): 
-        """ Makes a directory in Xnat via PUT
+        """ Makes a directory in Xnat via PUT.
         """ 
-        r = self.httpsRequest('PUT', XnatUri)
+        result = self.httpsRequest('PUT', XnatUri)
         #print "%s Put Dir %s \n%s"%(self.browser.utils.lf(), XnatUri, r)
-        return r
+        return result
+
+    
+
+    def search(self, searchString, level = None):
+        """ Utilizes the XNAT search query function
+            to on all levels of xnat.
+        """
+
+        searchUris = []
+        resultsDict = {}
+        
+ 
+        #-------------------- 
+        # Projects, subjects, experiments
+        #-------------------- 
+        levelTags = {}
+        levelTags['projects'] = ['ID', 'secondary_ID',	'name', 'pi_firstname', 'pi_lastname', 'description']
+        levelTags['subjects'] = ['ID', 'label']
+        levelTags['experiments'] = ['ID', 'label']
+
+        levels = ['projects', 'subjects', 'experiments']
+
+        for level in levels:
+            resultsDict[level] = []
+            for levelTag in levelTags[level]:
+                searchStr = '/%s?%s=*%s*'%(level, levelTag, searchString)
+                #
+                # Experiments: only search folders with images
+                #
+                if level == 'experiments':
+                    searchStr2 = searchStr + '&xsiType=xnat:mrSessionData'
+                    searchStr = searchStr + '&xsiType=xnat:petSessionData'
+                    resultsDict[level] = resultsDict[level] + self.getJson(searchStr2)
+                resultsDict[level] = resultsDict[level] + self.getJson(searchStr)
+
+
+        #-------------------- 
+        # Scans
+        #-------------------- 
+
+
+        #-------------------- 
+        # Slicer files
+        #-------------------- 
+
+        
+        return resultsDict
 
 
 
 
+############################
+# Static Vars
+############################
 
 
 
+XnatCommunicator.relevantMetadataDict = {
+
+'LABELS' : [
+    'ID',
+    'id',
+    'name',
+    'Name',
+    'label',
+],
+
+
+
+'projects' : [
+      'last_accessed_497',
+      'id'
+      'ID'
+#    'insert_user',
+#    'pi',
+#    'insert_date',
+#    'description',
+#    'secondary_ID',
+#    'pi_lastname',
+#    'pi_firstname',
+#    'project_invs',	
+#    'project_access_img',	
+#    'user_role_497',	
+#    'quarantine_status'
+#    'URI',
+],
+
+
+
+'subjects' : [
+     'ID',
+     'label'
+#    'insert_date',
+#    'insert_user',
+#    'totalRecords'
+#    'project',
+#    'URI',
+],
+
+
+
+'experiments' : [
+    'ID',
+    'label'
+#    'insert_date',
+#    'totalRecords',
+#    'date',
+#   'project',
+#   'xsiType',
+#   'ID',
+#   'xnat:subjectassessordata/id',
+#   'URI',
+],
+
+
+
+'scans' : [
+    'series_description',
+#    'note',
+#    'type',
+#   'xsiType',
+#   'quality',
+#   'xnat_imagescandata_id',
+#   'URI',
+],
+
+
+
+'resources' : [
+#    'element_name',
+#    'category',
+#    'cat_id',
+#    'xnat_abstractresource_id',
+#    'cat_desc'
+],
+
+
+
+'files' : [
+    'Size',
+#    'file_format',
+#    'file_content',
+#    'collection',
+#    'file_tags',
+#    'cat_ID',
+#    'URI'
+],
+
+
+
+'slicer' : [
+    'Size',
+#    'file_format',
+#    'file_content',
+#    'collection',
+#    'file_tags',
+#    'cat_ID',
+#    'URI'
+]
+        
+}
 
             
 

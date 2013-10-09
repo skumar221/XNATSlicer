@@ -40,6 +40,16 @@ class XnatTreeView(XnatView.XnatView):
         self.viewWidget.setBaseSize(treeWidgetSize)
 
 
+
+        #----------------------
+        # Search Tree Widget
+        # (Exists for the purposes
+        # of conducting searches -- no 
+        # hierarchy to the nodes)
+        #----------------------
+        self.searchWidget = qt.QTreeWidget()
+
+        
         
         #----------------------
         # TreeView Columns
@@ -54,6 +64,7 @@ class XnatTreeView(XnatView.XnatView):
         self.itemFont_folder = qt.QFont("Arial", self.browser.utils.fontSize, 25, False)
         self.itemFont_file = qt.QFont("Arial", self.browser.utils.fontSize, 75, False)
         self.itemFont_category = qt.QFont("Arial", self.browser.utils.fontSize, 25, True)
+        self.itemFont_searchHighlighted = qt.QFont("Arial", self.browser.utils.fontSize, 75, False)
 
         
         
@@ -132,6 +143,8 @@ class XnatTreeView(XnatView.XnatView):
         self.columns['MERGED_LABEL']['displayname'] = 'Name/ID/Label'   
         self.columns['XNAT_LEVEL'] = {}  
         self.columns['XNAT_LEVEL']['displayname'] = 'Level'      
+        self.columns['MERGED_INFO'] = {}  
+        self.columns['MERGED_INFO']['displayname'] = 'Info' 
 
 
         
@@ -143,91 +156,18 @@ class XnatTreeView(XnatView.XnatView):
         self.columnKeyOrder['ALL'] = [
             'MERGED_LABEL',
             'XNAT_LEVEL',
-        ]
-        
-        self.columnKeyOrder['LABELS'] = [
-            'ID',
-            'id',
-            'name',
-            'Name',
-            'label',
-        ]
-        
-        self.columnKeyOrder['projects'] = [
-            'last_accessed_497',
-        #    'insert_user',
-        #    'pi',
-        #    'insert_date',
-        #    'description',
-        #    'secondary_ID',
-        #    'pi_lastname',
-        #    'pi_firstname',
-        #    'project_invs',	
-        #    'project_access_img',	
-        #    'user_role_497',	
-        #    'quarantine_status'
-        #    'URI',
+            'MERGED_INFO'
         ]
 
-        self.columnKeyOrder['subjects'] = [
-        #    'insert_date',
-        #    'insert_user',
-        #    'totalRecords'
-        #    'project',
-        #    'URI',
-        ]
 
         
-        self.columnKeyOrder['experiments'] = [
-        #    'insert_date',
-        #    'totalRecords',
-        #    'date',
-        #   'project',
-        #   'xsiType',
-        #   'ID',
-        #   'xnat:subjectassessordata/id',
-        #   'URI',
-        ]
-
-        self.columnKeyOrder['scans'] = [
-            'series_description',
-        #    'note',
-        #    'type',
-        #   'xsiType',
-        #   'quality',
-        #   'xnat_imagescandata_id',
-        #   'URI',
-        ]
-
-        self.columnKeyOrder['resources'] = [
-        #    'element_name',
-        #    'category',
-        #    'cat_id',
-        #    'xnat_abstractresource_id',
-        #    'cat_desc'
-        ]
-
-        self.columnKeyOrder['files'] = [
-            'Size',
-        #    'file_format',
-        #    'file_content',
-        #    'collection',
-        #    'file_tags',
-        #    'cat_ID',
-        #    'URI'
-        ]
-
-
-        self.columnKeyOrder['slicer'] = [
-            'Size',
-        #    'file_format',
-        #    'file_content',
-        #    'collection',
-        #    'file_tags',
-        #    'cat_ID',
-        #    'URI'
-        ]
-
+        #---------------------- 
+        # Merge 'self.columnKeyOrder' with
+        # the XnatCommunicator's 'relevantMetadataDict'
+        #---------------------- 
+        self.columnKeyOrder = dict(self.columnKeyOrder.items() + 
+                                   self.browser.XnatCommunicator.relevantMetadataDict.items())
+        
 
 
         #---------------------- 
@@ -235,8 +175,10 @@ class XnatTreeView(XnatView.XnatView):
         # arrays (i.e. 'allHeaders')
         #---------------------- 
         allHeaders = self.browser.utils.uniqify(self.columnKeyOrder['ALL'] + 
-                                                # Leaving this out as it will become part of MERGED_LABELS
-                                                #  self.columnKeyOrder['LABELS'] + 
+                                                # NOTE: Leaving this out as it will become part of MERGED_LABELS
+                                                # via self.getMergedLabelByLevel, which determines the relevant
+                                                # metadata tag for the given XNAT level.
+                                                # self.columnKeyOrder['LABELS'] + 
                                                 self.columnKeyOrder['projects'] + 
                                                 self.columnKeyOrder['subjects'] + 
                                                 self.columnKeyOrder['experiments'] + 
@@ -254,14 +196,17 @@ class XnatTreeView(XnatView.XnatView):
         self.viewWidget.setColumnCount(len(allHeaders))
         headerLabels = []
         for header in allHeaders:
-            #
-            # Set other column key/values.
-            #
-            self.columns[header]['location'] = len(headerLabels)
-            #
-            # Set the headerLabels.
-            #
-            headerLabels.append( self.columns[header]['displayname'])
+            try:
+                #
+                # Set other column key/values.
+                #
+                self.columns[header]['location'] = len(headerLabels)
+                #
+                # Set the headerLabels.
+                #
+                headerLabels.append( self.columns[header]['displayname'])
+            except Exception, e:
+                print e, "column init stuff"
         self.viewWidget.setHeaderLabels(headerLabels)
         self.showColumnsByNodeLevel()
 
@@ -305,13 +250,35 @@ class XnatTreeView(XnatView.XnatView):
         #------------------
         for key in metadata:
             value = metadata[key]
-            self.columns[key]['value'] = value
-            if 'location' in self.columns[key]:
-                treeNode.setText(self.columns[key]['location'], value)
-                treeNode.setFont(self.columns[key]['location'], self.itemFont_folder) 
+
+            #
+            # Filtered projects return a lowercase 'id'
+            # need to convert this back to uppercase.
+            #
+            if key == 'id':
+                key = 'ID'
 
                 
+            self.columns[key]['value'] = value
+            if 'location' in self.columns[key]:
+                if key == 'MERGED_LABEL':
+                    treeNode.setText(self.columns[key]['location'], value)
+                    treeNode.setFont(self.columns[key]['location'], self.itemFont_folder)
+                else:
+                    treeNode.setText(self.columns[key]['location'], value)
+                    treeNode.setFont(self.columns[key]['location'], self.itemFont_folder)
+                    #
+                    # Combine non-essential columns into MERGED_INFO column
+                    #
+                    if key != 'XNAT_LEVEL':
+                        #self.viewWidget.hideColumn(self.columns[key]['location'])
+                        col = self.columns['MERGED_INFO']['location']
+                        if value and len(value) > 1:
+                            treeNode.setText(col, treeNode.text(col) + self.columns[key]['displayname'] + ': ' + value)
+                        treeNode.setFont(col, self.itemFont_folder)                  
                 
+
+                    
         #-------------------
         # Set the value for MERGED_LABEL.
         #-------------------        
@@ -377,8 +344,8 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         # Hide all
         #----------------------
-        for i in range(0, len(self.columns)):
-            self.viewWidget.hideColumn(i)
+        #for i in range(0, len(self.columns)):
+        #    self.viewWidget.hideColumn(i)
 
 
             
@@ -409,6 +376,9 @@ class XnatTreeView(XnatView.XnatView):
         showByKeys(self.columnKeyOrder['ALL'])
 
 
+        # TEMP
+        print self.browser.utils.lf(), " keeping other columns hidden."
+        return
         
         #----------------------
         # Show the row values pertaining specifically
@@ -1090,21 +1060,26 @@ class XnatTreeView(XnatView.XnatView):
         #--------------------
         if 'slicerQueryUris' in pathObj:
             slicerMetadata = self.browser.XnatCommunicator.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))
-            slicerChildNames = slicerMetadata[self.getMergedLabelTagByLevel('files')]
-            prevLen = len(childNames)
-            childNames = childNames + slicerChildNames  
             #
-            # Merge slicerMetadata with metadata
+            # Proceed only if the relevant metadata to retrieve Slicer
+            # files exists 
             #
-            for key in slicerMetadata:
-                if not key in metadata:
-                    metadata[key] = [''] * prevLen
-                metadata[key] += metadata[key] + slicerMetadata[key]
-                if (key == 'Size'):
-                    for i in range(0, len(metadata[key])):
-                        if metadata[key][i]:
-                            metadata[key][i] = '%i MB'%(int(round(self.browser.utils.bytesToMB(metadata[key][i]))))
-            metadata['XNAT_LEVEL'] = metadata['XNAT_LEVEL'] + ['Slicer' for x in range(len(slicerChildNames))]  
+            if self.getMergedLabelTagByLevel('files') in slicerMetadata:
+                slicerChildNames = slicerMetadata[self.getMergedLabelTagByLevel('files')]
+                prevLen = len(childNames)
+                childNames = childNames + slicerChildNames  
+                #
+                # Merge slicerMetadata with metadata
+                #
+                for key in slicerMetadata:
+                    if not key in metadata:
+                        metadata[key] = [''] * prevLen
+                        metadata[key] += metadata[key] + slicerMetadata[key]
+                        if (key == 'Size'):
+                            for i in range(0, len(metadata[key])):
+                                if metadata[key][i]:
+                                    metadata[key][i] = '%i MB'%(int(round(self.browser.utils.bytesToMB(metadata[key][i]))))
+                metadata['XNAT_LEVEL'] = metadata['XNAT_LEVEL'] + ['Slicer' for x in range(len(slicerChildNames))]  
                 
 
             
@@ -1219,8 +1194,204 @@ class XnatTreeView(XnatView.XnatView):
             parentItem.addTopLevelItems(treeItems)
             return
 
+
+
+        #------------------------
+        # Add items to the search Widget
+        #------------------------
+        self.searchWidget.addTopLevelItems(treeItems)
+        
+
         
         #------------------------    
         # Items array gets added to parentItem.
         #------------------------
         parentItem.addChildren(treeItems)
+
+
+
+
+
+            
+        
+    def searchEntered(self):
+        """
+            Qt::MatchExactly	0	Performs QVariant-based matching.
+            Qt::MatchFixedString	8	Performs string-based matching. String-based comparisons are case-insensitive unless the MatchCaseSensitive flag is also specified.
+            Qt::MatchContains	1	The search term is contained in the item.
+            Qt::MatchStartsWith	2	The search term matches the start of the item.
+            Qt::MatchEndsWith	3	The search term matches the end of the item.
+            Qt::MatchCaseSensitive	16	The search is case sensitive.
+            Qt::MatchRegExp	4	Performs string-based matching using a regular expression as the search term.
+            Qt::MatchWildcard	5	Performs string-based matching using a string with wildcards as the search term.
+            Qt::MatchWrap	32	Perform a search that wraps around, so that when the search reaches the last item in the model, it 
+                                begins again at the first item and continues until all items have been examined.
+            Qt::MatchRecursive	64	Searches the entire hierarchy.
+        """
+
+        #------------------------
+        # Get searchString from browser.  Remove starting 
+        # and ending white spaces via '.strip()'
+        #------------------------
+        searchString = self.browser.searchBox.text.strip()
+
+
+        
+        #------------------------
+        # Return out if searchString is all
+        # white spaces. 
+        # NOTE: .strip() is called on it above.
+        #------------------------
+        if len(searchString) == 0:
+            return
+
+
+        
+        #------------------------
+        # Set all visiblie if searchString == ''
+        # and return out.
+        #------------------------
+        if len(searchString) == 0:
+            def showAll(child):
+                child.setHidden(False)
+            self.loopProjectNodes(showAll)  
+            return          
+            
+
+            
+        #------------------------
+        # Search all items
+        #------------------------
+        flags = 1 | 64
+        self.searchTreeItems = self.viewWidget.findItems(searchString, flags , 0)
+
+
+
+
+
+
+        
+        #------------------------
+        # First pass: Hide all items that don't
+        # fit the search criteria.
+        #------------------------
+        def hideEqual(child):
+            if child in self.searchTreeItems:
+                child.setHidden(False)
+            else:
+                child.setHidden(True)
+        self.loopProjectNodes(hideEqual)
+
+
+
+        #------------------------
+        # Second pass: Re-show any ancestor nodes of the 
+        # search nodes.
+        #------------------------
+        for searchTreeItem in self.searchTreeItems:
+            #
+            # Get parent
+            #
+            parent = searchTreeItem.parent()
+            while parent:
+                #
+                # Show parent
+                #
+                parent.setHidden(False)
+                #
+                # Expand the ancestor
+                #
+                parent.setExpanded(True)
+                parent = parent.parent()
+
+
+                
+        #------------------------
+        # Deslect any selected items.
+        #------------------------  
+        for selectedItem in self.viewWidget.selectedItems():
+            selectedItem.setSelected(False)
+
+
+            
+        #------------------------
+        # Select the first item in the
+        # search list.
+        #------------------------       
+        if self.searchTreeItems:      
+            self.searchTreeItems[0].setSelected(True)
+
+
+
+        #------------------------
+        # Conduct a server-side search
+        #------------------------
+        serverQueryResults = self.browser.XnatCommunicator.search(searchString)
+
+
+        #------------------------
+        # Projects, subjects and experiments
+        #------------------------
+        levels = ['projects', 'subjects', 'experiments']
+
+        for level in levels:
+            labelTag = self.getMergedLabelTagByLevel(level)
+            #
+            # Cycle through results query
+            #
+            for levelDict in serverQueryResults[level]:
+                #
+                # Has to do with quirk in XNAT
+                #
+                if level == 'projects':
+                    labelTag = labelTag.upper()
+                #print "%s Searching For: %s"%(self.browser.utils.lf(), levelDict[labelTag)])
+                #
+                # Attempt first to find the item in the tree.
+                #
+                item = self.viewWidget.findItems(levelDict[labelTag], 0 | 64 , 0)
+                item[0].setFont(0, self.itemFont_searchHighlighted)
+
+
+                
+                #--------
+                # If the tree item exists in the tree, proceed accordingly
+                #--------
+                if len(item) > 0 and item[0].isHidden():
+
+                    #
+                    # Show the item
+                    #
+                    item[0].setHidden(False)
+                    
+                    #
+                    # Show the parents if it's not a 'project'
+                    #
+                    if level != 'projects':
+                        parent = item[0].parent()
+                        while parent:
+                            parent.setHidden(False)
+                            parent = parent.parent()
+                #
+                # Otherwise, the item has yet to be created in the tree (i.e. the 
+                # user hasn't browsed there yet).  Conduct the necessary steps
+                # to construct the branch all the way to the project level.
+                #
+                else:
+                    #
+                    # Only consider projects the user has access to.
+                    # These are already in the tree, hence we do not
+                    # need to consider items at the 'projects' level.
+                    #
+                    if level != 'projects':
+                        #print '\nLEVEL DICT', levelDict, levelDict['project']
+                        #print self.columns['ID']['location']
+                        item = self.viewWidget.findItems(levelDict['project'], 1 , self.columns['ID']['location'])
+                        item[0].setHidden(False)
+                        item[0].setExpanded(True)
+
+                        #
+                        # TODO: This should apply to the actual node not the project.
+                        #
+                        item[0].setFont(0, self.itemFont_searchHighlighted)
+                        #print item[0]
