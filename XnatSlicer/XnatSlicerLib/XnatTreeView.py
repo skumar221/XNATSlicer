@@ -1044,7 +1044,25 @@ class XnatTreeView(XnatView.XnatView):
         # Set nodeNames from metadata.
         #-------------------- 
         metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
-        childNames = metadata[self.getMergedLabelTagByLevel(currXnatLevel)]
+
+
+
+        #--------------------
+        # Return out of the childkeys dont exist.
+        # (Means that there are no children to the 
+        # node).
+        #--------------------        
+        xnatLabel = self.getMergedLabelTagByLevel(currXnatLevel)
+        if not xnatLabel in metadata:
+            print "NO XNAT LABEL"
+            return
+
+
+        
+        #--------------------
+        # Set the child names based on the level, metadata key
+        #--------------------
+        childNames = metadata[xnatLabel]
 
         
         
@@ -1345,12 +1363,16 @@ class XnatTreeView(XnatView.XnatView):
                 #
                 if level == 'projects':
                     labelTag = labelTag.upper()
-                #print "%s Searching For: %s"%(self.browser.utils.lf(), levelDict[labelTag)])
                 #
                 # Attempt first to find the item in the tree.
                 #
+                #print "%s Searching For: %s"%(self.browser.utils.lf(), levelDict[labelTag])
                 item = self.viewWidget.findItems(levelDict[labelTag], 0 | 64 , 0)
-                item[0].setFont(0, self.itemFont_searchHighlighted)
+
+
+                
+                if len(item) > 0:
+                    item[0].setFont(0, self.itemFont_searchHighlighted)
 
 
                 
