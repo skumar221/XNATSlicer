@@ -10,10 +10,14 @@ import XnatButtonsUI
 
 
 comment = """
-  XnatButtons is the class that handles all of the UI interactions to
-  call on the various XnatWorkflows.
-  
- TODO : 
+XnatButtons is the class that handles all of the buttons 
+(and thier events)  to call on the various 
+XnatWorkflows and filters.  This includes 'load/download', 
+'delete', 'save/upload', 'create folder' and 'filter' UI elements.
+It utilizes the UI file 'XnatButtonsUI' to generate the QT Widgets
+that are used for the buttons.
+
+TODO : 
 """
 
 
@@ -27,27 +31,31 @@ class XnatButtons(object):
         """
 
         #--------------------
-        # for inserting in gui
+        # Public vars.
         #--------------------
         self.parent = parent
         self.browser = browser
 
 
         #--------------------
-        # Buttons dictionary
+        # Buttons dictionary...for use by 
+        # other classes.
         #--------------------
         self.buttons = {}
 
 
         
         #--------------------
-        # IO Buttons
+        # IO Buttons (Save, Load, Delete, Add Project)
         #--------------------
         self.buttons['io'] = {}
         self.buttons['io'] = XnatButtonsUI.makeButtons_io(self)
-        #
+
+
+
+        #--------------------
         # IO Button onClicks
-        #
+        #--------------------
         self.buttons['io']['load'].connect('clicked()', self.onLoadClicked)
         self.buttons['io']['save'].connect('clicked()', self.onSaveClicked)
         self.buttons['io']['delete'].connect('clicked()', self.onDeleteClicked)
@@ -70,6 +78,7 @@ class XnatButtons(object):
         for key in self.buttons['filter']:
             self.buttons['filter'][key].connect('clicked()', self.onFilterButtonClicked)
 
+
             
         #--------------------
         # Testing button
@@ -84,11 +93,23 @@ class XnatButtons(object):
         """ Sets a button enabled or disabled as part of QT
         """
         
+        #--------------------
+        # If button is specified, apply 'setEnambed' to 
+        # it.
+        #--------------------
         if buttonKey:
             self.buttons['io'][buttonKey].setEnabled(enabled)
+
+
+
+        #--------------------
+        # Otherwise apply 'setEnabled' to all buttons.
+        #--------------------
         else:
             for k,b in self.buttons.iteritems():
                 b.setEnabled(enabled)
+
+                
 
 
     
@@ -108,11 +129,11 @@ class XnatButtons(object):
         
         self.lastButtonClicked = "save" 
         self.browser.XnatView.setEnabled(False)
-
         saver = XnatSaveWorkflow(self.browser)
         saver.beginWorkflow()
 
 
+        
 
     def onTestClicked(self):        
         """ Starts Save workflow.
@@ -123,13 +144,13 @@ class XnatButtons(object):
 
 
         
+        
     def onLoadClicked(self):
         """ Starts Load workflow.
         """
         
         self.lastButtonClicked = "load"
         self.browser.XnatView.setEnabled(False)
-
         loader = XnatLoadWorkflow(self.browser)
         loader.beginWorkflow()
 
@@ -168,7 +189,6 @@ class XnatButtons(object):
             buttons relative to one another. O(4n).
         """
 
-
         #-----------------
         # Count down buttons
         #------------------
@@ -179,6 +199,7 @@ class XnatButtons(object):
            if currButton.isChecked():
                checkedButtons += 1
 
+               
                
         #-----------------
         # If there are no down buttons, apply the ['all']
@@ -192,6 +213,7 @@ class XnatButtons(object):
             self.browser.XnatView.loadProjects(['all'])
             return
  
+
         
         #-----------------
         # If a new button has been clicked
@@ -203,6 +225,7 @@ class XnatButtons(object):
                 self.currentlyToggledFilterButton = currButton
                 break
 
+            
                 
         #-----------------
         # Un-toggle previously toggled buttons.
@@ -212,6 +235,7 @@ class XnatButtons(object):
             if currButton.isChecked() and self.currentlyToggledFilterButton != currButton:
                 currButton.setDown(False)
 
+                
 
         #-----------------
         # Apply method

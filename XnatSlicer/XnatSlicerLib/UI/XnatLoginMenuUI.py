@@ -1,12 +1,26 @@
 from __main__ import vtk, ctk, qt, slicer
 
-
 import os
 
 
+
+comment = """
+Constructs the various QT Widgets for the Login
+menu.
+
+TODO:
+"""
+
+
+
 def makeCredentialsWidgets(XnatLoginMenu):
+    """ Makes the username and password lines
+        and lables.
+    """
 
-
+    #--------------------
+    # Username + password label and lines.
+    #--------------------
     usernameLabel = qt.QLabel('username:')
     usernameLabel.setFont(XnatLoginMenu.browser.utils.labelFontBold)
     
@@ -20,7 +34,9 @@ def makeCredentialsWidgets(XnatLoginMenu):
     passwordLine.setFixedWidth(100)
 
     
-    # Asthetics  
+    #--------------------
+    # Sets aesthetics.
+    #--------------------
     usernameLine.setText(XnatLoginMenu.defaultUsernameText)
     usernameLine.setFont(XnatLoginMenu.browser.utils.labelFontItalic)
     passwordLine.setFont(XnatLoginMenu.browser.utils.labelFontItalic) 
@@ -36,11 +52,10 @@ def makeCredentialsWidgets(XnatLoginMenu):
 def makeHostDropdown(XnatLoginMenu):
     """ Initiates the dropdown that allows the user to select hosts
     """
+    
     hostDropdown = qt.QComboBox()
     hostDropdown.setFont(XnatLoginMenu.browser.utils.labelFont)
     hostDropdown.toolTip = "Select Xnat host"
-
-
     return hostDropdown
 
 
@@ -49,22 +64,23 @@ def makeHostDropdown(XnatLoginMenu):
 def makeLoginButton(XnatLoginMenu):
     """ Connects the login to the first treeView call
     """
+    
     plt = qt.QPalette()
     plt.setColor(qt.QPalette().Button, qt.QColor(255,255,255))    
     loginButton = qt.QPushButton("Login")
     loginButton.setFont(XnatLoginMenu.browser.utils.labelFontBold)    
     loginButton.toolTip = "Login to selected Xnat host"    
     loginButton.setFixedSize(XnatLoginMenu.browser.utils.buttonSizeMed.width(), (XnatLoginMenu.browser.utils.buttonSizeSmall.height() - 4))
-
     return loginButton
 
 
 
 
 def makeSettingsButton(XnatLoginMenu):
-    """ Initiates the button aesthetics for the button that opens the manage 
-    hosts popup 
+    """ Initiates the button aesthetics for the button 
+        that opens the manage hosts popup 
     """
+    
     settingsButton = qt.QPushButton()
     settingsButton.setIcon(qt.QIcon(os.path.join(XnatLoginMenu.browser.utils.iconPath, 'wrench.png')) )
     settingsButton.toolTip = "Settings"
@@ -76,8 +92,12 @@ def makeSettingsButton(XnatLoginMenu):
 
 
 def makeLoginLayout(XnatLoginMenu):
+    """ As stated.
+    """
 
+    #--------------------
     # Username/Password Row
+    #--------------------
     credentialsRow = qt.QHBoxLayout()
     credentialsRow.addWidget(XnatLoginMenu.settingsButton)
     credentialsRow.addWidget(XnatLoginMenu.hostDropdown)
@@ -86,8 +106,11 @@ def makeLoginLayout(XnatLoginMenu):
     credentialsRow.addWidget(XnatLoginMenu.passwordLine)
     credentialsRow.addWidget(XnatLoginMenu.loginButton)
     
+
     
-    # Everything related to logging in
+    #--------------------
+    # Everything related to logging in.
+    #--------------------
     loginLayout = qt.QGridLayout() 
     loginLayout.addLayout(credentialsRow, 0,2)
     

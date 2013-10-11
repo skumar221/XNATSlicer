@@ -19,6 +19,7 @@ TODO :
 """
 
 
+
 class XnatSessionArgs(dict):
     """ Inherits the 'dict' type of python.  Specifically tailored
         for XNAT tracking.  Keys are immutable, so the user cannot 
@@ -100,7 +101,7 @@ class XnatSessionManager(object):
         """ Init function.
         """
         self.browser = browser
-        self.sessionFileName = os.path.join(self.browser.utils.utilPath, 'SessionLog.txt')
+        self.sessionFileName = os.path.join(self.browser.utils.MODULE_URIS['settings'], 'SessionLog.txt')
         self.sessionArgs = None
         self.saveItem = None
 
