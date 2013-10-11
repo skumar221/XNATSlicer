@@ -2,72 +2,116 @@ from __main__ import vtk, ctk, qt, slicer
 
 
 
-def makeAddPopup(hostEditor):
-    """
-    """
+comment = """
+Constructs the various QT Widgets for Editing the hosts
+available to the user in the settings modal.
 
+TODO:
+"""
+
+
+
+def makeAddHostModal(hostEditor):
+    """ As stated. 
+    """
+    
+    #--------------------
     # Clear shared object lines
+    #--------------------
     hostEditor.nameLine.clear()
     hostEditor.urlLine.clear()
 
+
+
+    #--------------------    
     # Buttons
+    #--------------------
     saveButton = qt.QPushButton("OK")
     cancelButton = qt.QPushButton("Cancel")
 
+
+
+    #--------------------
     # Create for line editors
+    #--------------------
     currLayout = qt.QFormLayout()
     currLayout.addRow("Name:", hostEditor.nameLine)
     currLayout.addRow("URL:", hostEditor.urlLine)
     currLayout.addRow(hostEditor.setDefault)
 
+
+
+    #--------------------
     # Create layout for buttons
+    #--------------------
     buttonLayout = qt.QHBoxLayout()
     buttonLayout.addStretch(1)
     buttonLayout.addWidget(cancelButton)
     buttonLayout.addWidget(saveButton)
 
+
+
+    #--------------------
     # Combine both layouts
+    #--------------------
     masterForm = qt.QFormLayout()    
     masterForm.addRow(currLayout)
     masterForm.addRow(buttonLayout)
 
-    # Make window
-    addPopup = qt.QDialog(hostEditor.addButton)
-    addPopup.setWindowTitle("Add Host")
-    addPopup.setFixedWidth(300)
-    addPopup.setLayout(masterForm)
-    addPopup.setWindowModality(2)
 
+
+    #--------------------
+    # Make window
+    #--------------------
+    addHostModal = qt.QDialog(hostEditor.addButton)
+    addHostModal.setWindowTitle("Add Host")
+    addHostModal.setFixedWidth(300)
+    addHostModal.setLayout(masterForm)
+    addHostModal.setWindowModality(2)
+
+
+
+    #--------------------
     # Clear previous host
+    #--------------------
     hostEditor.prevName = None
 
+    
 
     #--------------------
     # Button Connectors
     #--------------------
-    cancelButton.connect("clicked()", addPopup.close)
+    cancelButton.connect("clicked()", addHostModal.close)
     saveButton.connect("clicked()", hostEditor.writeHost)   
 
     
-    return addPopup
+    return addHostModal
 
 
 
 
-def makeEditPopup(hostEditor):
+def makeEditHostModal(hostEditor):
+    """ As stated.
     """
-    """
 
-    # get selected strings from host list
+    #--------------------
+    # Get selected strings from host list.
+    #--------------------
     selHost = hostEditor.hostLister.selectedText().split("\t")
 
 
-    # Populate the line edits from selecting strings
+    
+    #--------------------
+    # Populate the line edits from selecting strings.
+    #--------------------
     hostEditor.nameLine.setText(selHost[0])
     hostEditor.urlLine.setText(selHost[1])
 
-    
-    # Prevent editing of default host 
+
+
+    #--------------------
+    # Prevent editing of default host. 
+    #--------------------
     if selHost[0].strip("") in hostEditor.browser.settings.defaultHosts:
         hostEditor.nameLine.setReadOnly(True)
         hostEditor.nameLine.setFont(hostEditor.browser.utils.labelFontItalic)
@@ -75,33 +119,55 @@ def makeEditPopup(hostEditor):
         hostEditor.urlLine.setReadOnly(True)
         hostEditor.urlLine.setFont(hostEditor.browser.utils.labelFontItalic)
         hostEditor.urlLine.setEnabled(False)
-    # Otherwise, go ahead
+
+
+        
+    #--------------------
+    # Otherwise, go ahead.
+    #--------------------
     else:
         hostEditor.nameLine.setEnabled(True)
         hostEditor.urlLine.setEnabled(True)
 
 
-    # Buttons
+
+    #--------------------
+    # Buttons.
+    #--------------------
     cancelButton = qt.QPushButton("Cancel")   
     saveButton = qt.QPushButton("OK")
-    
-    # Layouts
+
+
+
+    #--------------------
+    # Layouts.
+    #--------------------
     currLayout = qt.QFormLayout()
     hostEditor.prevName = hostEditor.nameLine.text
     currLayout.addRow("Edit Name:", hostEditor.nameLine)
     currLayout.addRow("Edit URL:", hostEditor.urlLine)
 
-    # Default checkbox if default
+
+
+    #--------------------
+    # Default checkbox if default.
+    #--------------------
     if hostEditor.browser.settings.isDefault(hostEditor.nameLine.text):
         hostEditor.setDefault.setCheckState(2)
 
 
-    # Labels
+
+    #--------------------
+    # Labels.
+    #--------------------
     spaceLabel = qt.QLabel("")
     unmLabel = qt.QLabel("Stored Username:")
 
 
-    # Layouts
+    
+    #--------------------
+    # Layouts.
+    #--------------------
     currLayout.addRow(hostEditor.setDefault)
     hostEditor.usernameLine.setText(hostEditor.browser.settings.getCurrUsername(hostEditor.nameLine.text))
     currLayout.addRow(spaceLabel)
@@ -117,42 +183,52 @@ def makeEditPopup(hostEditor):
     masterForm.addRow(currLayout)
     masterForm.addRow(buttonLayout)
 
+
     
-    # The popup
-    editPopup = qt.QDialog(hostEditor.addButton)
-    editPopup.setWindowTitle("Edit Host")
-    editPopup.setFixedWidth(300)
-    editPopup.setLayout(masterForm)
-    editPopup.setWindowModality(2)
+    #--------------------
+    # The modal.
+    #--------------------
+    editHostModal = qt.QDialog(hostEditor.addButton)
+    editHostModal.setWindowTitle("Edit Host")
+    editHostModal.setFixedWidth(300)
+    editHostModal.setLayout(masterForm)
+    editHostModal.setWindowModality(2)
 
 
     
     #--------------------
     # Button Connectors
     #--------------------
-    cancelButton.connect("clicked()", editPopup.close)
+    cancelButton.connect("clicked()", editHostModal.close)
     saveButton.connect("clicked()", hostEditor.rewriteHost) 
 
-    return editPopup
+    return editHostModal
 
 
 
 
-def makeDeletePopup(hostEditor):
+def makeDeleteHostModal(hostEditor):
+    """ As stated.
     """
-    """
 
+    #--------------------
     # get selected strings from host list
+    #--------------------
     selHost = hostEditor.hostLister.selectedText().split("\t")
 
+
     
+    #--------------------
     # Buttons
+    #--------------------
     okButton = qt.QPushButton("OK")
     cancelButton = qt.QPushButton("Cancel")
 
 
-    
+
+    #--------------------
     # Labels
+    #--------------------
     messageLabel = qt.QTextEdit()
     messageLabel.setReadOnly(True)
     messageLabel.insertPlainText("Are you sure you want to delete the host ") 
@@ -166,7 +242,10 @@ def makeDeletePopup(hostEditor):
     messageLabel.setFrameShape(0)
 
 
+    
+    #--------------------
     # Layouts
+    #--------------------
     currLayout = qt.QVBoxLayout()
     currLayout.addWidget(messageLabel)
     currLayout.addStretch(1)
@@ -181,21 +260,24 @@ def makeDeletePopup(hostEditor):
     masterForm.addRow(buttonLayout)
 
 
+
+    #--------------------
     # Window
-    deletePopup = qt.QDialog(hostEditor.addButton)
-    deletePopup.setWindowTitle("Delete Host")
-    deletePopup.setLayout(masterForm)
-    deletePopup.setWindowModality(2)
+    #--------------------
+    deleteHostModal = qt.QDialog(hostEditor.addButton)
+    deleteHostModal.setWindowTitle("Delete Host")
+    deleteHostModal.setLayout(masterForm)
+    deleteHostModal.setWindowModality(2)
 
 
 
     #--------------------
     # Button Connectors
     #--------------------
-    cancelButton.connect("clicked()", deletePopup.close)
+    cancelButton.connect("clicked()", deleteHostModal.close)
     okButton.connect("clicked()", hostEditor.deleteHost) 
     
-    return deletePopup
+    return deleteHostModal
 
 
 
@@ -204,18 +286,17 @@ def makeDeletePopup(hostEditor):
 def makeFrame(hostEditor):
     """ As described.
     """
-
     
-    #
+    #--------------------
     # For the frame
-    #
+    #--------------------
     hostEditor.mhLabel = qt.QLabel("Manage Hosts")
 
+
     
-         
-    #
+    #--------------------
     # Layout for top part of frame (host list)
-    #
+    #--------------------
     topRow = qt.QHBoxLayout()
     topRow.addWidget(hostEditor.mhLabel)
     hostEditor.hostLayout = qt.QFormLayout()    
@@ -223,9 +304,10 @@ def makeFrame(hostEditor):
     hostEditor.hostLayout.addRow(hostEditor.hostLister)
 
 
-    #
+    
+    #--------------------
     # Layout for bottom part of frame (buttons)
-    #
+    #--------------------
     buttonLayout = qt.QHBoxLayout()
     buttonLayout.addWidget(hostEditor.addButton)
     buttonLayout.addWidget(hostEditor.editButton)
@@ -233,9 +315,10 @@ def makeFrame(hostEditor):
     hostEditor.hostLayout.addRow(buttonLayout)
 
 
-    #
+    
+    #--------------------
     # Layout for entire frame
-    #
+    #--------------------
     frame = qt.QFrame()
     frame.setStyleSheet("QWidget { background: rgb(255,255,255)}")
     frame.setLayout(hostEditor.hostLayout)
@@ -260,8 +343,8 @@ def makeButtons(hostEditor):
 
 
 
-def makeSharedPopupObjects(hostEditor):
-    """ Commonly shared UI objects for the Add, Edit popups.
+def makeSharedHostModalObjects(hostEditor):
+    """ Makes commonly shared UI objects for the Add, Edit popups.
     """
     urlLine = qt.QLineEdit()
     nameLine = qt.QLineEdit()

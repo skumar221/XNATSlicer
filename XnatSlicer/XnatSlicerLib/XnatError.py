@@ -3,19 +3,23 @@ from __main__ import vtk, ctk, qt, slicer
 
 
 comment = """
-XnatError is 
+XnatError is a class that manages an errors resultant from
+the XnatCommunicator.  Rather than passing strings alone, XnatError
+handles other relevant data to a specific Xnat IO error, such as the
+Xnat host and the user who logs into the host.
 
-TODO: 
+TODO: Consider futher variables to track as part of an error.  Consider
+further errors to keep track of.
 """
 
 
 
 class XnatError(object):
-    """ Descriptor
+    """ Described above.
     """
     
     def __init__(self, host, username, errorString):
-        """ Descriptor
+        """ Init function.
         """
 
         self.host = host

@@ -67,7 +67,7 @@ class XnatSlicer:
       parent.categories = ["XNATSlicer"]
       parent.dependencies = []
       parent.contributors = ["Sunil Kumar (Moka Creative, LLC), Dan Marcus (WashU-St. Louis), Steve Pieper (Isomics)"] 
-      parent.helpText = """ The XNATSlicer Browser 1.0"""
+      parent.helpText = """ The XNATSlicer 1.0"""
       parent.acknowledgementText = """Sunil Kumar for the Neuroinformatics Research Group - sunilk@mokacreativellc.com""" 
       self.parent = parent
 
@@ -108,16 +108,43 @@ class XnatSlicerWidget:
         if not parent:
             self.setup()
             self.parent.show()
+
+
+            
+        #--------------------------------
+        # Init Xnat Utils
+        #--------------------------------
+        self.utils = XnatUtils()   
+
+
+
+        #--------------------------------
+        # Construct all needed directories
+        # if not there...
+        #--------------------------------
+        self.utils.constructNecessaryModuleDirectories()
+
         
-        self.utils = XnatUtils()    
+        
+        #--------------------------------
+        # Set the layout
+        #--------------------------------
         self.layout = self.parent.layout()
 
+        
+        
+        #--------------------------------
+        # Collapse the 'Data Probe' button.
+        #--------------------------------
+        dataProbeButton = slicer.util.findChildren(text='Data Probe')[0]
+        dataProbeButton.setChecked(False)
 
 
+        
         #--------------------------------
         # Xnat settings
         #--------------------------------
-        self.settings = XnatSettings(slicer.qMRMLWidget(), self.utils.utilPath, self)
+        self.settings = XnatSettings(slicer.qMRMLWidget(), self.utils.MODULE_URIS['settings'], self)
         self.settingsPopup = XnatSettingsWindow(self)
 
 
@@ -169,7 +196,7 @@ class XnatSlicerWidget:
         #--------------------------------
         # Layouts
         #--------------------------------
-        self.browserLayout = None
+        self.viewerLayout = None
         self.loginLayout = None
         self.XnatViewLayout = qt.QGridLayout()
         
@@ -321,10 +348,17 @@ class XnatSlicerWidget:
 
         
         #--------------------------------
-        # Browser Section
+        # Viewer Section
         #--------------------------------
-        browserCollapsibleButton = ctk.ctkCollapsibleButton()
-        browserCollapsibleButton.text = "XNAT TreeView"
+        viewerCollapsibleButton = ctk.ctkCollapsibleButton()
+        viewerCollapsibleButton.text = "XNAT Viewer"
+
+
+        #--------------------------------
+        # Tools Section
+        #--------------------------------
+        toolsCollapsibleButton = ctk.ctkCollapsibleButton()
+        toolsCollapsibleButton.text = "Tools"
 
         
         
@@ -332,43 +366,42 @@ class XnatSlicerWidget:
         # Add all sections to parent layout.
         #--------------------------------
         self.layout.addWidget(loginCollapsibleButton)
-        self.layout.addWidget(browserCollapsibleButton)
+        self.layout.addWidget(viewerCollapsibleButton)
+        self.layout.addWidget(toolsCollapsibleButton)
 
-
+        
         
         #--------------------------------
         # Define section layouts.
         #--------------------------------
         self.loginLayout = qt.QVBoxLayout(loginCollapsibleButton)
-        self.browserLayout = qt.QVBoxLayout(browserCollapsibleButton) 
+        self.viewerLayout = qt.QVBoxLayout(viewerCollapsibleButton) 
+        self.toolsLayout = qt.QVBoxLayout(toolsCollapsibleButton) 
 
-
-        
-        #--------------------------------
-        # Xnat Window
-        #--------------------------------
-        self.viewerLayout = qt.QVBoxLayout()
 
         
 
         #--------------------------------
         # Clean the temp dir
         #--------------------------------
-        self.cleanTempDir(200)
+        self.cleanCacheDir(200)
 
 
-        
+
         #--------------------------------
-        # Top button Row (Filters)
+        # Top Widgets Row 
         #--------------------------------
         self.topButtonRowLayout = qt.QHBoxLayout()
-        filterLabel = qt.QLabel("Filter:")
-        self.topButtonRowLayout.addWidget(filterLabel)
-        self.topButtonRowLayout.addSpacing(15)
-        self.topButtonRowLayout.addWidget(self.XnatButtons.buttons['filter']['accessed'])
-        self.topButtonRowLayout.addStretch()
+        #
+        # Search
+        #
+        searchLabel = qt.QLabel("Search:")
+        self.topButtonRowLayout.addWidget(searchLabel)
+        self.searchBox = qt.QLineEdit()
+        self.searchBox.connect("returnPressed()", self.XnatView.searchEntered)
+        self.topButtonRowLayout.addWidget(self.searchBox)
 
-
+        
         
         #--------------------------------
         # Load/Save buttons
@@ -380,43 +413,49 @@ class XnatSlicerWidget:
 
         
         #--------------------------------
-        # Bottom button Row (XNAT IO)
+        # Tool Row (XNAT IO)
         #--------------------------------
-        self.bottomButtonRowLayout = qt.QHBoxLayout()
-        self.bottomButtonRowLayout.addWidget(self.XnatButtons.buttons['io']['delete'])
-        self.bottomButtonRowLayout.addSpacing(15)
-        self.bottomButtonRowLayout.addWidget(self.XnatButtons.buttons['io']['addProj'])
-        self.bottomButtonRowLayout.addSpacing(15)
-        self.bottomButtonRowLayout.addWidget(self.XnatButtons.buttons['io']['test'])
-        self.bottomButtonRowLayout.addStretch()
-
+        self.toolRowLayout = qt.QHBoxLayout()
+        self.toolRowLayout.addWidget(self.XnatButtons.buttons['io']['delete'])
+        self.toolRowLayout.addSpacing(15)
+        self.toolRowLayout.addWidget(self.XnatButtons.buttons['io']['addProj'])
+        self.toolRowLayout.addSpacing(15)
+        self.toolRowLayout.addWidget(self.XnatButtons.buttons['io']['test'])
+        self.toolRowLayout.addStretch()
+        #
+        # Filter
+        #
+        self.toolRowLayout.addStretch()
+        filterLabel = qt.QLabel("Project filter:")
+        self.toolRowLayout.addWidget(filterLabel)
+        self.toolRowLayout.addSpacing(15)
+        self.toolRowLayout.addWidget(self.XnatButtons.buttons['filter']['accessed'])
 
         
         #--------------------------------
         # XnatViewer
         #--------------------------------
-        self.XnatViewLayout.addLayout(self.topButtonRowLayout, 0, 0)
-        self.XnatViewLayout.addWidget(self.XnatView.viewWidget, 1, 0)
-        self.XnatViewLayout.addLayout(self.buttonColumnLayout, 1, 1)
-        self.XnatViewLayout.addLayout(self.bottomButtonRowLayout, 2, 0)
-        
+        self.XnatViewLayout.addLayout(self.topButtonRowLayout, 0, 0, 1, 1)
+        self.XnatViewLayout.addWidget(self.XnatView.viewWidget, 2, 0)
+        self.XnatViewLayout.addLayout(self.buttonColumnLayout, 2, 1)
+       
 
         
         #--------------------------------
         # Apply to globals
         #--------------------------------      
         self.loginLayout.addLayout(self.XnatLoginMenu.loginLayout)
-        self.browserLayout.addLayout(self.XnatViewLayout)
-
+        self.viewerLayout.addLayout(self.XnatViewLayout)
+        self.toolsLayout.addLayout(self.toolRowLayout)
 
 
         
         
-    def cleanTempDir(self, maxSize):
+    def cleanCacheDir(self, maxSize):
         """ Empties contents of the temp directory based upon maxSize
         """
         import math
-        folder = self.utils.tempPath
+        folder = self.utils.CACHE_URI
         folder_size = 0
 
 
@@ -436,8 +475,7 @@ class XnatSlicerWidget:
         #--------------------------------
         folder_size = math.ceil(folder_size/(1024*1024.0))
         if folder_size > maxSize:
-            self.utils.removeFilesInDir(self.utils.tempPath)    
-            self.utils.removeFilesInDir(self.utils.tempUploadPath)   
+            self.utils.removeFilesInDir(folder)    
 
 
 

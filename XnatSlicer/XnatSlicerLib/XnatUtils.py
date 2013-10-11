@@ -119,31 +119,56 @@ class XnatUtils(object):
         return "data"
 
 
+    
+    @property
+    def LIB_URI(self):
+        return os.path.dirname(os.path.abspath( __file__ ))
+
 
     
     @property
-    def MASTERPATH(self):
-        return os.path.join(os.path.dirname(os.path.abspath( __file__ )), self.XnatRootDir)
+    def ROOT_URI(self):
+        return os.path.dirname(self.LIB_URI)
 
+    
+
+    @property
+    def CACHE_URI(self):
+        return os.path.join(self.ROOT_URI, 'Cache')
+
+
+    
+    @property
+    def RESOURCES_URI(self):
+        return os.path.join(self.ROOT_URI, 'Resources')
 
     
     
     @property
-    def MODULEPATHS(self):
-        mPaths = {
-            "home" : self.MASTERPATH,
-            "util": os.path.join(self.MASTERPATH, "Utils"),
-            "project" : os.path.join(self.MASTERPATH, "Projects"),
-            "download" : os.path.join(self.MASTERPATH, "temp"),
-            "temp" : os.path.join(self.MASTERPATH, "temp"),
-            "tempUpload" : os.path.join(os.path.join(self.MASTERPATH, "temp"), "upload"),  
-            "icons" : os.path.join(os.path.dirname(os.path.abspath( __file__ )), "icons"),                       
+    def MODULE_URIS(self):
+        return {
+            "home" : self.ROOT_URI,
+            "settings": os.path.join(self.ROOT_URI, "Settings"),
+            "projects" : os.path.join(self.CACHE_URI, "projects"),
+            "downloads" : os.path.join(self.CACHE_URI, "downloads"),
+            "uploads" : os.path.join(self.CACHE_URI, "uploads"), 
+            "icons" : os.path.join(self.RESOURCES_URI, "Icons"),                       
         }
 
-        for key, val in mPaths.iteritems():
-            if not os.path.exists(val):       
+
+
+        
+    def constructNecessaryModuleDirectories(self):
+        """ As stated.
+        """
+
+        
+        #---------------------
+        # Make the module paths if they don't exist.
+        #---------------------
+        for key, val in self.MODULE_URIS.iteritems():
+            if not os.path.exists(val):    
                 os.makedirs(val)
-        return mPaths
 
     
 
@@ -154,8 +179,6 @@ class XnatUtils(object):
                 1:"subjects",
                 2:"experiments",
                 3:"scans"}
-
-    
 
     
     @property
@@ -200,61 +223,61 @@ class XnatUtils(object):
     
     @property
     def homePath(self):
-        return self.MODULEPATHS["home"]
+        return self.MODULE_URIS["home"]
 
 
     
     
     @property
     def utilSharedPath(self):
-        return self.MODULEPATHS["utilShared"]
+        return self.MODULE_URIS["utilShared"]
 
     
     
     @property
     def iconPath(self):
-        return self.MODULEPATHS["icons"]
+        return self.MODULE_URIS["icons"]
 
     
     
     @property
-    def utilPath(self):
-        return self.MODULEPATHS["util"]
+    def settingsPath(self):
+        return self.MODULE_URIS["settings"]
 
 
     
     
     @property
     def downloadPath(self):
-        return self.MODULEPATHS["download"]
+        return self.MODULE_URIS["download"]
 
 
     
     
     @property
     def tempPath(self):
-        return self.MODULEPATHS["temp"]
+        return self.MODULE_URIS["temp"]
 
 
     
     
     @property
     def tempUploadPath(self):
-        return self.MODULEPATHS["tempUpload"]
+        return self.MODULE_URIS["tempUpload"]
 
 
     
     
     @property
     def projectPath(self):
-        return self.MODULEPATHS["project"]
+        return self.MODULE_URIS["project"]
 
 
     
     
     @property
     def remoteFilePath(self):
-        return self.MODULEPATHS["remoteFile"] 
+        return self.MODULE_URIS["remoteFile"] 
 
 
     
@@ -345,7 +368,7 @@ class XnatUtils(object):
     
     @property
     def dicomDBBackupFN(self):
-        return self.adjustPathSlashes(os.path.join(self.utilPath, "slicerDICOMDBBackup.txt")) 
+        return self.adjustPathSlashes(os.path.join(self.MODULE_URIS['settings'], "slicerDICOMDBBackup.txt")) 
 
 
 

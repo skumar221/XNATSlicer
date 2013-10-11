@@ -4,6 +4,7 @@ import os
 import glob
 import sys
 
+
 import XnatHostEditorUI
 
 
@@ -35,7 +36,7 @@ class XnatHostEditor:
     #--------------------
     # Current popup opened by user
     #--------------------
-    self.currPopup = None
+    self.currModal = None
 
 
     
@@ -49,7 +50,7 @@ class XnatHostEditor:
     #--------------------
     # Shared popup objects
     #--------------------
-    self.urlLine, self.nameLine, self.setDefault, self.usernameLine = XnatHostEditorUI.makeSharedPopupObjects(self)
+    self.urlLine, self.nameLine, self.setDefault, self.usernameLine = XnatHostEditorUI.makeSharedHostModalObjects(self)
 
 
     
@@ -57,9 +58,9 @@ class XnatHostEditor:
     # Buttons
     #--------------------
     self.addButton, self.editButton, self.deleteButton = XnatHostEditorUI.makeButtons(self)
-    self.addButton.connect('clicked()', self.showAddHostPopup)     
-    self.editButton.connect('clicked()', self.showEditHostPopup) 
-    self.deleteButton.connect('clicked()', self.showDeleteHostPopup)  
+    self.addButton.connect('clicked()', self.showAddHostModal)     
+    self.editButton.connect('clicked()', self.showEditHostModal) 
+    self.deleteButton.connect('clicked()', self.showDeleteHostModal)  
 
 
     
@@ -183,8 +184,8 @@ class XnatHostEditor:
     #--------------------
     # Close popup
     #--------------------
-    self.currPopup.close()
-    self.currPopup = None
+    self.currModal.close()
+    self.currModal = None
 
 
     
@@ -242,37 +243,37 @@ class XnatHostEditor:
     #--------------------
     # Close popup
     #--------------------
-    self.currPopup.close()
-    self.currPopup = None
+    self.currModal.close()
+    self.currModal = None
 
 
 
 
     
-  def showEditHostPopup(self):
+  def showEditHostModal(self):
     """ As described.
     """
-    self.currPopup = XnatHostEditorUI.makeEditPopup(self)
-    self.currPopup.setWindowModality(2)
-    self.currPopup.show()  
+    self.currModal = XnatHostEditorUI.makeEditHostModal(self)
+    self.currModal.setWindowModality(2)
+    self.currModal.show()  
 
 
 
     
-  def showDeleteHostPopup(self, message=None):
+  def showDeleteHostModal(self, message=None):
     """ As described.
     """
-    self.currPopup = XnatHostEditorUI.makeDeletePopup(self)
-    self.currPopup.show()   
+    self.currModal = XnatHostEditorUI.makeDeleteHostModal(self)
+    self.currModal.show()   
 
 
 
     
-  def showAddHostPopup(self):  
+  def showAddHostModal(self):  
     """ As described.
     """ 
-    self.currPopup = XnatHostEditorUI.makeAddPopup(self)
-    self.currPopup.show()
+    self.currModal = XnatHostEditorUI.makeAddHostModal(self)
+    self.currModal.show()
 
 
 
@@ -281,7 +282,7 @@ class XnatHostEditor:
                   
 class HostLister(qt.QTextEdit):
     """ Inherits qt.QTextEdit to list the hosts in the 
-        SettingsPopup
+        SettingsModal
     """
 
 
