@@ -35,7 +35,7 @@ class XnatFileLoadWorkflow(XnatLoadWorkflow):
         #-------------------- 
         # Get the file from XNAT host.
         #-------------------- 
-        self.browser.XnatIo.getFile({self.xnatSrc: self.localDst})
+        self.MODULE.XnatIo.getFile({self.xnatSrc: self.localDst})
         
 
 
@@ -53,9 +53,9 @@ class XnatFileLoadWorkflow(XnatLoadWorkflow):
         # session args...
         #-------------------- 
         if fileSuccessfullyLoaded: 
-            sessionArgs = XnatSessionArgs(browser = self.browser, srcPath = self.xnatSrc)
+            sessionArgs = XnatSessionArgs(MODULE = self.MODULE, srcPath = self.xnatSrc)
             sessionArgs['sessionType'] = "scene download"
-            self.browser.XnatView.startNewSession(sessionArgs)
+            self.MODULE.XnatView.startNewSession(sessionArgs)
             print ("'%s' successfully loaded."%(os.path.basename(self.localDst))) 
 
 

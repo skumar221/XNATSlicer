@@ -20,10 +20,10 @@ class XnatSettingsWindow:
         such as host names and default users.
     """
     
-    def __init__(self, browser):  
+    def __init__(self, MODULE):  
         """ Descriptor
         """      
-        self.browser = browser
+        self.MODULE = MODULE
         self.spacer = qt.QLabel("\n\n\n")
 
 
@@ -56,7 +56,7 @@ class XnatSettingsWindow:
         #--------------------
         # Create an XnatHostEditor (communicates to XnatSettings)
         #--------------------
-        self.hostEditor = XnatHostEditor(self.browser, parent = self)
+        self.hostEditor = XnatHostEditor(self.MODULE, parent = self)
         
 
         
@@ -106,6 +106,6 @@ class XnatSettingsWindow:
     def doneClicked(self):
         """ Hide window if done was clicked.
         """
-        self.browser.XnatLoginMenu.loadDefaultHost()
+        self.MODULE.XnatLoginMenu.loadDefaultHost()
         self.setupWindow()
         self.window.hide()

@@ -11,7 +11,7 @@ from XnatSettingsWindow import *
 comment = """
 XnatSettings is the class that manages storable settings for the
 XnatSlicer module.  The class is activated by clicking the wrench
-icon in the XnatSlicer browser.  XnatSettings utilizes the qt.QSettings
+icon in the XnatSlicer MODULE.  XnatSettings utilizes the qt.QSettings
 object to write to a settings database called 'XnatSettings.ini'.  As
 the formate of the database indicates, the storage method is .ini, which
 utilizes key-value pairs under a single header.
@@ -54,7 +54,7 @@ class XnatSettings:
 
 
   
-  def __init__(self, parent = None, rootDir = None, browser = None):    
+  def __init__(self, parent = None, rootDir = None, MODULE = None):    
     """ Init function.
     """
     if not parent:
@@ -62,7 +62,7 @@ class XnatSettings:
     else:
       self.parent = parent   
       
-    self.browser = browser
+    self.MODULE = MODULE
     self.filepath = os.path.join(rootDir, 'XnatSettings.ini')
 
     #--------------------

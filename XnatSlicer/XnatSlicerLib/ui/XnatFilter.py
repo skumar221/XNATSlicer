@@ -25,10 +25,10 @@ class XnatFilter(object):
     """ Descriptor
     """
     
-    def __init__(self, browser = None):
+    def __init__(self, MODULE = None):
         """ Descriptor
         """
-        self.browser = browser
+        self.MODULE = MODULE
 
 
         

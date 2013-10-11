@@ -24,14 +24,14 @@ class XnatDeleteWorkflow(object):
     """ Descriptor above.
     """
     
-    def __init__(self, browser):
+    def __init__(self, MODULE):
         """ Init function.
         """
 
         #--------------------
-        # The browser
+        # The MODULE
         #--------------------
-        self.browser = browser
+        self.MODULE = MODULE
 
 
         
@@ -41,7 +41,7 @@ class XnatDeleteWorkflow(object):
         #--------------------
         self.deleteDialog = qt.QMessageBox()
         self.deleteDialog.setIcon(qt.QMessageBox.Warning)
-        self.deleteDialog.setText("Are you sure you want to delete the file: '%s' from Xnat?"%(self.browser.XnatView.viewWidget.currentItem().text(self.browser.XnatView.column_name)))   
+        self.deleteDialog.setText("Are you sure you want to delete the file: '%s' from Xnat?"%(self.MODULE.XnatView.viewWidget.currentItem().text(self.MODULE.XnatView.column_name)))   
         self.deleteDialog.connect('buttonClicked(QAbstractButton*)', self.beginWorkflow)
         self.deleteDialog.addButton(qt.QMessageBox.Ok)
         self.deleteDialog.addButton(qt.QMessageBox.Cancel)  
@@ -69,9 +69,9 @@ class XnatDeleteWorkflow(object):
             #
             # Construct the full delete string based on type of tree item deleted
             #
-            delStr = self.browser.XnatView.getXnatDir(self.browser.XnatView.getParents(self.browser.XnatView.viewWidget.currentItem()))
-            if (('files' in self.browser.XnatView.viewWidget.currentItem().text(self.browser.XnatView.column_category))
-                or (self.browser.utils.slicerFolderName in self.browser.XnatView.viewWidget.currentItem().text(self.browser.XnatView.column_category))):
+            delStr = self.MODULE.XnatView.getXnatDir(self.MODULE.XnatView.getParents(self.MODULE.XnatView.viewWidget.currentItem()))
+            if (('files' in self.MODULE.XnatView.viewWidget.currentItem().text(self.MODULE.XnatView.column_category))
+                or (self.MODULE.utils.slicerFolderName in self.MODULE.XnatView.viewWidget.currentItem().text(self.MODULE.XnatView.column_category))):
                 delStr = delStr
             else:
                 delStr = os.path.dirname(delStr)
@@ -80,7 +80,7 @@ class XnatDeleteWorkflow(object):
             #
             # Call delete XnatIo's 'delete' function.
             #
-            self.browser.XnatIo.delete(delStr)
+            self.MODULE.XnatIo.delete(delStr)
 
             
             #
@@ -89,8 +89,8 @@ class XnatDeleteWorkflow(object):
             # TODO: Consider setting the current item to the deleted 
             # sibling above or below it.  If no siblings, then go to parent.
             #
-            self.browser.XnatView.viewWidget.setCurrentItem(self.browser.XnatView.viewWidget.currentItem().parent())
-            self.browser.XnatView.onTreeItemExpanded(self.browser.XnatView.viewWidget.currentItem())
+            self.MODULE.XnatView.viewWidget.setCurrentItem(self.MODULE.XnatView.viewWidget.currentItem().parent())
+            self.MODULE.XnatView.onTreeItemExpanded(self.MODULE.XnatView.viewWidget.currentItem())
 
 
 

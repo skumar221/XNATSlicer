@@ -23,12 +23,12 @@ TODO:  Consider sending more functions from XnatTreeView
 
 class XnatView(object):
 
-    def __init__(self, parent = None, browser = None):
-        """ Sets parent and browser parameters.
+    def __init__(self, parent = None, MODULE = None):
+        """ Sets parent and MODULE parameters.
         """
         self.parent = parent
-        self.browser = browser
-        self.sessionManager = XnatSessionManager(self.browser)
+        self.MODULE = MODULE
+        self.sessionManager = XnatSessionManager(self.MODULE)
         self.setup()
 
 
@@ -52,10 +52,10 @@ class XnatView(object):
         # project contents...
         #----------------------
         projectContents = None
-        if self.browser.XnatIo.projectCache == None:
+        if self.MODULE.XnatIo.projectCache == None:
             self.viewWidget.clear()
-            projectContents = self.browser.XnatIo.getFolderContents(queryUris = ['/projects'], 
-                                                                              metadataTags = self.browser.utils.XnatMetadataTags_projects,
+            projectContents = self.MODULE.XnatIo.getFolderContents(queryUris = ['/projects'], 
+                                                                              metadataTags = self.MODULE.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
             #
             # If the class name of the Json is 'XnatError'
@@ -73,7 +73,7 @@ class XnatView(object):
         #----------------------
         projectsLoaded = self.loadProjects(filters = None, projectContents = projectContents)
         if projectsLoaded:
-            self.browser.XnatButtons.setEnabled(buttonKey='addProj', enabled=True) 
+            self.MODULE.XnatButtons.setEnabled(buttonKey='addProj', enabled=True) 
 
             
 

@@ -112,12 +112,12 @@ def makeEditHostModal(hostEditor):
     #--------------------
     # Prevent editing of default host. 
     #--------------------
-    if selHost[0].strip("") in hostEditor.browser.settings.defaultHosts:
+    if selHost[0].strip("") in hostEditor.MODULE.settings.defaultHosts:
         hostEditor.nameLine.setReadOnly(True)
-        hostEditor.nameLine.setFont(hostEditor.browser.utils.labelFontItalic)
+        hostEditor.nameLine.setFont(hostEditor.MODULE.utils.labelFontItalic)
         hostEditor.nameLine.setEnabled(False)
         hostEditor.urlLine.setReadOnly(True)
-        hostEditor.urlLine.setFont(hostEditor.browser.utils.labelFontItalic)
+        hostEditor.urlLine.setFont(hostEditor.MODULE.utils.labelFontItalic)
         hostEditor.urlLine.setEnabled(False)
 
 
@@ -152,7 +152,7 @@ def makeEditHostModal(hostEditor):
     #--------------------
     # Default checkbox if default.
     #--------------------
-    if hostEditor.browser.settings.isDefault(hostEditor.nameLine.text):
+    if hostEditor.MODULE.settings.isDefault(hostEditor.nameLine.text):
         hostEditor.setDefault.setCheckState(2)
 
 
@@ -169,7 +169,7 @@ def makeEditHostModal(hostEditor):
     # Layouts.
     #--------------------
     currLayout.addRow(hostEditor.setDefault)
-    hostEditor.usernameLine.setText(hostEditor.browser.settings.getCurrUsername(hostEditor.nameLine.text))
+    hostEditor.usernameLine.setText(hostEditor.MODULE.settings.getCurrUsername(hostEditor.nameLine.text))
     currLayout.addRow(spaceLabel)
     currLayout.addRow(unmLabel)
     currLayout.addRow(hostEditor.usernameLine)
@@ -353,6 +353,6 @@ def makeSharedHostModalObjects(hostEditor):
         
     urlLine.setEnabled(True)
     nameLine.setEnabled(True) 
-    usernameLine.setFont(hostEditor.browser.utils.labelFontItalic) 
+    usernameLine.setFont(hostEditor.MODULE.utils.labelFontItalic) 
 
     return urlLine, nameLine, setDefault, usernameLine 

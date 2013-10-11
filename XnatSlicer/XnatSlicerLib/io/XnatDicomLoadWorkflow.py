@@ -92,8 +92,8 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #---------------------
         # Get the resources of the Xnat URI provided in the argument.
         #---------------------
-        resources = self.browser.XnatIo.getResources(parentXnatUri)     
-        #print "%s parentXnatUri: %s\nresources:%s"%(self.browser.utils.lf(), parentXnatUri, resources) 
+        resources = self.MODULE.XnatIo.getResources(parentXnatUri)     
+        #print "%s parentXnatUri: %s\nresources:%s"%(self.MODULE.utils.lf(), parentXnatUri, resources) 
 
 
         #---------------------
@@ -107,7 +107,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             #
             # Get the contentsof the fileFolderUri.
             #
-            contents = self.browser.XnatIo.getFolderContents(fileFolderUri, metadataTags = ['Name', 'Size'])
+            contents = self.MODULE.XnatIo.getFolderContents(fileFolderUri, metadataTags = ['Name', 'Size'])
             fileNames = contents['Name']
             #
             # Check to see if the file extensions (contents) are valid.
@@ -156,7 +156,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             os.mkdir(self.localDst)
 
 
-        print(self.browser.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.") 
+        print(self.MODULE.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.") 
   
 
         
@@ -178,7 +178,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             #
             # Get 'experiments'       
             #                        
-            experimentsList, sizes = self.browser.XnatIo.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_subjects)
+            experimentsList, sizes = self.MODULE.XnatIo.getFolderContents(self.xnatSrc, self.MODULE.utils.XnatMetadataTags_subjects)
 
 
             #
@@ -193,7 +193,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             #
             for expt in experimentsList:
                 parentScanFolder = self.xnatSrc + "/" + expt + "/scans"
-                scanList = self.browser.XnatIo.getFolderContents(parentScanFolder, self.browser.utils.XnatMetadataTags_scans)
+                scanList = self.MODULE.XnatIo.getFolderContents(parentScanFolder, self.MODULE.utils.XnatMetadataTags_scans)
                 for scan in scanList:
                     self.getDownloadables(parentScanFolder + "/" + scan)
         
@@ -203,7 +203,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # EXPERIMENT - get downloadables.
         #--------------------
         elif self.XnatLevel == 'experiments':
-            #print(self.browser.utils.lf(), "Retrieving experiment-level DICOMS.") 
+            #print(self.MODULE.utils.lf(), "Retrieving experiment-level DICOMS.") 
             #
             # First, get the downloadables at the current URI.
             #
@@ -212,7 +212,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             # Then, scan the folder contents of the 'scan' folders within
             # the experiment.  Get the downloadables accordingly.
             #
-            scansList, sizes = self.browser.XnatIo.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_experiments)
+            scansList, sizes = self.MODULE.XnatIo.getFolderContents(self.xnatSrc, self.MODULE.utils.XnatMetadataTags_experiments)
             for scan in scansList:
                 self.getDownloadables(self.xnatSrc + "/" + scan)
 
@@ -239,7 +239,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Exit out if there are no downloadables.
         #--------------------           
         if len(self.downloadables) == 0:
-            self.browser.XnatIo.downloadFailed("Download Failed", "No scans in found to download!")
+            self.MODULE.XnatIo.downloadFailed("Download Failed", "No scans in found to download!")
             return 
 
 
@@ -258,7 +258,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Download all DICOMS as part of a zipped file.
         #--------------------           
         _dict = dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables]))        
-        zipFolders = self.browser.XnatIo.getFiles(_dict)
+        zipFolders = self.MODULE.XnatIo.getFiles(_dict)
 
 
             
@@ -283,8 +283,8 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             # the download modal being clicked.) 
             #
             if not os.path.exists(zipFile):
-                print "%s exiting workflow..."%(self.browser.utils.lf())  
-                self.browser.XnatView.setEnabled(True) 
+                print "%s exiting workflow..."%(self.MODULE.utils.lf())  
+                self.MODULE.XnatView.setEnabled(True) 
                 return False
 
 
@@ -298,7 +298,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             # Add to files in the decompressed destination 
             # to downloadedDICOMS list.
             #
-            print "%s Inventorying downloaded files..."%(self.browser.utils.lf())  
+            print "%s Inventorying downloaded files..."%(self.MODULE.utils.lf())  
             for root, dirs, files in os.walk(extractPath):
                 for relFileName in files:          
                     downloadedDICOMS.append(self.utils.adjustPathSlashes(os.path.join(root, relFileName)))
@@ -310,7 +310,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Show a popup informing the user if it's not.
         # The user has to restart the process if it's not.
         #--------------------
-        self.browser.XnatView.viewWidget.setEnabled(False) 
+        self.MODULE.XnatView.viewWidget.setEnabled(False) 
         m = slicer.util.mainWindow()
         if not slicer.dicomDatabase:
             msg =  """It doesn\'t look like your DICOM database directory is setup. Please set it up in the DICOM module and try your download again."""
@@ -394,7 +394,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Reenable the XnatView so the user
         # can interact with it.
         #--------------------
-        self.browser.XnatView.setEnabled(True)
+        self.MODULE.XnatView.setEnabled(True)
 
 
       
@@ -409,9 +409,9 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             track the origins of the files for Save/upload
             routines.
         """
-        #print(self.browser.utils.lf(), "DICOMS successfully loaded.")
-        sessionArgs = XnatSessionArgs(browser = self.browser, srcPath = self.xnatSrc)
+        #print(self.MODULE.utils.lf(), "DICOMS successfully loaded.")
+        sessionArgs = XnatSessionArgs(MODULE = self.MODULE, srcPath = self.xnatSrc)
         sessionArgs['sessionType'] = "dicom download"
-        self.browser.XnatView.startNewSession(sessionArgs)
+        self.MODULE.XnatView.startNewSession(sessionArgs)
 
 

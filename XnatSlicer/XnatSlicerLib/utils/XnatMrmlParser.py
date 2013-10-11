@@ -25,10 +25,10 @@ class XnatMrmlParser(object):
     """ Description above.
     """
 
-    def __init__(self, browser = None):    
+    def __init__(self, MODULE = None):    
         """ Initialises class variables
         """   
-        self.browser = browser
+        self.MODULE = MODULE
         self.useCache = True
         self.tempLocalFileMap = None
         self.tempNewFilename = None
@@ -46,7 +46,7 @@ class XnatMrmlParser(object):
         """
 
         
-        #print (self.browser.utils.lf(), "Changing values in the mrml.") 
+        #print (self.MODULE.utils.lf(), "Changing values in the mrml.") 
         dicoms = []
         compLines = []
 
@@ -65,7 +65,7 @@ class XnatMrmlParser(object):
         if filename == newFilename:
             bkpFN = filename.split(".")[0] + ".BKP"
             shutil.copy(filename,bkpFN)
-            self.browser.utils.removeFile(filename)
+            self.MODULE.utils.removeFile(filename)
             slicer.app.processEvents()
             filename = bkpFN
 
@@ -92,7 +92,7 @@ class XnatMrmlParser(object):
                     #
                     if replaceValues == {}:
                         if os.path.basename(os.path.dirname(value)).lower() == "data":
-                            #print self.browser.utils.lf() + " CHANGING NAME WITH DATA FORMAT: 
+                            #print self.MODULE.utils.lf() + " CHANGING NAME WITH DATA FORMAT: 
                             # %s\tOLD: %s\tNEW:%s"%(subelement.attrib[name], value, "./Data/" + os.path.basename(value))
                             subelement.attrib[name] = "./Data/%s"%(os.path.basename(value))
 
@@ -118,7 +118,7 @@ class XnatMrmlParser(object):
         #------------------------
         # return the dicom files, if necessary
         #------------------------
-        #print (self.browser.utils.lf(), "Done writing new mrml!")
+        #print (self.MODULE.utils.lf(), "Done writing new mrml!")
         return {"dicoms": dicoms}        
 
 

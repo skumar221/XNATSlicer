@@ -25,14 +25,14 @@ class XnatAddProjEditor(object):
     """ Described above.
     """
     
-    def __init__(self, browser = None):
+    def __init__(self, MODULE = None):
         """ Init function.
         """
         
         #--------------------
         # Public vars.
         #--------------------        
-        self.browser = browser
+        self.MODULE = MODULE
 
         
 
@@ -41,7 +41,7 @@ class XnatAddProjEditor(object):
         #--------------------        
         self.projLabel = qt.QLabel("Project")
         self.projDD = qt.QComboBox()
-        self.projDD.addItems(self.browser.XnatIo.getFolderContents('/projects'))       
+        self.projDD.addItems(self.MODULE.XnatIo.getFolderContents('/projects'))       
         self.projDD.connect("currentIndexChanged(const QString&)", self.populateSubjectDD)
 
 
@@ -97,10 +97,10 @@ class XnatAddProjEditor(object):
         p = None
         s = None
         proj = ""
-        if (self.browser.XnatView.viewWidget.currentItem() != None):
-            p = self.browser.XnatView.getParentItemByCategory(self.browser.XnatView.viewWidget.currentItem(), "projects")
-            s = self.browser.XnatView.getParentItemByCategory(self.browser.XnatView.viewWidget.currentItem(), "subjects")
-            proj = p.text(self.browser.XnatView.column_name)
+        if (self.MODULE.XnatView.viewWidget.currentItem() != None):
+            p = self.MODULE.XnatView.getParentItemByCategory(self.MODULE.XnatView.viewWidget.currentItem(), "projects")
+            s = self.MODULE.XnatView.getParentItemByCategory(self.MODULE.XnatView.viewWidget.currentItem(), "subjects")
+            proj = p.text(self.MODULE.XnatView.column_name)
             self.projDD.setCurrentIndex(self.projDD.findText(proj))
         else:
             proj = self.projDD.currentText 
@@ -113,7 +113,7 @@ class XnatAddProjEditor(object):
         #--------------------
         self.populateSubjectDD(proj) 
         if s:
-            self.subjDD.setCurrentIndex(self.subjDD.findText(s.text(self.browser.XnatView.column_name)))
+            self.subjDD.setCurrentIndex(self.subjDD.findText(s.text(self.MODULE.XnatView.column_name)))
 
 
 
@@ -126,7 +126,7 @@ class XnatAddProjEditor(object):
         #--------------------
         # Get the raw subjects
         #--------------------
-        subjs_raw = self.browser.XnatIo.getFolderContents('/projects/' + proj + '/subjects')
+        subjs_raw = self.MODULE.XnatIo.getFolderContents('/projects/' + proj + '/subjects')
         subjs_name = []
 
 
@@ -135,7 +135,7 @@ class XnatAddProjEditor(object):
         # Add subjects to dropdown
         #--------------------
         for r in subjs_raw:
-            subjs_name.append(self.browser.XnatIo.getItemValue('/projects/' + proj + '/subjects/' + str(urllib2.quote(r)), 'label'))
+            subjs_name.append(self.MODULE.XnatIo.getItemValue('/projects/' + proj + '/subjects/' + str(urllib2.quote(r)), 'label'))
         self.subjDD.clear()
         self.subjDD.addItems(subjs_name)
 
@@ -254,8 +254,8 @@ class XnatAddProjEditor(object):
             # the relevant error based on whether it was a project
             # subject or experiment...
             #--------------------
-            if (self.browser.XnatIo.fileExists(xnatUri)):
-                print ("%s %s ALREADY EXISTS!"%(self.browser.utils.lf(), xnatUri))
+            if (self.MODULE.XnatIo.fileExists(xnatUri)):
+                print ("%s %s ALREADY EXISTS!"%(self.MODULE.utils.lf(), xnatUri))
                 projStr = xnatUri.split("/subjects")[0]
                 subjStr = None
                 exptStr = None
@@ -263,11 +263,11 @@ class XnatAddProjEditor(object):
                     subjStr = xnatUri.split("/experiments")[0]
                 if "/experiments" in xnatUri:
                     exptStr =  xnatUri
-                if (exptStr and self.browser.XnatIo.fileExists(exptStr)):
+                if (exptStr and self.MODULE.XnatIo.fileExists(exptStr)):
                     self.exptError.setText("<font color=\"red\">*Experiment already exists.</font>")
-                elif (subjStr and self.browser.XnatIo.fileExists(subjStr)):
+                elif (subjStr and self.MODULE.XnatIo.fileExists(subjStr)):
                     self.subjError.setText("<font color=\"red\">*Subject already exists.</font>")
-                elif (projStr and self.browser.XnatIo.fileExists(projStr)):
+                elif (projStr and self.MODULE.XnatIo.fileExists(projStr)):
                     self.projError.setText("<font color=\"red\">*Project already exists.</font>")
 
 
@@ -276,10 +276,10 @@ class XnatAddProjEditor(object):
             # Otherwise make the folder and close the modal.
             #--------------------
             else:
-                self.browser.XnatIo.makeDir(xnatUri)
+                self.MODULE.XnatIo.makeDir(xnatUri)
                 slicer.app.processEvents()
-                self.browser.XnatView.selectItem_byPath(xnatUri)
-                print ("%s creating %s "%(self.browser.utils.lf(), xnatUri))
+                self.MODULE.XnatView.selectItem_byPath(xnatUri)
+                print ("%s creating %s "%(self.MODULE.utils.lf(), xnatUri))
                 self.addProjWindow.close()
 
 

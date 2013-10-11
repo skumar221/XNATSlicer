@@ -29,10 +29,10 @@ class XnatScenePackager(object):
        XNATSlicer workflow.
     """
        
-    def __init__(self, browser = None):
+    def __init__(self, MODULE = None):
         """ Init function.
         """
-        self.browser = browser
+        self.MODULE = MODULE
 
         
 
@@ -56,8 +56,8 @@ class XnatScenePackager(object):
         #-------------------
         # Create a directory for packaging.
         #-------------------
-        tempDir = os.path.join(self.browser.utils.tempUploadPath, packageName)
-        #print self.browser.utils.lf() +  "CREATE PACKAGE DIRECTORY: %s"%(tempDir)
+        tempDir = os.path.join(self.MODULE.utils.tempUploadPath, packageName)
+        #print self.MODULE.utils.lf() +  "CREATE PACKAGE DIRECTORY: %s"%(tempDir)
 
 
 
@@ -65,9 +65,9 @@ class XnatScenePackager(object):
         # Try to remove the existing directory if it exists
         #-------------------
         try:
-            #print self.browser.utils.lf() + ("%s does not exist. Making it."%(tempDir)) 
+            #print self.MODULE.utils.lf() + ("%s does not exist. Making it."%(tempDir)) 
             if os.path.exists(tempDir): 
-                self.browser.utils.removeDirsAndFiles(tempDir)
+                self.MODULE.utils.removeDirsAndFiles(tempDir)
         except Exception, e: 
             pass
          
@@ -84,7 +84,7 @@ class XnatScenePackager(object):
         try: 
             os.makedirs(tempDir + "/Data")
         except Exception, e: 
-            print self.browser.utils.lf() +  "Likely the dir already exists: " + str(e)
+            print self.MODULE.utils.lf() +  "Likely the dir already exists: " + str(e)
 
 
 
@@ -111,8 +111,8 @@ class XnatScenePackager(object):
         # Return appropriate dictionary with the mrml file
         # and the package directory.
         #-------------------
-        return {'path':self.browser.utils.adjustPathSlashes(tempDir), 
-                'mrml': self.browser.utils.adjustPathSlashes(mrml)}
+        return {'path':self.MODULE.utils.adjustPathSlashes(tempDir), 
+                'mrml': self.MODULE.utils.adjustPathSlashes(mrml)}
 
 
 

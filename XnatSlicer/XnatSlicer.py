@@ -40,7 +40,7 @@ from XnatSessionManager import *
 from XnatTimer import *
 from XnatSettings import *
 from XnatTreeView import *
-from XnatCommunicator import *
+from XnatIo import *
 from XnatLoginMenu import *
 from XnatButtons import *
 from XnatView import *
@@ -160,7 +160,7 @@ class XnatSlicerWidget:
         #--------------------------------
         # Xnat Communicator
         #--------------------------------
-        self.XnatCommunicator = XnatCommunicator()
+        self.XnatIo = XnatIo()
 
 
       
@@ -174,7 +174,7 @@ class XnatSlicerWidget:
         #--------------------------------
         # Login Menu
         #--------------------------------
-        self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, browser = self)
+        self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, MODULE = self)
         self.XnatLoginMenu.loadDefaultHost()   
 
 
@@ -182,22 +182,22 @@ class XnatSlicerWidget:
         #--------------------------------
         # Viewer
         #--------------------------------
-        self.XnatView = XnatTreeView(parent = self.parent, browser = self)  
+        self.XnatView = XnatTreeView(parent = self.parent, MODULE = self)  
         
         
         
         #--------------------------------
         # Xnat Buttons
         #--------------------------------
-        self.XnatButtons = XnatButtons(self.parent, browser=self)  
+        self.XnatButtons = XnatButtons(self.parent, MODULE=self)  
         
         
         
         #--------------------------------
         # Popups
         #--------------------------------
-        self.downloadPopup = XnatDownloadPopup(browser = self)
-        #self.uploadPopup = XnatDownloadPopup(browser = self)
+        self.downloadPopup = XnatDownloadPopup(MODULE = self)
+        #self.uploadPopup = XnatDownloadPopup(MODULE = self)
 
 
       
@@ -520,7 +520,7 @@ class XnatSlicerWidget:
         #--------------------
         # Init communicator.
         #--------------------
-        self.XnatCommunicator.setup(browser = self, 
+        self.XnatIo.setup(MODULE = self, 
                                     host = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
                                     user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 

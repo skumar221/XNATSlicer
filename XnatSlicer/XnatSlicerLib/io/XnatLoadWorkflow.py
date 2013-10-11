@@ -36,11 +36,11 @@ class XnatLoadWorkflow(object):
     """
 
     
-    def __init__(self, browser):
+    def __init__(self, MODULE):
         """ Parent init.
         """
         self.utils = XnatUtils()
-        self.browser = browser       
+        self.MODULE = MODULE       
         self.loadFile = None
         self.newMRMLFile = None
         self.currRemoteHost = None
@@ -83,7 +83,7 @@ class XnatLoadWorkflow(object):
             Reenables the viewer UI.
         """
         qt.QMessageBox.warning( None, warnStr[0], warnStr[1])
-        self.browser.XnatView.setEnabled(True)
+        self.MODULE.XnatView.setEnabled(True)
 
 
 
@@ -142,10 +142,10 @@ class XnatLoadWorkflow(object):
         #------------------------
         # Show clearSceneDialog
         #------------------------
-        if not button and not self.browser.utils.isCurrSceneEmpty():           
-            self.browser.XnatView.initClearDialog()
-            self.browser.XnatView.clearSceneDialog.connect('buttonClicked(QAbstractButton*)', self.beginWorkflow) 
-            self.browser.XnatView.clearSceneDialog.show()
+        if not button and not self.MODULE.utils.isCurrSceneEmpty():           
+            self.MODULE.XnatView.initClearDialog()
+            self.MODULE.XnatView.clearSceneDialog.connect('buttonClicked(QAbstractButton*)', self.beginWorkflow) 
+            self.MODULE.XnatView.clearSceneDialog.show()
             return
         
         
@@ -157,15 +157,15 @@ class XnatLoadWorkflow(object):
         # Clear the scene and current session if button was 'yes'.
         #
         if (button and 'yes' in button.text.lower()):
-            self.browser.XnatView.sessionManager.clearCurrentSession()
+            self.MODULE.XnatView.sessionManager.clearCurrentSession()
             slicer.app.mrmlScene().Clear(0)
         #    
         # Acquire vars: current treeItem, the XnatPath, and the remote URI for 
         # getting the file.
         #
-        currItem = self.browser.XnatView.viewWidget.currentItem()
-        pathObj = self.browser.XnatView.getXnatUriObject(currItem)
-        remoteURI = self.browser.settings.getAddress(self.browser.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
+        currItem = self.MODULE.XnatView.viewWidget.currentItem()
+        pathObj = self.MODULE.XnatView.getXnatUriObject(currItem)
+        remoteURI = self.MODULE.settings.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
         #    
         # Check path string if at the scan level -- adjust accordingly.
         #
@@ -174,7 +174,7 @@ class XnatLoadWorkflow(object):
         #
         # Construct dst string (the local file to be downloaded).
         #
-        dst = os.path.join(self.browser.utils.downloadPath,  currItem.text(self.browser.XnatView.getColumn('MERGED_LABEL')))
+        dst = os.path.join(self.MODULE.utils.downloadPath,  currItem.text(self.MODULE.XnatView.getColumn('MERGED_LABEL')))
             
 
             
@@ -184,18 +184,18 @@ class XnatLoadWorkflow(object):
         #
         # Slicer files
         #
-        if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.browser.utils.defaultPackageExtension)): 
-            loader = self.browser.XnatSceneLoadWorkflow
+        if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.MODULE.utils.defaultPackageExtension)): 
+            loader = self.MODULE.XnatSceneLoadWorkflow
         #    
         # Other readable files
         #
         elif ('files' in remoteURI and '/resources/' in remoteURI):
-            loader =  self.browser.XnatFileLoadWorkflow
+            loader =  self.MODULE.XnatFileLoadWorkflow
         #    
         #  DICOMS
         #
         else:      
-            loader =  self.browser.XnatDicomLoadWorkflow
+            loader =  self.MODULE.XnatDicomLoadWorkflow
                     
                     
                 
@@ -212,7 +212,7 @@ class XnatLoadWorkflow(object):
         #------------------------
         # Enable XnatView
         #------------------------
-        self.browser.XnatView.viewWidget.setEnabled(True)
+        self.MODULE.XnatView.viewWidget.setEnabled(True)
         self.lastButtonClicked = None
     
         

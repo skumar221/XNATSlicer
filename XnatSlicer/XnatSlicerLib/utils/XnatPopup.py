@@ -32,10 +32,10 @@ class XnatPopup(object):
     """ Popup class for XNAT-relevant interactions
     """
     
-    def __init__(self, browser, title = "XnatPopup", modality = 2):
+    def __init__(self, MODULE, title = "XnatPopup", modality = 2):
         """ Init function.
         """
-        self.browser = browser
+        self.MODULE = MODULE
         self.spacer = qt.QLabel("\n\n\n")
 
         self.window = qt.QWidget()
@@ -83,10 +83,10 @@ class XnatDownloadPopup(XnatPopup):
         specifically to downloading files.
     """
 
-    def __init__(self, browser, title = "Xnat Download", memDisplay = "MB"):
+    def __init__(self, MODULE, title = "Xnat Download", memDisplay = "MB"):
         """ Init funnction.
         """
-        super(XnatDownloadPopup, self).__init__(browser = browser, title = title)
+        super(XnatDownloadPopup, self).__init__(MODULE = MODULE, title = title)
 
 
         
@@ -126,7 +126,7 @@ class XnatDownloadPopup(XnatPopup):
         #-------------------
         self.cancelButton = qt.QPushButton()
         self.cancelButton.setText("Cancel")
-        self.cancelButton.connect('pressed()', self.browser.XnatIo.cancelDownload)
+        self.cancelButton.connect('pressed()', self.MODULE.XnatIo.cancelDownload)
         self.cancelButton.setFixedWidth(60)
         
 
@@ -188,7 +188,7 @@ class XnatDownloadPopup(XnatPopup):
             display.
         """
         if (self.memDisplay.lower() == 'mb'):
-            return self.browser.utils.bytesToMB(size) 
+            return self.MODULE.utils.bytesToMB(size) 
         return size      
 
 
@@ -251,7 +251,7 @@ class XnatDownloadPopup(XnatPopup):
             pct = float(float(self.downloadedBytes) / float(self.downloadFileSize))
             #
             # Output to Python command prompt
-            #print "%s %s Downloaded: %s\tDownloadSize: %s\tPct: %s"%(self.browser.utils.lf(), self.lines[0].text, self.downloadedBytes , self.downloadFileSize, pct)
+            #print "%s %s Downloaded: %s\tDownloadSize: %s\tPct: %s"%(self.MODULE.utils.lf(), self.lines[0].text, self.downloadedBytes , self.downloadFileSize, pct)
             #
             #
             # Update progress bar

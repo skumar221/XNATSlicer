@@ -24,12 +24,12 @@ class XnatSaveWorkflow(object):
     """ Descriptor above.
     """
 
-    def __init__(self, browser):
+    def __init__(self, MODULE):
         """ Init function.
         """
         
-        self.browser = browser
-        self.scenePackager = XnatScenePackager(self.browser)
+        self.MODULE = MODULE
+        self.scenePackager = XnatScenePackager(self.MODULE)
 
 
         
@@ -58,22 +58,22 @@ class XnatSaveWorkflow(object):
         #------------------------
         # If Scene originated from XNAT (i.e. the session manager is active)...
         #------------------------
-        if self.browser.XnatView.sessionManager.sessionArgs:
-            self.browser.XnatView.setEnabled(False)
-            FileSaveDialog(self.browser, self)
+        if self.MODULE.XnatView.sessionManager.sessionArgs:
+            self.MODULE.XnatView.setEnabled(False)
+            FileSaveDialog(self.MODULE, self)
             
 
 
         #------------------------
         # If scene is local, or of non-XNAT origin
         #------------------------
-        elif (not self.browser.XnatView.sessionManager.sessionArgs):
+        elif (not self.MODULE.XnatView.sessionManager.sessionArgs):
             #
             # Construct new sessionArgs
             #
-            fullPath = self.browser.XnatView.getXnatDir(self.browser.XnatView.getParents(self.browser.XnatView.viewWidget.currentItem()))
-            remoteURI = self.browser.settings.getAddress(self.browser.XnatLoginMenu.hostDropdown.currentText) + fullPath
-            sessionArgs = XnatSessionArgs(browser = self.browser, srcPath = fullPath)
+            fullPath = self.MODULE.XnatView.getXnatDir(self.MODULE.XnatView.getParents(self.MODULE.XnatView.viewWidget.currentItem()))
+            remoteURI = self.MODULE.settings.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + fullPath
+            sessionArgs = XnatSessionArgs(MODULE = self.MODULE, srcPath = fullPath)
             sessionArgs['sessionType'] = "scene upload - unlinked"
             sessionArgs.printAll()
             return
@@ -97,14 +97,14 @@ class XnatSaveWorkflow(object):
         #------------------------
         # Disable the view widget
         #------------------------
-        self.browser.XnatView.setEnabled(False)
+        self.MODULE.XnatView.setEnabled(False)
 
 
 
         #------------------------
         # Package scene
         #------------------------
-        package = self.scenePackager.bundleScene(self.browser.XnatView.sessionManager.sessionArgs)
+        package = self.scenePackager.bundleScene(self.MODULE.XnatView.sessionManager.sessionArgs)
         projectDir =         package['path']
         mrmlFile =           package['mrml']  
         
@@ -113,19 +113,19 @@ class XnatSaveWorkflow(object):
         #------------------------
         # Zip package     
         #------------------------ 
-        packageFileName = projectDir + self.browser.utils.defaultPackageExtension
+        packageFileName = projectDir + self.MODULE.utils.defaultPackageExtension
         if os.path.exists(packageFileName): 
-            self.browser.utils.removeFile(packageFileName) 
+            self.MODULE.utils.removeFile(packageFileName) 
         self.scenePackager.packageDir(packageFileName, projectDir)
-        self.browser.utils.removeDirsAndFiles(projectDir)
+        self.MODULE.utils.removeDirsAndFiles(projectDir)
 
 
 
         #------------------------
         # Upload package  
         #------------------------   
-        uploadStr = self.browser.XnatView.sessionManager.sessionArgs['saveDir'] + "/" + os.path.basename(packageFileName)    
-        self.browser.XnatIo.upload(packageFileName, uploadStr)
+        uploadStr = self.MODULE.XnatView.sessionManager.sessionArgs['saveDir'] + "/" + os.path.basename(packageFileName)    
+        self.MODULE.XnatIo.upload(packageFileName, uploadStr)
         slicer.app.processEvents()
   
 
@@ -134,10 +134,10 @@ class XnatSaveWorkflow(object):
         # Update viewer
         #------------------------
         baseName = os.path.basename(packageFileName)
-        self.browser.XnatView.sessionManager.sessionArgs['sessionType'] = "scene upload"
-        self.browser.XnatView.startNewSession(self.browser.XnatView.sessionManager.sessionArgs)
-        self.browser.XnatView.setCurrItemToChild(item = None, childFileName = baseName)
-        self.browser.XnatView.setEnabled(True)
+        self.MODULE.XnatView.sessionManager.sessionArgs['sessionType'] = "scene upload"
+        self.MODULE.XnatView.startNewSession(self.MODULE.XnatView.sessionManager.sessionArgs)
+        self.MODULE.XnatView.setCurrItemToChild(item = None, childFileName = baseName)
+        self.MODULE.XnatView.setEnabled(True)
         print "\nUpload of '%s' complete."%(baseName)
 
 
@@ -170,7 +170,7 @@ class XnatSaveWorkflow(object):
         # If no 'saveLevel' specified, go to default level.
         #------------------------
         if not saveLevel:                                                                                                                 
-            saveLevel = self.browser.utils.defaultXnatSaveLevel               
+            saveLevel = self.MODULE.utils.defaultXnatSaveLevel               
 
 
             
@@ -179,13 +179,13 @@ class XnatSaveWorkflow(object):
         #------------------------
         else:
             findCount = False
-            for key, value in self.browser.utils.xnatDepthDict.iteritems():
+            for key, value in self.MODULE.utils.xnatDepthDict.iteritems():
                 if value == saveLevel: 
                     findCount = True
             if not findCount:
-                print (self.browser.utils.lf() + 
-                       "Couldn't find save level '%s'. Resorting to default: %s"%(saveLevel, self.browser.utils.defaultXnatSaveLevel))
-                saveLevel = self.browser.utils.defaultXnatSaveLevel 
+                print (self.MODULE.utils.lf() + 
+                       "Couldn't find save level '%s'. Resorting to default: %s"%(saveLevel, self.MODULE.utils.defaultXnatSaveLevel))
+                saveLevel = self.MODULE.utils.defaultXnatSaveLevel 
 
 
                 
@@ -193,8 +193,8 @@ class XnatSaveWorkflow(object):
         # Look at the sessionManager, reconcile save dir based on that
         # and XnatSaveLevel derived above.
         #------------------------
-        if self.browser.XnatView.sessionManager.currSessionInfo:
-            saveDir = self.browser.utils.constructSlicerSaveUri(currUri = self.browser.XnatView.sessionManager.currSessionInfo['RemoteURI'], xnatLevel = saveLevel)
+        if self.MODULE.XnatView.sessionManager.currSessionInfo:
+            saveDir = self.MODULE.utils.constructSlicerSaveUri(currUri = self.MODULE.XnatView.sessionManager.currSessionInfo['RemoteURI'], xnatLevel = saveLevel)
         else:
             return None            
 
@@ -204,8 +204,8 @@ class XnatSaveWorkflow(object):
         # DEPRECATED: for other saving schemes like share files
         #------------------------
         otherRequiredDirs = []
-        baseDir = saveDir.split(self.browser.utils.slicerFolderName)[0]
-        for folderName in self.browser.utils.requiredSlicerFolders:
+        baseDir = saveDir.split(self.MODULE.utils.slicerFolderName)[0]
+        for folderName in self.MODULE.utils.requiredSlicerFolders:
             otherRequiredDirs.append("%s%s/files/"%(baseDir, folderName))
 
 

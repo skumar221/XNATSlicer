@@ -42,11 +42,11 @@ class XnatSaveDialog(object):
     """ Parent class of all of the save dialogs.
     """
     
-    def __init__(self, browser, saveWorkflow):
+    def __init__(self, MODULE, saveWorkflow):
         """ Init function.
         """
 
-        self.browser = browser
+        self.MODULE = MODULE
         self.dialogs = []        
         self.setup()
         self.begin()         
@@ -155,14 +155,14 @@ class SaveUnlinkedDialog(XnatSaveDialog):
          a local scene to a given XNAT host.
      """
 
-     def __init__(self, browser, saveWorkflow):
+     def __init__(self, MODULE, saveWorkflow):
         """ Init function.
         """
 
         #--------------------
         # Call parent class.
         #--------------------
-        super(saveUnlinkedDialog, self).__init__(browser, saveWorkflow)
+        super(saveUnlinkedDialog, self).__init__(MODULE, saveWorkflow)
 
 
         
@@ -177,8 +177,8 @@ class SaveUnlinkedDialog(XnatSaveDialog):
          #--------------------
          self.setNumDialogs(1)
          msg = """the scene doesn't appear to be associated with a specific xnat location.  Would you like to save it within this xnat """
-         msg = "%s %s (%s)?" %(msg, self.browser.utils.defaultXnatSaveLevel[:-1], os.path.basename(self.browser.XnatView.sessionManager.sessionArgs['savelevel']))
-         msg.replace('location', self.browser.utils.defaultXnatSaveLevel[:-1])
+         msg = "%s %s (%s)?" %(msg, self.MODULE.utils.defaultXnatSaveLevel[:-1], os.path.basename(self.MODULE.XnatView.sessionManager.sessionArgs['savelevel']))
+         msg.replace('location', self.MODULE.utils.defaultXnatSaveLevel[:-1])
          self.dialogs[0].setText(msg)      
          
 
@@ -188,7 +188,7 @@ class SaveUnlinkedDialog(XnatSaveDialog):
          #--------------------
          self.dialogs[0].addButton(qt.QMessageBox.yes)
          self.dialogs[0].addButton(qt.QMessageBox.cancel)
-         self.browser.XNAView.selectItem_byPath((self.browser.XnatView.sessionManager.sessionArgs['savelevel']))
+         self.MODULE.XNAView.selectItem_byPath((self.MODULE.XnatView.sessionManager.sessionArgs['savelevel']))
 
 
 
@@ -208,7 +208,7 @@ class SaveUnlinkedDialog(XnatSaveDialog):
             #
             # Call FileSave with updated sessionArgs.
             #
-            FileSaveDialog(self.browser, self.browser.XnatView.sessionManager.sessionArgs)
+            FileSaveDialog(self.MODULE, self.MODULE.XnatView.sessionManager.sessionArgs)
 
 
             
@@ -223,7 +223,7 @@ class FileSaveDialog(XnatSaveDialog):
 
     
     
-    def __init__(self, browser, saveWorkflow):
+    def __init__(self, MODULE, saveWorkflow):
         """ Init function.
         """
 
@@ -243,8 +243,8 @@ class FileSaveDialog(XnatSaveDialog):
         #--------------------
         # Call parent.
         #--------------------
-        super(FileSaveDialog, self).__init__(browser, saveWorkflow)
-        #print "%s"%(self.browser.utils.lf())
+        super(FileSaveDialog, self).__init__(MODULE, saveWorkflow)
+        #print "%s"%(self.MODULE.utils.lf())
         return
 
 
@@ -275,7 +275,7 @@ class FileSaveDialog(XnatSaveDialog):
         # Set fileline text (where user enters the file
         # name) 
         #--------------------
-        self.fileLine = qt.QLineEdit(self.browser.XnatView.sessionManager.sessionArgs['fileName'].split(self.browser.utils.defaultPackageExtension)[0])
+        self.fileLine = qt.QLineEdit(self.MODULE.XnatView.sessionManager.sessionArgs['fileName'].split(self.MODULE.utils.defaultPackageExtension)[0])
 
         
 
@@ -324,7 +324,7 @@ class FileSaveDialog(XnatSaveDialog):
         # Set onClick connections.
         #--------------------  
         buttonRow.connect('clicked(QAbstractButton*)', self.onButtonClicked)
-        self.browser.XnatView.selectItem_byPath((self.browser.XnatView.sessionManager.sessionArgs['saveLevel']))
+        self.MODULE.XnatView.selectItem_byPath((self.MODULE.XnatView.sessionManager.sessionArgs['saveLevel']))
 
 
 
@@ -346,8 +346,8 @@ class FileSaveDialog(XnatSaveDialog):
         #--------------------
         # Get filename from the text input line.
         #--------------------
-        self.browser.XnatView.sessionManager.sessionArgs['fileName'] = self.browser.utils.replaceForbiddenChars(self.fileLine.text.split(".")[0], "_")
-        self.browser.XnatView.sessionManager.sessionArgs['fileName'] += self.browser.utils.defaultPackageExtension
+        self.MODULE.XnatView.sessionManager.sessionArgs['fileName'] = self.MODULE.utils.replaceForbiddenChars(self.fileLine.text.split(".")[0], "_")
+        self.MODULE.XnatView.sessionManager.sessionArgs['fileName'] += self.MODULE.utils.defaultPackageExtension
 
 
         
@@ -359,8 +359,8 @@ class FileSaveDialog(XnatSaveDialog):
             # Pre-save.  Start an new session and make the necessary
             # slicerSave folders in the XNAT host.
             #
-            self.browser.XnatView.startNewSession(self.browser.XnatView.sessionManager.sessionArgs)
-            self.browser.XnatView.makeRequiredSlicerFolders() 
+            self.MODULE.XnatView.startNewSession(self.MODULE.XnatView.sessionManager.sessionArgs)
+            self.MODULE.XnatView.makeRequiredSlicerFolders() 
             #
             # Save scene to XNAT host.    
             #     
@@ -368,8 +368,8 @@ class FileSaveDialog(XnatSaveDialog):
             #
             # UI config
             #
-            self.browser.XnatButtons.buttons['load'].setEnabled(True)
-            self.browser.XnatButtons.buttons['delete'].setEnabled(True) 
+            self.MODULE.XnatButtons.buttons['load'].setEnabled(True)
+            self.MODULE.XnatButtons.buttons['delete'].setEnabled(True) 
 
 
             
@@ -377,5 +377,5 @@ class FileSaveDialog(XnatSaveDialog):
         # Otherwise reenable everything.
         #--------------------
         else:
-            self.browser.XnatView.setEnabled(True)
+            self.MODULE.XnatView.setEnabled(True)
             

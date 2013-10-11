@@ -24,12 +24,12 @@ class XnatHostEditor:
   """
 
   
-  def __init__(self, browser, parent = None):
+  def __init__(self, MODULE, parent = None):
     """ Init function.
     """
 
     self.parent = parent
-    self.browser = browser
+    self.MODULE = MODULE
 
 
     
@@ -92,7 +92,7 @@ class XnatHostEditor:
     """ Enables / Disables button based upon the editable
         quality of the host.  Some hosts cannot be modified.
     """
-    if self.browser.settings.isModifiable(nameString):
+    if self.MODULE.settings.isModifiable(nameString):
         self.deleteButton.setEnabled(True)
         self.editButton.setEnabled(True)
     else:
@@ -110,7 +110,7 @@ class XnatHostEditor:
     #--------------------
     # Get host dictionary from XnatSettings
     #--------------------
-    hostDictionary = self.browser.settings.getHostNameAddressDictionary()  
+    hostDictionary = self.MODULE.settings.getHostNameAddressDictionary()  
 
 
 
@@ -132,12 +132,12 @@ class XnatHostEditor:
         #
         # Apply style if default
         #
-        if (self.browser.settings.isDefault(name)):
+        if (self.MODULE.settings.isDefault(name)):
             self.hostLister.applyIsDefaultStyle()
         #
         # Get curr username
         #
-        currName = self.browser.settings.getCurrUsername(name)
+        currName = self.MODULE.settings.getCurrUsername(name)
         #
         # If there's a username, add it....
         #
@@ -156,7 +156,7 @@ class XnatHostEditor:
   def rewriteHost(self):
     """ As stated.  Calls on the internal "writeHost" function.
     """
-    self.browser.settings.deleteHost(self.prevName)
+    self.MODULE.settings.deleteHost(self.prevName)
     self.prevName = None
     self.writeHost()
 
@@ -171,7 +171,7 @@ class XnatHostEditor:
     # applying the text to the settings, and removing from there.
     #--------------------
     hostStr = self.hostLister.selectedText().split("\t")
-    deleted = self.browser.settings.deleteHost(hostStr[0])
+    deleted = self.MODULE.settings.deleteHost(hostStr[0])
 
 
     #--------------------
@@ -179,7 +179,7 @@ class XnatHostEditor:
     #--------------------
     if deleted: 
         self.loadHosts()
-        self.browser.XnatLoginMenu.loadDefaultHost()
+        self.MODULE.XnatLoginMenu.loadDefaultHost()
 
     #--------------------
     # Close popup
@@ -197,7 +197,7 @@ class XnatHostEditor:
     #--------------------
     # Check if the nameLine is part of the defaut set
     #--------------------
-    modifiable = not self.nameLine.text.strip("") in self.browser.settings.defaultHosts
+    modifiable = not self.nameLine.text.strip("") in self.MODULE.settings.defaultHosts
 
 
 
@@ -212,7 +212,7 @@ class XnatHostEditor:
     #--------------------
     # Save Host
     #--------------------
-    self.browser.settings.saveHost(self.nameLine.text, self.urlLine.text, isModifiable = modifiable, isDefault = self.setDefault.isChecked())
+    self.MODULE.settings.saveHost(self.nameLine.text, self.urlLine.text, isModifiable = modifiable, isDefault = self.setDefault.isChecked())
 
 
 
@@ -220,7 +220,7 @@ class XnatHostEditor:
     # Set default if checkbox is check
     #--------------------
     if self.setDefault.isChecked():
-        self.browser.settings.setDefault(self.nameLine.text)   
+        self.MODULE.settings.setDefault(self.nameLine.text)   
 
 
 
@@ -228,14 +228,14 @@ class XnatHostEditor:
     # Set default username
     #--------------------
     if self.usernameLine.text != "":
-        self.browser.settings.setCurrUsername(self.nameLine.text, self.usernameLine.text)
+        self.MODULE.settings.setCurrUsername(self.nameLine.text, self.usernameLine.text)
 
 
 
     #--------------------
     # Reload hosts
     #--------------------
-    self.browser.XnatLoginMenu.loadDefaultHost()
+    self.MODULE.XnatLoginMenu.loadDefaultHost()
     self.loadHosts() 
 
 

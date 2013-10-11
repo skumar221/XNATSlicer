@@ -61,10 +61,10 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         # Fonts
         #----------------------
-        self.itemFont_folder = qt.QFont("Arial", self.browser.utils.fontSize, 25, False)
-        self.itemFont_file = qt.QFont("Arial", self.browser.utils.fontSize, 75, False)
-        self.itemFont_category = qt.QFont("Arial", self.browser.utils.fontSize, 25, True)
-        self.itemFont_searchHighlighted = qt.QFont("Arial", self.browser.utils.fontSize, 75, False)
+        self.itemFont_folder = qt.QFont("Arial", self.MODULE.utils.fontSize, 25, False)
+        self.itemFont_file = qt.QFont("Arial", self.MODULE.utils.fontSize, 75, False)
+        self.itemFont_category = qt.QFont("Arial", self.MODULE.utils.fontSize, 25, True)
+        self.itemFont_searchHighlighted = qt.QFont("Arial", self.MODULE.utils.fontSize, 75, False)
 
         
         
@@ -115,7 +115,7 @@ class XnatTreeView(XnatView.XnatView):
             XNAT metadata values.
         """
         self.columns = {}
-        for key in self.browser.utils.XnatMetadataTags_all:
+        for key in self.MODULE.utils.XnatMetadataTags_all:
             self.columns[key] = {}
 
 
@@ -166,7 +166,7 @@ class XnatTreeView(XnatView.XnatView):
         # the XnatIo's 'relevantMetadataDict'
         #---------------------- 
         self.columnKeyOrder = dict(self.columnKeyOrder.items() + 
-                                   self.browser.XnatIo.relevantMetadataDict.items())
+                                   self.MODULE.XnatIo.relevantMetadataDict.items())
         
 
 
@@ -174,7 +174,7 @@ class XnatTreeView(XnatView.XnatView):
         # Create a union of all the self.columnKeyOrder 
         # arrays (i.e. 'allHeaders')
         #---------------------- 
-        allHeaders = self.browser.utils.uniqify(self.columnKeyOrder['ALL'] + 
+        allHeaders = self.MODULE.utils.uniqify(self.columnKeyOrder['ALL'] + 
                                                 # NOTE: Leaving this out as it will become part of MERGED_LABELS
                                                 # via self.getMergedLabelByLevel, which determines the relevant
                                                 # metadata tag for the given XNAT level.
@@ -377,7 +377,7 @@ class XnatTreeView(XnatView.XnatView):
 
 
         # TEMP
-        print self.browser.utils.lf(), " keeping other columns hidden."
+        print self.MODULE.utils.lf(), " keeping other columns hidden."
         return
         
         #----------------------
@@ -428,7 +428,7 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------            
         def filter_accessed():
             self.viewWidget.sortItems(self.columns['last_accessed_497']['location'], 1)
-            self.browser.XnatButtons.setButtonDown(category = 'filter' , name = 'accessed', isDown = True, callSignals = False)
+            self.MODULE.XnatButtons.setButtonDown(category = 'filter' , name = 'accessed', isDown = True, callSignals = False)
             def hideEmpty(child):
                 accessedText = child.text(self.columns['last_accessed_497']['location'])
                 if accessedText == '': 
@@ -447,7 +447,7 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         # If no 'filters'...
         #----------------------
-        defaultFilterButton = self.browser.XnatButtons.buttons['filter']['accessed']
+        defaultFilterButton = self.MODULE.XnatButtons.buttons['filter']['accessed']
         defaultFilterFunction = filter_accessed
         if not filters or len(filters) == 0:
             #
@@ -514,7 +514,7 @@ class XnatTreeView(XnatView.XnatView):
             of the current XNAT host.
         """     
         if self.sessionManager.sessionArgs:
-            self.browser.XnatIo.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
+            self.MODULE.XnatIo.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
 
 
             
@@ -569,7 +569,7 @@ class XnatTreeView(XnatView.XnatView):
             #
             # For masked slicer folders
             #
-            elif ((self.browser.utils.slicerFolderName in item.text(self.columns['XNAT_LEVEL']['location'])) 
+            elif ((self.MODULE.utils.slicerFolderName in item.text(self.columns['XNAT_LEVEL']['location'])) 
                   and self.applySlicerFolderMask): 
                 isSlicerFile = True
             #
@@ -607,10 +607,10 @@ class XnatTreeView(XnatView.XnatView):
         # Modify URI for Slicer files.
         #------------------------
         if isSlicerFile:
-            #print self.browser.utils.lf() + "IS SLICER FILE!" 
+            #print self.MODULE.utils.lf() + "IS SLICER FILE!" 
             self.currLoadable = "scene"
             dirStr = ("%s/resources/%s/files/%s"%(os.path.dirname(os.path.dirname(os.path.dirname(dirStr))),
-                                                  self.browser.utils.slicerFolderName,
+                                                  self.MODULE.utils.slicerFolderName,
                                                   os.path.basename(os.path.dirname(dirStr))))   
 
             
@@ -619,7 +619,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         else:
             if XnatDepth < 4: 
-                dirStr += self.browser.utils.xnatDepthDict[XnatDepth] 
+                dirStr += self.MODULE.utils.xnatDepthDict[XnatDepth] 
         return dirStr
 
 
@@ -704,7 +704,7 @@ class XnatTreeView(XnatView.XnatView):
         isExperiment = 'experiments' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
         isScan = 'scans' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
         isFile = 'files' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isSlicerFile = self.browser.utils.slicerFolderName.replace("/","") in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
+        isSlicerFile = self.MODULE.utils.slicerFolderName.replace("/","") in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
 
         
 
@@ -730,17 +730,17 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Enable load/save at the default save level
         #------------------------
-        self.browser.XnatButtons.setEnabled('save', False)
-        self.browser.XnatButtons.setEnabled('load', False)
-        self.browser.XnatButtons.setEnabled('delete', False)
-        self.browser.XnatButtons.setEnabled('addProj', True)
+        self.MODULE.XnatButtons.setEnabled('save', False)
+        self.MODULE.XnatButtons.setEnabled('load', False)
+        self.MODULE.XnatButtons.setEnabled('delete', False)
+        self.MODULE.XnatButtons.setEnabled('addProj', True)
         if isExperiment or isScan:
-            self.browser.XnatButtons.setEnabled('save', True)
-            self.browser.XnatButtons.setEnabled('load', True)
+            self.MODULE.XnatButtons.setEnabled('save', True)
+            self.MODULE.XnatButtons.setEnabled('load', True)
         elif isFile or isSlicerFile or isResource:
-            self.browser.XnatButtons.setEnabled('save', True)
-            self.browser.XnatButtons.setEnabled('load', True)
-            self.browser.XnatButtons.setEnabled('delete', True)
+            self.MODULE.XnatButtons.setEnabled('save', True)
+            self.MODULE.XnatButtons.setEnabled('load', True)
+            self.MODULE.XnatButtons.setEnabled('delete', True)
 
 
             
@@ -748,7 +748,7 @@ class XnatTreeView(XnatView.XnatView):
         # If mask is enabled, determine if item is a slicer file
         #------------------------
         if self.applySlicerFolderMask:
-            if item.text(self.columns['XNAT_LEVEL']['location']) == self.browser.utils.slicerFolderName:
+            if item.text(self.columns['XNAT_LEVEL']['location']) == self.MODULE.utils.slicerFolderName:
                 isFile = True    
 
 
@@ -766,11 +766,11 @@ class XnatTreeView(XnatView.XnatView):
                 #
                 # Recognizable extensions  
                 #      
-                if self.browser.utils.isRecognizedFileExt(ext[1]):
+                if self.MODULE.utils.isRecognizedFileExt(ext[1]):
                     #
                     # Scene package
                     #
-                    for ext_ in self.browser.utils.packageExtensions:
+                    for ext_ in self.MODULE.utils.packageExtensions:
                         if ext_.replace(".","") in ext[1]: 
                             #
                             # Set currloadable to scene   
@@ -790,7 +790,7 @@ class XnatTreeView(XnatView.XnatView):
         # If the user is at the default load/save level, 
         # set default loader to DICOM.     
         #------------------------
-        if self.browser.utils.defaultXnatSaveLevel in item.text(self.columns['XNAT_LEVEL']['location']).strip(" "):
+        if self.MODULE.utils.defaultXnatSaveLevel in item.text(self.columns['XNAT_LEVEL']['location']).strip(" "):
             self.currLoadable = "mass_dicom" 
             return
 
@@ -870,7 +870,7 @@ class XnatTreeView(XnatView.XnatView):
             try:
                 child = item.child(x)
                 ext = child.text(self.columns['MERGED_LABEL']['location']).rsplit(".")[1]            
-                if self.browser.utils.isDICOM(ext):
+                if self.MODULE.utils.isDICOM(ext):
                     dicomCount +=1
             except Exception, e:
                 pass        
@@ -960,7 +960,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Break apart pathStr to its Xnat categories
         #------------------------
-        pathDict = self.browser.utils.makeXnatUriDictionary(pathStr)
+        pathDict = self.MODULE.utils.makeXnatUriDictionary(pathStr)
 
 
         
@@ -1043,7 +1043,7 @@ class XnatTreeView(XnatView.XnatView):
         # Get folder contents via metadata.  
         # Set nodeNames from metadata.
         #-------------------- 
-        metadata = self.browser.XnatIo.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
+        metadata = self.MODULE.XnatIo.getFolderContents(pathObj['childQueryUris'], self.MODULE.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
 
 
 
@@ -1077,7 +1077,7 @@ class XnatTreeView(XnatView.XnatView):
         # Special case for children with Slicer URIs
         #--------------------
         if 'slicerQueryUris' in pathObj:
-            slicerMetadata = self.browser.XnatIo.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))
+            slicerMetadata = self.MODULE.XnatIo.getFolderContents(pathObj['slicerQueryUris'], self.MODULE.utils.XnatMetadataTagsByLevel('files'))
             #
             # Proceed only if the relevant metadata to retrieve Slicer
             # files exists 
@@ -1096,7 +1096,7 @@ class XnatTreeView(XnatView.XnatView):
                         if (key == 'Size'):
                             for i in range(0, len(metadata[key])):
                                 if metadata[key][i]:
-                                    metadata[key][i] = '%i MB'%(int(round(self.browser.utils.bytesToMB(metadata[key][i]))))
+                                    metadata[key][i] = '%i MB'%(int(round(self.MODULE.utils.bytesToMB(metadata[key][i]))))
                 metadata['XNAT_LEVEL'] = metadata['XNAT_LEVEL'] + ['Slicer' for x in range(len(slicerChildNames))]  
                 
 
@@ -1248,10 +1248,10 @@ class XnatTreeView(XnatView.XnatView):
         """
 
         #------------------------
-        # Get searchString from browser.  Remove starting 
+        # Get searchString from MODULE.  Remove starting 
         # and ending white spaces via '.strip()'
         #------------------------
-        searchString = self.browser.searchBox.text.strip()
+        searchString = self.MODULE.searchBox.text.strip()
 
 
         
@@ -1344,7 +1344,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Conduct a server-side search
         #------------------------
-        serverQueryResults = self.browser.XnatIo.search(searchString)
+        serverQueryResults = self.MODULE.XnatIo.search(searchString)
 
 
         #------------------------
@@ -1366,7 +1366,7 @@ class XnatTreeView(XnatView.XnatView):
                 #
                 # Attempt first to find the item in the tree.
                 #
-                #print "%s Searching For: %s"%(self.browser.utils.lf(), levelDict[labelTag])
+                #print "%s Searching For: %s"%(self.MODULE.utils.lf(), levelDict[labelTag])
                 item = self.viewWidget.findItems(levelDict[labelTag], 0 | 64 , 0)
 
 

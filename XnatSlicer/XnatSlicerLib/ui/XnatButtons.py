@@ -26,7 +26,7 @@ class XnatButtons(object):
     """ Creates buttons for the GUI and calls respective workflows.
     """
     
-    def __init__(self, parent = None, browser = None):
+    def __init__(self, parent = None, MODULE = None):
         """  Create buttons
         """
 
@@ -34,7 +34,7 @@ class XnatButtons(object):
         # Public vars.
         #--------------------
         self.parent = parent
-        self.browser = browser
+        self.MODULE = MODULE
 
 
         #--------------------
@@ -117,7 +117,7 @@ class XnatButtons(object):
         """ Starts Delete workflow.
         """  
 
-        deleter = XnatDeleteWorkflow(self.browser)
+        deleter = XnatDeleteWorkflow(self.MODULE)
         deleter.beginWorkflow()
 
 
@@ -128,8 +128,8 @@ class XnatButtons(object):
         """     
         
         self.lastButtonClicked = "save" 
-        self.browser.XnatView.setEnabled(False)
-        saver = XnatSaveWorkflow(self.browser)
+        self.MODULE.XnatView.setEnabled(False)
+        saver = XnatSaveWorkflow(self.MODULE)
         saver.beginWorkflow()
 
 
@@ -139,8 +139,8 @@ class XnatButtons(object):
         """ Starts Save workflow.
         """     
         self.lastButtonClicked = "test" 
-        self.browser.XnatView.setEnabled(True)
-        self.browser.tester.runTest()
+        self.MODULE.XnatView.setEnabled(True)
+        self.MODULE.tester.runTest()
 
 
         
@@ -150,8 +150,8 @@ class XnatButtons(object):
         """
         
         self.lastButtonClicked = "load"
-        self.browser.XnatView.setEnabled(False)
-        loader = XnatLoadWorkflow(self.browser)
+        self.MODULE.XnatView.setEnabled(False)
+        loader = XnatLoadWorkflow(self.MODULE)
         loader.beginWorkflow()
 
 
@@ -161,7 +161,7 @@ class XnatButtons(object):
         """ Adds a project folder to the server.
         """
 
-        self.addProjEditor = XnatAddProjEditor(self, self.browser, self.browser.XnatIo)
+        self.addProjEditor = XnatAddProjEditor(self, self.MODULE, self.MODULE.XnatIo)
         self.addProjEditor.show()
 
 
@@ -210,7 +210,7 @@ class XnatButtons(object):
                 self.buttons['filter'][key].setDown(False)
                 self.buttons['filter'][key].setChecked(False)
             self.currentlyToggledFilterButton = ''
-            self.browser.XnatView.loadProjects(['all'])
+            self.MODULE.XnatView.loadProjects(['all'])
             return
  
 
@@ -242,4 +242,4 @@ class XnatButtons(object):
         #------------------
         for key in self.buttons['filter']:
             if self.currentlyToggledFilterButton == self.buttons['filter'][key]:
-                self.browser.XnatView.loadProjects([self.currentlyToggledFilterButton.text.lower()])
+                self.MODULE.XnatView.loadProjects([self.currentlyToggledFilterButton.text.lower()])

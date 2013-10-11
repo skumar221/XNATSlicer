@@ -47,7 +47,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         #-------------------------
         # Get scene package from XNAT host.
         #-------------------------
-        self.browser.XnatIo.getFile({self.xnatSrc : self.localDst})
+        self.MODULE.XnatIo.getFile({self.xnatSrc : self.localDst})
 
 
         
@@ -57,8 +57,8 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         # being pressed in download modal) 
         #-------------------------
         if not os.path.exists(self.localDst):
-            print "%s exiting workflow..."%(self.browser.utils.lf())  
-            self.browser.XnatView.setEnabled(True) 
+            print "%s exiting workflow..."%(self.MODULE.utils.lf())  
+            self.MODULE.XnatView.setEnabled(True) 
             return False       
 
 
@@ -226,7 +226,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         # NOTE: Parsing of the MRML is needed because node filePaths are absolute, not relative.
         # TODO: Submit a change request for absolute path values to Slicer
         #
-        mrmlParser = XnatMrmlParser(self.browser)
+        mrmlParser = XnatMrmlParser(self.MODULE)
         mrmlParser.changeValues(mrmlFiles[0], newMRMLFile,  {},  None, True)
         return newMRMLFile
 
@@ -320,15 +320,15 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         #-------------------------
         # Create new XNAT session.
         #-------------------------
-        sessionArgs = XnatSessionArgs(browser = self.browser, srcPath = self.xnatSrc)
+        sessionArgs = XnatSessionArgs(MODULE = self.MODULE, srcPath = self.xnatSrc)
         sessionArgs['sessionType'] = "scene download"
-        self.browser.XnatView.startNewSession(sessionArgs)
+        self.MODULE.XnatView.startNewSession(sessionArgs)
         #print( "\nScene '%s' loaded."%(os.path.basename(fileName.rsplit(".")[0])))  
 
 
         
         #-------------------------
-        # Enable view in browser
+        # Enable view in MODULE
         #-------------------------
-        self.browser.XnatView.setEnabled(True)
+        self.MODULE.XnatView.setEnabled(True)
         return True

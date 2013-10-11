@@ -26,11 +26,11 @@ class XnatSessionArgs(dict):
         add further keys.
     """
     
-    def __init__(self, browser, srcPath = None, useDefaultXnatSaveLevel = True):
+    def __init__(self, MODULE, srcPath = None, useDefaultXnatSaveLevel = True):
         """ Establish the relevant keys in the Session Manager.
         """
 
-        self.browser = browser
+        self.MODULE = MODULE
         self.inserting = True 
         self['host'] = None
         self['username'] = None
@@ -66,9 +66,9 @@ class XnatSessionArgs(dict):
         """ Consructs a number of the session values
             by one argument, 'filePath'.
         """
-        saveLevelDir, slicerDir = self.browser.utils.getSaveTuple(filePath) 
-        self['host'] = self.browser.XnatLoginMenu.hostDropdown.currentText
-        self['username'] = self.browser.XnatLoginMenu.usernameLine.text        
+        saveLevelDir, slicerDir = self.MODULE.utils.getSaveTuple(filePath) 
+        self['host'] = self.MODULE.XnatLoginMenu.hostDropdown.currentText
+        self['username'] = self.MODULE.XnatLoginMenu.usernameLine.text        
         self['saveLevel'] = saveLevelDir
         self['saveDir'] = slicerDir
         if os.path.basename(os.path.dirname(filePath)) == 'files':
@@ -97,11 +97,11 @@ class XnatSessionManager(object):
     """
 
     
-    def __init__(self, browser):
+    def __init__(self, MODULE):
         """ Init function.
         """
-        self.browser = browser
-        self.sessionFileName = os.path.join(self.browser.utils.MODULE_URIS['settings'], 'SessionLog.txt')
+        self.MODULE = MODULE
+        self.sessionFileName = os.path.join(self.MODULE.utils.MODULE_URIS['settings'], 'SessionLog.txt')
         self.sessionArgs = None
         self.saveItem = None
 
@@ -122,7 +122,7 @@ class XnatSessionManager(object):
     def clearCurrentSession(self):
         """ As stated.
         """
-        #print(self.browser.utils.lf() + "Clearing current session")
+        #print(self.MODULE.utils.lf() + "Clearing current session")
         self.sessionArgs = None
 
 
@@ -136,7 +136,7 @@ class XnatSessionManager(object):
             fileLines.append("%s:\t\t%s\n"%(item, self.sessionArgs[item]))
         
         fileLines.append("\n\n")
-        #print(self.browser.utils.lf() + "Session log file: %s"%(self.sessionFileName))
+        #print(self.MODULE.utils.lf() + "Session log file: %s"%(self.sessionFileName))
         f = open(self.sessionFileName, 'a')
         f.writelines(fileLines)            
         f.close()

@@ -22,10 +22,10 @@ def makeCredentialsWidgets(XnatLoginMenu):
     # Username + password label and lines.
     #--------------------
     usernameLabel = qt.QLabel('username:')
-    usernameLabel.setFont(XnatLoginMenu.browser.utils.labelFontBold)
+    usernameLabel.setFont(XnatLoginMenu.MODULE.utils.labelFontBold)
     
     passwordLabel = qt.QLabel('password:')
-    passwordLabel.setFont(XnatLoginMenu.browser.utils.labelFontBold)    
+    passwordLabel.setFont(XnatLoginMenu.MODULE.utils.labelFontBold)    
     
     usernameLine = qt.QLineEdit()   
     passwordLine = qt.QLineEdit() # encrypted
@@ -38,8 +38,8 @@ def makeCredentialsWidgets(XnatLoginMenu):
     # Sets aesthetics.
     #--------------------
     usernameLine.setText(XnatLoginMenu.defaultUsernameText)
-    usernameLine.setFont(XnatLoginMenu.browser.utils.labelFontItalic)
-    passwordLine.setFont(XnatLoginMenu.browser.utils.labelFontItalic) 
+    usernameLine.setFont(XnatLoginMenu.MODULE.utils.labelFontItalic)
+    passwordLine.setFont(XnatLoginMenu.MODULE.utils.labelFontItalic) 
     passwordLine.setText(XnatLoginMenu.defaultPasswordText)
     passwordLine.selectAll()
 
@@ -54,7 +54,7 @@ def makeHostDropdown(XnatLoginMenu):
     """
     
     hostDropdown = qt.QComboBox()
-    hostDropdown.setFont(XnatLoginMenu.browser.utils.labelFont)
+    hostDropdown.setFont(XnatLoginMenu.MODULE.utils.labelFont)
     hostDropdown.toolTip = "Select Xnat host"
     return hostDropdown
 
@@ -68,9 +68,9 @@ def makeLoginButton(XnatLoginMenu):
     plt = qt.QPalette()
     plt.setColor(qt.QPalette().Button, qt.QColor(255,255,255))    
     loginButton = qt.QPushButton("Login")
-    loginButton.setFont(XnatLoginMenu.browser.utils.labelFontBold)    
+    loginButton.setFont(XnatLoginMenu.MODULE.utils.labelFontBold)    
     loginButton.toolTip = "Login to selected Xnat host"    
-    loginButton.setFixedSize(XnatLoginMenu.browser.utils.buttonSizeMed.width(), (XnatLoginMenu.browser.utils.buttonSizeSmall.height() - 4))
+    loginButton.setFixedSize(XnatLoginMenu.MODULE.utils.buttonSizeMed.width(), (XnatLoginMenu.MODULE.utils.buttonSizeSmall.height() - 4))
     return loginButton
 
 
@@ -82,9 +82,9 @@ def makeSettingsButton(XnatLoginMenu):
     """
     
     settingsButton = qt.QPushButton()
-    settingsButton.setIcon(qt.QIcon(os.path.join(XnatLoginMenu.browser.utils.iconPath, 'wrench.png')) )
+    settingsButton.setIcon(qt.QIcon(os.path.join(XnatLoginMenu.MODULE.utils.iconPath, 'wrench.png')) )
     settingsButton.toolTip = "Settings"
-    settingsButton.setFixedSize(XnatLoginMenu.browser.utils.buttonSizeMed.width() - 10, 26)
+    settingsButton.setFixedSize(XnatLoginMenu.MODULE.utils.buttonSizeMed.width() - 10, 26)
 
     return settingsButton
 

@@ -23,12 +23,12 @@ class XnatLoginMenu(object):
         XnatIo.
     """
 
-    def __init__(self, parent = None, browser = None):
+    def __init__(self, parent = None, MODULE = None):
         """ Init function.
         """
         
         self.parent = parent
-        self.browser = browser
+        self.MODULE = MODULE
 
 
         
@@ -109,9 +109,9 @@ class XnatLoginMenu(object):
         # Get the dictionary from settings and the key to 
         # the dropdown widget.
         #--------------------
-        hostDict = self.browser.settings.getHostNameAddressDictionary()
+        hostDict = self.MODULE.settings.getHostNameAddressDictionary()
         for name in hostDict:     
-            self.browser.XnatLoginMenu.hostDropdown.addItem(name)       
+            self.MODULE.XnatLoginMenu.hostDropdown.addItem(name)       
 
         
 
@@ -130,7 +130,7 @@ class XnatLoginMenu(object):
         #--------------------
         # Set host dropdown to default stored hostName.
         #--------------------
-        defaultName = self.browser.settings.getDefault()
+        defaultName = self.MODULE.settings.getDefault()
         self.setHostDropdownByName(defaultName)
 
 
@@ -166,7 +166,7 @@ class XnatLoginMenu(object):
         # Does the username exist in the settings file?
         #--------------------
         if self.currHostName: 
-            currUser = self.browser.settings.getCurrUsername(self.currHostName).strip()
+            currUser = self.MODULE.settings.getCurrUsername(self.currHostName).strip()
             #
             # If it does, and it's not a '' string, then apply it to the
             # usernameLine....
@@ -201,9 +201,9 @@ class XnatLoginMenu(object):
     def onSettingsButtonClicked(self):
         """ Event function for when the settings button
             is clicked.  Displays the XnatSettingsPopup 
-            from the browser.
+            from the MODULE.
         """
-        self.browser.settingsPopup.showWindow()
+        self.MODULE.settingsPopup.showWindow()
 
 
 
@@ -247,27 +247,27 @@ class XnatLoginMenu(object):
         #--------------------
         # Store the current username in settings
         #--------------------
-        self.browser.settings.setCurrUsername(self.hostDropdown.currentText, self.usernameLine.text)
+        self.MODULE.settings.setCurrUsername(self.hostDropdown.currentText, self.usernameLine.text)
 
         
         #--------------------
         # Clear the current XnatView.
         #--------------------
-        self.browser.XnatView.clear()
+        self.MODULE.XnatView.clear()
 
 
         #--------------------
         # Derive the XNAT host URL by mapping the current item in the host
         # dropdown to its value pair in the settings.  
         #--------------------
-        if self.browser.settings.getAddress(self.hostDropdown.currentText):
-            self.currHostUrl = qt.QUrl(self.browser.settings.getAddress(self.hostDropdown.currentText))
+        if self.MODULE.settings.getAddress(self.hostDropdown.currentText):
+            self.currHostUrl = qt.QUrl(self.MODULE.settings.getAddress(self.hostDropdown.currentText))
             #
-            # Call the 'beginXnat' function from the browser.
+            # Call the 'beginXnat' function from the MODULE.
             #
-            self.browser.loggedIn = True
-            self.browser.beginXnat()
+            self.MODULE.loggedIn = True
+            self.MODULE.beginXnat()
         else:
-            print "%s The host '%s' doesn't appear to have a valid URL"%(self.browser.utils.lf(), self.hostDropdown.currentText) 
+            print "%s The host '%s' doesn't appear to have a valid URL"%(self.MODULE.utils.lf(), self.hostDropdown.currentText) 
             pass  
 

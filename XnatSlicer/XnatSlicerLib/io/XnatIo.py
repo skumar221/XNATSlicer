@@ -34,10 +34,10 @@ class XnatIo(object):
     """
 
         
-    def setup(self, browser, host, user, password):
+    def setup(self, MODULE, host, user, password):
 
         self.projectCache = None
-        self.browser = browser
+        self.MODULE = MODULE
         self.host = host
         self.user = user
         self.password = password
@@ -57,7 +57,7 @@ class XnatIo(object):
     
     def getFilesByUrl(self, srcDstMap, withProgressBar = True, fileOrFolder = None): 
 
-        print self.browser.utils.lf(), srcDstMap
+        print self.MODULE.utils.lf(), srcDstMap
 
         timeStart = time.time()
         
@@ -70,7 +70,7 @@ class XnatIo(object):
 
 
         t = time.time()
-        print (self.browser.utils.lf(), t, "Remove existing - start")
+        print (self.MODULE.utils.lf(), t, "Remove existing - start")
         #-------------------------
         # Remove existing dst files
         #-------------------------
@@ -79,10 +79,10 @@ class XnatIo(object):
             basename = os.path.basename(dst)
             if not any(basename in s for s in clearedDirs):
                 if os.path.exists(basename):
-                    self.browser.utils.removeFileInDir(basename)
+                    self.MODULE.utils.removeFileInDir(basename)
                     clearedDirs.append(basename)
                     
-        print (self.browser.utils.lf(), t-time.time(), "Remove existing - end")
+        print (self.MODULE.utils.lf(), t-time.time(), "Remove existing - end")
 
         
         #-------------------------
@@ -90,7 +90,7 @@ class XnatIo(object):
         #-------------------------
         if fileOrFolder == "file":
             for src, dst in srcDstMap.iteritems():
-                print("%s file download\nsrc: '%s' \ndst: '%s'"%(self.browser.utils.lf(), src, dst))
+                print("%s file download\nsrc: '%s' \ndst: '%s'"%(self.MODULE.utils.lf(), src, dst))
 
                 fName = os.path.basename(src)
                 fUri = "/projects/" + src.split("/projects/")[1]
@@ -103,7 +103,7 @@ class XnatIo(object):
 
 
             t = time.time()
-            print (self.browser.utils.lf(), t, "Determine source folders - start")
+            print (self.MODULE.utils.lf(), t, "Determine source folders - start")
 
             #---------------------
             # Determine source folders, create new dict based on basename
@@ -114,7 +114,7 @@ class XnatIo(object):
                 if not srcFolder in xnatFileFolders:
                     xnatFileFolders.append(srcFolder)
                     
-            print (self.browser.utils.lf(), t-time.time(), "Determine source folders - end")
+            print (self.MODULE.utils.lf(), t-time.time(), "Determine source folders - end")
                     
                     
             #--------------------
@@ -126,16 +126,16 @@ class XnatIo(object):
                     
                     # Sting cleanup
                     src = (f + "?format=zip")                 
-                    dst = tempfile.mktemp('', 'XnatDownload', self.browser.utils.tempPath) + ".zip"
-                    downloadFolders.append(self.browser.utils.adjustPathSlashes(dst))
+                    dst = tempfile.mktemp('', 'XnatDownload', self.MODULE.utils.tempPath) + ".zip"
+                    downloadFolders.append(self.MODULE.utils.adjustPathSlashes(dst))
 
                     # remove existing
                     if os.path.exists(dst): 
-                        self.browser.utils.removeFile(dst)
+                        self.MODULE.utils.removeFile(dst)
 
                         
                     # Init download
-                    print("%s folder downloading %s to %s"%(self.browser.utils.lf(), src, dst))
+                    print("%s folder downloading %s to %s"%(self.MODULE.utils.lf(), src, dst))
                     self.get(src, dst)
 
                     
@@ -175,7 +175,7 @@ class XnatIo(object):
             self.httpsRequest('DELETE', xnatDst, '')
 
             
-        print "%s Uploading\nsrc: '%s'\nxnatDst: '%s'"%(self.browser.utils.lf(), localSrc, xnatDst)
+        print "%s Uploading\nsrc: '%s'\nxnatDst: '%s'"%(self.MODULE.utils.lf(), localSrc, xnatDst)
 
 
 
@@ -252,7 +252,7 @@ class XnatIo(object):
         # REST call
         #-------------------- 
         connection.request(restMethod, req.get_selector (), body = body, headers = header)
-        #print ('%s httpsRequest: %s %s')%(self.browser.utils.lf(), restMethod, url)
+        #print ('%s httpsRequest: %s %s')%(self.MODULE.utils.lf(), restMethod, url)
 
 
         #-------------------- 
@@ -266,7 +266,7 @@ class XnatIo(object):
     def delete(self, selStr):
         """ Description
         """
-        print "%s deleting %s"%(self.browser.utils.lf(), selStr)
+        print "%s deleting %s"%(self.MODULE.utils.lf(), selStr)
         self.httpsRequest('DELETE', selStr, '')
 
 
@@ -276,11 +276,11 @@ class XnatIo(object):
         """ Set's the download state to 0.  The open buffer in the 'get' method
             will then read this download state, and cancel out.
         """
-        print self.browser.utils.lf(), "Canceling download."
-        self.browser.downloadPopup.window.hide()
-        self.browser.downloadPopup.reset()
+        print self.MODULE.utils.lf(), "Canceling download."
+        self.MODULE.downloadPopup.window.hide()
+        self.MODULE.downloadPopup.reset()
         self.downloadState = 0
-        self.browser.XnatView.setEnabled(True)
+        self.MODULE.XnatView.setEnabled(True)
         
 
 
@@ -346,7 +346,7 @@ class XnatIo(object):
         #-------------------- 
         errorString = ""
         try:
-            print self.browser.utils.lf(), "XnatSrc: ", XnatSrc
+            print self.MODULE.utils.lf(), "XnatSrc: ", XnatSrc
             response = urllib2.urlopen(XnatSrc)
         except Exception, e:
             errorString += str(e) + "\n"
@@ -355,7 +355,7 @@ class XnatIo(object):
             # If the urllib2 version fails, try the httplib version
             #-------------------
             try:
-                print self.browser.utils.lf(), "urllib2 get failed.  Attempting httplib version."
+                print self.MODULE.utils.lf(), "urllib2 get failed.  Attempting httplib version."
                 #------------
                 # HTTP LIB VERSION
                 #-----------
@@ -363,9 +363,9 @@ class XnatIo(object):
                 #
                 # Reset popup
                 #
-                self.browser.downloadPopup.reset()
-                self.browser.downloadPopup.setDownloadFilename(XnatSrc) 
-                self.browser.downloadPopup.show()
+                self.MODULE.downloadPopup.reset()
+                self.MODULE.downloadPopup.setDownloadFilename(XnatSrc) 
+                self.MODULE.downloadPopup.show()
                 #
                 # Credentials
                 #
@@ -397,7 +397,7 @@ class XnatIo(object):
                 # REST call
                 #
                 connection.request (restMethod, req.get_selector (), body= '', headers=header)
-                print "%s Xnat request - %s %s"%(self.browser.utils.lf(), restMethod, url)
+                print "%s Xnat request - %s %s"%(self.MODULE.utils.lf(), restMethod, url)
                 #
                 # Return response
                 #
@@ -409,14 +409,14 @@ class XnatIo(object):
                 #
                 with open(dst, 'wb') as f:
                     f.write(data)
-                self.browser.XnatView.setEnabled(True)
-                self.browser.downloadPopup.hide()
+                self.MODULE.XnatView.setEnabled(True)
+                self.MODULE.downloadPopup.hide()
                 return
                 
             except Exception, e2:
                 errorString += str(e2)
                 qt.QMessageBox.warning( None, "Xnat Error", errorStrings)
-                self.browser.XnatView.setEnabled(True)
+                self.MODULE.XnatView.setEnabled(True)
                 return
 
 
@@ -432,14 +432,14 @@ class XnatIo(object):
             # If not in log, read the header
             if response.headers and "Content-Length" in response.headers:
                 self.downloadTracker['totalDownloadSize']['bytes'] = int(response.headers["Content-Length"])  
-                self.downloadTracker['totalDownloadSize']['MB'] = self.browser.utils.bytesToMB(self.downloadTracker['totalDownloadSize']['bytes'])
+                self.downloadTracker['totalDownloadSize']['MB'] = self.MODULE.utils.bytesToMB(self.downloadTracker['totalDownloadSize']['bytes'])
 
 
             
         #-------------------- 
-        # Adjust browser UI
+        # Adjust MODULE UI
         #-------------------- 
-        self.browser.XnatView.setEnabled(False)
+        self.MODULE.XnatView.setEnabled(False)
 
         
 
@@ -452,23 +452,23 @@ class XnatIo(object):
 
             #-------------------- 
             # If a progress indicator is desired,
-            # set the parameters of self.browser.downloadPopup.
+            # set the parameters of self.MODULE.downloadPopup.
             #-------------------- 
             if showProgressIndicator:
                 #
                 # Reset popup
                 #
-                self.browser.downloadPopup.reset()
+                self.MODULE.downloadPopup.reset()
                 #
                 # Set filename
                 #
-                self.browser.downloadPopup.setDownloadFilename(fileDisplayName) 
-                self.browser.downloadPopup.show()
+                self.MODULE.downloadPopup.setDownloadFilename(fileDisplayName) 
+                self.MODULE.downloadPopup.show()
                 #
                 # Update the download popup file size
                 #
                 if self.downloadTracker['totalDownloadSize']['bytes']:
-                    self.browser.downloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
+                    self.MODULE.downloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
                     #
                     # Wait for threads to catch up 
                     #
@@ -479,7 +479,7 @@ class XnatIo(object):
             #--------------------
             # Disable view widget
             #--------------------
-            self.browser.XnatView.viewWidget.setEnabled(False)
+            self.MODULE.XnatView.viewWidget.setEnabled(False)
 
 
             
@@ -493,15 +493,15 @@ class XnatIo(object):
                 if self.downloadState == 0:
                     fileToWrite.close()
                     slicer.app.processEvents()
-                    self.browser.utils.removeFile(fileToWrite.name)
+                    self.MODULE.utils.removeFile(fileToWrite.name)
                     break
                 #
                 # Read buffer
                 #
                 buffer = response.read(buffer_size)
                 if not buffer: 
-                    if self.browser.downloadPopup:
-                        self.browser.downloadPopup.hide()
+                    if self.MODULE.downloadPopup:
+                        self.MODULE.downloadPopup.hide()
                         break 
                 #    
                 # Write buffer chunk to file
@@ -511,8 +511,8 @@ class XnatIo(object):
                 # Update progress indicators
                 #
                 self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
-                if showProgressIndicator and self.browser.downloadPopup:
-                    self.browser.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
+                if showProgressIndicator and self.MODULE.downloadPopup:
+                    self.MODULE.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
                 #   
                 # Wait for threads to catch up      
                 #
@@ -534,7 +534,7 @@ class XnatIo(object):
         #-------------------- 
         # When finished, reenable Viewer and close the file
         #-------------------- 
-        self.browser.XnatView.setEnabled(True)
+        self.MODULE.XnatView.setEnabled(True)
         XnatFile.close()
 
     
@@ -549,7 +549,7 @@ class XnatIo(object):
         # Get the response from httpRequest
         #--------------------      
         response = self.httpsRequest('GET', url).read()
-        print "%s %s"%(self.browser.utils.lf(), url)
+        print "%s %s"%(self.MODULE.utils.lf(), url)
         #print "Get JSON Response: %s"%(response)
 
 
@@ -566,7 +566,7 @@ class XnatIo(object):
         # If that fails, kick back error...
         #-------------------- 
         except Exception, e:
-            print "%s login error to host '%s'!"%(self.browser.utils.lf(), self.host)
+            print "%s login error to host '%s'!"%(self.MODULE.utils.lf(), self.host)
             return XnatError(self.host, self.user, response)
 
 
@@ -576,13 +576,13 @@ class XnatIo(object):
     def getXnatUriAt(self, url, level):
         """ Returns the XNAT path from 'url' at 'level',
         """
-        #print "%s %s"%(self.browser.utils.lf(), url, level)
+        #print "%s %s"%(self.MODULE.utils.lf(), url, level)
         if not level.startswith('/'):
             level = '/' + level
         if level in url:
             return  url.split(level)[0] + level
         else:
-            raise Exception("%s invalid get level '%s' parameter: %s"%(self.browser.utils.lf(), url, level))
+            raise Exception("%s invalid get level '%s' parameter: %s"%(self.MODULE.utils.lf(), url, level))
 
         
 
@@ -591,7 +591,7 @@ class XnatIo(object):
         """ Determines whether a file exists
             on an XNAT host based on the 'fileUri' argument.
         """
-        #print "%s %s"%(self.browser.utils.lf(), fileUri)
+        #print "%s %s"%(self.MODULE.utils.lf(), fileUri)
 
         #-------------------- 
         # Query logged files before checking
@@ -622,7 +622,7 @@ class XnatIo(object):
     def getSize(self, fileUri):
         """ Descriptor
         """
-        #print "%s %s"%(self.browser.utils.lf(), fileUri)
+        #print "%s %s"%(self.MODULE.utils.lf(), fileUri)
         bytes = 0
        
         
@@ -630,7 +630,7 @@ class XnatIo(object):
         fileName = os.path.basename(fileUri)
         if fileName in self.fileDict:
             bytes = int(self.fileDict[fileName]['Size'])
-            return {"bytes": (bytes), "MB" : self.browser.utils.bytesToMB(bytes)}
+            return {"bytes": (bytes), "MB" : self.MODULE.utils.bytesToMB(bytes)}
 
         return {"bytes": None, "MB" : None}
 
@@ -700,7 +700,7 @@ class XnatIo(object):
             newQueryUri = queryUri
             if queryArguments:
                 newQueryUri = self.applyQueryArgumentsToUri(queryUri, queryArguments)
-            print "%s query path: %s"%(self.browser.utils.lf(), newQueryUri)
+            print "%s query path: %s"%(self.MODULE.utils.lf(), newQueryUri)
             #
             # Get the JSON
             #
@@ -749,7 +749,7 @@ class XnatIo(object):
                 for content in contents:
                     # create a tracker in the fileDict
                     self.fileDict[content['Name']] = content
-                #print "%s %s"%(self.browser.utils.lf(), self.fileDict)
+                #print "%s %s"%(self.MODULE.utils.lf(), self.fileDict)
             elif queryUri.endswith('/projects'):
                 self.projectCache = returnContents
                             
@@ -772,8 +772,8 @@ class XnatIo(object):
         #-------------------- 
         folder += "/resources"
         resources = self.getJson(folder)
-        #print "%s %s"%(self.browser.utils.lf(), folder)
-        #print self.browser.utils.lf() + " Got resources: '%s'"%(str(resources))
+        #print "%s %s"%(self.MODULE.utils.lf(), folder)
+        #print self.MODULE.utils.lf() + " Got resources: '%s'"%(str(resources))
 
 
         
@@ -784,10 +784,10 @@ class XnatIo(object):
         for r in resources:
             if 'label' in r:
                 resourceNames.append(r['label'])
-                #print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['label']))
+                #print (self.MODULE.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['label']))
             elif 'Name' in r:
                 resourceNames.append(r['Name'])
-                #print (self.browser.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['Name']))                
+                #print (self.MODULE.utils.lf() +  "FOUND RESOURCE ('%s') : %s"%(folder, r['Name']))                
             
             return resourceNames
 
@@ -802,7 +802,7 @@ class XnatIo(object):
         # Clean string
         #-------------------- 
         XnatItem = self.cleanUri(XnatItem)
-        #print "%s %s %s"%(self.browser.utils.lf(), XnatItem, attr)
+        #print "%s %s %s"%(self.MODULE.utils.lf(), XnatItem, attr)
 
 
         
@@ -844,7 +844,7 @@ class XnatIo(object):
         """ Makes a directory in Xnat via PUT.
         """ 
         result = self.httpsRequest('PUT', XnatUri)
-        #print "%s Put Dir %s \n%s"%(self.browser.utils.lf(), XnatUri, r)
+        #print "%s Put Dir %s \n%s"%(self.MODULE.utils.lf(), XnatUri, r)
         return result
 
     
