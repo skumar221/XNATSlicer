@@ -4,7 +4,7 @@ import imp, os, inspect, sys, slicer
 
 #
 # Widget path needs to be globally recognized by Python.
-# Appending to global path here.
+# Appending to global path.
 #
 MODULE_PATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
 #
