@@ -6,20 +6,28 @@ import imp, os, inspect, sys, slicer
 # Widget path needs to be globally recognized by Python.
 # Appending to global path here.
 #
-WIDGETPATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
+MODULE_PATH = os.path.normpath(os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe()))[0])))
 #
 # Inlcude testing folders.
 #
-sys.path.append(os.path.join(WIDGETPATH, 'Testing'))
+sys.path.append(os.path.join(MODULE_PATH, 'Testing'))
 #
 # Include lib folder.
 #
-WIDGETPATH = os.path.join(WIDGETPATH, "XnatSlicerLib")
-sys.path.append(WIDGETPATH)
+LIB_PATH = os.path.join(MODULE_PATH, "XnatSlicerLib")
+sys.path.append(LIB_PATH)
 #
 # Include UI folder.
 #
-sys.path.append(os.path.join(WIDGETPATH, 'UI'))
+sys.path.append(os.path.join(LIB_PATH, 'ui2'))
+#
+# Include utils folder.
+#
+sys.path.append(os.path.join(LIB_PATH, 'utils'))
+#
+# Include io folder.
+#
+sys.path.append(os.path.join(LIB_PATH, 'io'))
 
 
 
