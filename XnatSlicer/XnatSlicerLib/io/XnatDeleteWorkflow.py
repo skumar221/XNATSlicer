@@ -78,9 +78,9 @@ class XnatDeleteWorkflow(object):
 
                 
             #
-            # Call delete XnatCommunicator's 'delete' function.
+            # Call delete XnatIo's 'delete' function.
             #
-            self.browser.XnatCommunicator.delete(delStr)
+            self.browser.XnatIo.delete(delStr)
 
             
             #

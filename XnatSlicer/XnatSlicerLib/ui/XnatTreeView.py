@@ -163,10 +163,10 @@ class XnatTreeView(XnatView.XnatView):
         
         #---------------------- 
         # Merge 'self.columnKeyOrder' with
-        # the XnatCommunicator's 'relevantMetadataDict'
+        # the XnatIo's 'relevantMetadataDict'
         #---------------------- 
         self.columnKeyOrder = dict(self.columnKeyOrder.items() + 
-                                   self.browser.XnatCommunicator.relevantMetadataDict.items())
+                                   self.browser.XnatIo.relevantMetadataDict.items())
         
 
 
@@ -514,7 +514,7 @@ class XnatTreeView(XnatView.XnatView):
             of the current XNAT host.
         """     
         if self.sessionManager.sessionArgs:
-            self.browser.XnatCommunicator.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
+            self.browser.XnatIo.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveDir']))
 
 
             
@@ -1002,7 +1002,7 @@ class XnatTreeView(XnatView.XnatView):
         
     def getChildren(self, item, expanded, setCurrItem = True):
         """ Gets the branches of a particular treeItem 
-            via an XnatCommunicator.   
+            via an XnatIo.   
         """       
 
         #--------------------
@@ -1043,7 +1043,7 @@ class XnatTreeView(XnatView.XnatView):
         # Get folder contents via metadata.  
         # Set nodeNames from metadata.
         #-------------------- 
-        metadata = self.browser.XnatCommunicator.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
+        metadata = self.browser.XnatIo.getFolderContents(pathObj['childQueryUris'], self.browser.utils.XnatMetadataTagsByLevel(currXnatLevel), queryArguments)
 
 
 
@@ -1077,7 +1077,7 @@ class XnatTreeView(XnatView.XnatView):
         # Special case for children with Slicer URIs
         #--------------------
         if 'slicerQueryUris' in pathObj:
-            slicerMetadata = self.browser.XnatCommunicator.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))
+            slicerMetadata = self.browser.XnatIo.getFolderContents(pathObj['slicerQueryUris'], self.browser.utils.XnatMetadataTagsByLevel('files'))
             #
             # Proceed only if the relevant metadata to retrieve Slicer
             # files exists 
@@ -1344,7 +1344,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Conduct a server-side search
         #------------------------
-        serverQueryResults = self.browser.XnatCommunicator.search(searchString)
+        serverQueryResults = self.browser.XnatIo.search(searchString)
 
 
         #------------------------

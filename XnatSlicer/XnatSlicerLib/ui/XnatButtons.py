@@ -161,7 +161,7 @@ class XnatButtons(object):
         """ Adds a project folder to the server.
         """
 
-        self.addProjEditor = XnatAddProjEditor(self, self.browser, self.browser.XnatCommunicator)
+        self.addProjEditor = XnatAddProjEditor(self, self.browser, self.browser.XnatIo)
         self.addProjEditor.show()
 
 

@@ -12,7 +12,7 @@ from XnatSessionManager import *
 
 comment = """
 XnatView is the class that handles all of the UI interactions 
-to the XnatCommunicator.  It is meant to serve as a parent
+to the XnatIo.  It is meant to serve as a parent
 class to various XnatView schemes such as XnatTreeView.
 
 TODO:  Consider sending more functions from XnatTreeView
@@ -52,9 +52,9 @@ class XnatView(object):
         # project contents...
         #----------------------
         projectContents = None
-        if self.browser.XnatCommunicator.projectCache == None:
+        if self.browser.XnatIo.projectCache == None:
             self.viewWidget.clear()
-            projectContents = self.browser.XnatCommunicator.getFolderContents(queryUris = ['/projects'], 
+            projectContents = self.browser.XnatIo.getFolderContents(queryUris = ['/projects'], 
                                                                               metadataTags = self.browser.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
             #

@@ -125,7 +125,7 @@ class XnatSaveWorkflow(object):
         # Upload package  
         #------------------------   
         uploadStr = self.browser.XnatView.sessionManager.sessionArgs['saveDir'] + "/" + os.path.basename(packageFileName)    
-        self.browser.XnatCommunicator.upload(packageFileName, uploadStr)
+        self.browser.XnatIo.upload(packageFileName, uploadStr)
         slicer.app.processEvents()
   
 

@@ -13,7 +13,7 @@ from XnatUtils import *
 
 comment = """
 XnatAddProjEditor is used for creating new projects/folders within a given
-Xnat host.  It manages talking to a given XnatCommunicator and its associated
+Xnat host.  It manages talking to a given XnatIo and its associated
 string inputs. 
 
 TODO : 
@@ -41,7 +41,7 @@ class XnatAddProjEditor(object):
         #--------------------        
         self.projLabel = qt.QLabel("Project")
         self.projDD = qt.QComboBox()
-        self.projDD.addItems(self.browser.XnatCommunicator.getFolderContents('/projects'))       
+        self.projDD.addItems(self.browser.XnatIo.getFolderContents('/projects'))       
         self.projDD.connect("currentIndexChanged(const QString&)", self.populateSubjectDD)
 
 
@@ -119,14 +119,14 @@ class XnatAddProjEditor(object):
 
             
     def populateSubjectDD(self, proj):
-        """ Utilizes 'XnatCommunicator' to query for the subjects within a given
+        """ Utilizes 'XnatIo' to query for the subjects within a given
             project, provided by the argument.
         """
 
         #--------------------
         # Get the raw subjects
         #--------------------
-        subjs_raw = self.browser.XnatCommunicator.getFolderContents('/projects/' + proj + '/subjects')
+        subjs_raw = self.browser.XnatIo.getFolderContents('/projects/' + proj + '/subjects')
         subjs_name = []
 
 
@@ -135,7 +135,7 @@ class XnatAddProjEditor(object):
         # Add subjects to dropdown
         #--------------------
         for r in subjs_raw:
-            subjs_name.append(self.browser.XnatCommunicator.getItemValue('/projects/' + proj + '/subjects/' + str(urllib2.quote(r)), 'label'))
+            subjs_name.append(self.browser.XnatIo.getItemValue('/projects/' + proj + '/subjects/' + str(urllib2.quote(r)), 'label'))
         self.subjDD.clear()
         self.subjDD.addItems(subjs_name)
 
@@ -254,7 +254,7 @@ class XnatAddProjEditor(object):
             # the relevant error based on whether it was a project
             # subject or experiment...
             #--------------------
-            if (self.browser.XnatCommunicator.fileExists(xnatUri)):
+            if (self.browser.XnatIo.fileExists(xnatUri)):
                 print ("%s %s ALREADY EXISTS!"%(self.browser.utils.lf(), xnatUri))
                 projStr = xnatUri.split("/subjects")[0]
                 subjStr = None
@@ -263,11 +263,11 @@ class XnatAddProjEditor(object):
                     subjStr = xnatUri.split("/experiments")[0]
                 if "/experiments" in xnatUri:
                     exptStr =  xnatUri
-                if (exptStr and self.browser.XnatCommunicator.fileExists(exptStr)):
+                if (exptStr and self.browser.XnatIo.fileExists(exptStr)):
                     self.exptError.setText("<font color=\"red\">*Experiment already exists.</font>")
-                elif (subjStr and self.browser.XnatCommunicator.fileExists(subjStr)):
+                elif (subjStr and self.browser.XnatIo.fileExists(subjStr)):
                     self.subjError.setText("<font color=\"red\">*Subject already exists.</font>")
-                elif (projStr and self.browser.XnatCommunicator.fileExists(projStr)):
+                elif (projStr and self.browser.XnatIo.fileExists(projStr)):
                     self.projError.setText("<font color=\"red\">*Project already exists.</font>")
 
 
@@ -276,7 +276,7 @@ class XnatAddProjEditor(object):
             # Otherwise make the folder and close the modal.
             #--------------------
             else:
-                self.browser.XnatCommunicator.makeDir(xnatUri)
+                self.browser.XnatIo.makeDir(xnatUri)
                 slicer.app.processEvents()
                 self.browser.XnatView.selectItem_byPath(xnatUri)
                 print ("%s creating %s "%(self.browser.utils.lf(), xnatUri))

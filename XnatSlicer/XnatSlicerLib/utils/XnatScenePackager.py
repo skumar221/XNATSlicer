@@ -44,7 +44,7 @@ class XnatScenePackager(object):
         #-------------------
         # Init variables.
         #-------------------
-        XnatCommunicator = args['XnatCommunicator'] 
+        XnatIo = args['XnatIo'] 
         XnatDir = args['saveDir']
         XnatSharedDir = args['sharedDir']
         sceneName = args['fileName'] 

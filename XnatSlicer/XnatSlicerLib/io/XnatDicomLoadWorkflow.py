@@ -92,7 +92,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #---------------------
         # Get the resources of the Xnat URI provided in the argument.
         #---------------------
-        resources = self.browser.XnatCommunicator.getResources(parentXnatUri)     
+        resources = self.browser.XnatIo.getResources(parentXnatUri)     
         #print "%s parentXnatUri: %s\nresources:%s"%(self.browser.utils.lf(), parentXnatUri, resources) 
 
 
@@ -107,7 +107,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             #
             # Get the contentsof the fileFolderUri.
             #
-            contents = self.browser.XnatCommunicator.getFolderContents(fileFolderUri, metadataTags = ['Name', 'Size'])
+            contents = self.browser.XnatIo.getFolderContents(fileFolderUri, metadataTags = ['Name', 'Size'])
             fileNames = contents['Name']
             #
             # Check to see if the file extensions (contents) are valid.
@@ -178,7 +178,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             #
             # Get 'experiments'       
             #                        
-            experimentsList, sizes = self.browser.XnatCommunicator.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_subjects)
+            experimentsList, sizes = self.browser.XnatIo.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_subjects)
 
 
             #
@@ -193,7 +193,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             #
             for expt in experimentsList:
                 parentScanFolder = self.xnatSrc + "/" + expt + "/scans"
-                scanList = self.browser.XnatCommunicator.getFolderContents(parentScanFolder, self.browser.utils.XnatMetadataTags_scans)
+                scanList = self.browser.XnatIo.getFolderContents(parentScanFolder, self.browser.utils.XnatMetadataTags_scans)
                 for scan in scanList:
                     self.getDownloadables(parentScanFolder + "/" + scan)
         
@@ -212,7 +212,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             # Then, scan the folder contents of the 'scan' folders within
             # the experiment.  Get the downloadables accordingly.
             #
-            scansList, sizes = self.browser.XnatCommunicator.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_experiments)
+            scansList, sizes = self.browser.XnatIo.getFolderContents(self.xnatSrc, self.browser.utils.XnatMetadataTags_experiments)
             for scan in scansList:
                 self.getDownloadables(self.xnatSrc + "/" + scan)
 
@@ -239,7 +239,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Exit out if there are no downloadables.
         #--------------------           
         if len(self.downloadables) == 0:
-            self.browser.XnatCommunicator.downloadFailed("Download Failed", "No scans in found to download!")
+            self.browser.XnatIo.downloadFailed("Download Failed", "No scans in found to download!")
             return 
 
 
@@ -258,7 +258,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Download all DICOMS as part of a zipped file.
         #--------------------           
         _dict = dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables]))        
-        zipFolders = self.browser.XnatCommunicator.getFiles(_dict)
+        zipFolders = self.browser.XnatIo.getFiles(_dict)
 
 
             

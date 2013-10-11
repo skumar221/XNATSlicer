@@ -126,7 +126,7 @@ class XnatDownloadPopup(XnatPopup):
         #-------------------
         self.cancelButton = qt.QPushButton()
         self.cancelButton.setText("Cancel")
-        self.cancelButton.connect('pressed()', self.browser.XnatCommunicator.cancelDownload)
+        self.cancelButton.connect('pressed()', self.browser.XnatIo.cancelDownload)
         self.cancelButton.setFixedWidth(60)
         
 

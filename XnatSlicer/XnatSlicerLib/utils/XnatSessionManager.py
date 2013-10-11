@@ -40,7 +40,7 @@ class XnatSessionArgs(dict):
         self['fileName'] = None 
         self['sessionStart'] = str(datetime.datetime.now())
         self["sessionType"] = None
-        self["XnatCommunicator"] = None
+        self["XnatIo"] = None
         self["metadata"] = None
         self.inserting = False
    

@@ -47,7 +47,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         #-------------------------
         # Get scene package from XNAT host.
         #-------------------------
-        self.browser.XnatCommunicator.getFile({self.xnatSrc : self.localDst})
+        self.browser.XnatIo.getFile({self.xnatSrc : self.localDst})
 
 
         

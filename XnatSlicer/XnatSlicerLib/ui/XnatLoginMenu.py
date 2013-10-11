@@ -9,7 +9,7 @@ import XnatLoginMenuUI
 
 comment = """
 XnatLoginMenu is the class that handles all of the UI  
-to the XnatCommunicator related to logging in to a given 
+to the XnatIo related to logging in to a given 
 XNAT host.  
 
 TODO : 
@@ -20,7 +20,7 @@ TODO :
 class XnatLoginMenu(object):
     """ Handles UI for loggin into XNAT as well as settings by 
         linking to button clicks to external methods in the
-        XnatCommunicator.
+        XnatIo.
     """
 
     def __init__(self, parent = None, browser = None):

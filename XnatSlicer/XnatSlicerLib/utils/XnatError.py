@@ -4,7 +4,7 @@ from __main__ import vtk, ctk, qt, slicer
 
 comment = """
 XnatError is a class that manages an errors resultant from
-the XnatCommunicator.  Rather than passing strings alone, XnatError
+the XnatIo.  Rather than passing strings alone, XnatError
 handles other relevant data to a specific Xnat IO error, such as the
 Xnat host and the user who logs into the host.
 
