@@ -41,6 +41,7 @@ from XnatSessionManager import *
 from XnatTimer import *
 from XnatSettings import *
 from XnatTreeView import *
+from XnatSearchBar import *
 from XnatIo import *
 from XnatLoginMenu import *
 from XnatButtons import *
@@ -194,6 +195,13 @@ class XnatSlicerWidget:
         self.XnatLoginMenu.loadDefaultHost()   
 
 
+
+        #--------------------------------
+        # SearchBar
+        #--------------------------------
+        self.XnatSearchBar = XnatSearchBar(MODULE = self)
+
+        
       
         #--------------------------------
         # Viewer
@@ -364,44 +372,27 @@ class XnatSlicerWidget:
         """
                 
         #--------------------------------
-        # Main Collapsible Button
+        # Make Main Collapsible Button
         #--------------------------------
         mainCollapsibleButton = ctk.ctkCollapsibleButton()
         mainCollapsibleButton.text = "XNATSlicer"
 
 
-
+        
         #--------------------------------
-        # Login Group Box
+        # Make Group boxes
         #--------------------------------
         self.loginGroupBox = ctk.ctkCollapsibleGroupBox()
         self.loginGroupBox.setTitle("Login")
 
-
-        
-        #--------------------------------
-        # Tools Group Box
-        #--------------------------------
         self.toolsGroupBox = ctk.ctkCollapsibleGroupBox()
         self.toolsGroupBox.setTitle("Tools")
 
-
-
-        #--------------------------------
-        # Viewer Group Box
-        #--------------------------------
         self.viewerGroupBox = ctk.ctkCollapsibleGroupBox()
         self.viewerGroupBox.setTitle("Viewer")
 
 
         
-        
-        #--------------------------------
-        # Add all sections to parent layout.
-        #--------------------------------
-        self.layout.addWidget(mainCollapsibleButton)
-
-
 
         #--------------------------------
         # DEFINE: Main layout
@@ -411,96 +402,109 @@ class XnatSlicerWidget:
 
         
         #--------------------------------
-        # LOGIN layout.
+        # Set LOGIN Group Box.
         #--------------------------------        
         self.loginGroupBox.setLayout(self.XnatLoginMenu.loginLayout)
-        self.loginGroupBox.setChecked(True)
+        #
+        # Add login group box to widget.
+        #
         self.mainLayout.addWidget(self.loginGroupBox)
 
 
-
+        
         #--------------------------------
-        # Viewer layout.
+        # Set VIEWER Group Box.
         #--------------------------------   
         self.viewerLayout = qt.QGridLayout()  
         #
-        # Search Row
+        # Add Search Bar to Layout
         #
-        self.searchRowLayout = qt.QStackedLayout()
-        self.searchRowLayout.setStackingMode(1)
-        self.searchBox = qt.QLineEdit()
-        self.searchBox.connect("returnPressed()", self.XnatView.searchEntered)
-
-
-        searchButton = qt.QPushButton("Search:")
-        size = qt.QSize(26,26)
-        searchButton.setFixedSize(size)
-        searchButton.setStyleSheet("background: none")
-        #searchButton.setStyleSheet("border: none")
-
-        
-        self.searchRowLayout.addWidget(self.searchBox)
-        self.searchRowLayout.addWidget(searchButton)
-        searchButton.setStyleSheet('qproperty-alignment: AlignRight')
-        
-        
-        self.searchRowLayout.setAlignment(searchButton, 0x0002)
+        self.viewerLayout.addWidget(self.XnatSearchBar.searchWidget, 0, 0, 1, 1)
         #
-        # Load / Save Buttons
+        # Add Viewer to Layout
         #
-        self.loadSaveButtonLayout = qt.QVBoxLayout()
-        self.loadSaveButtonLayout.addWidget(self.XnatButtons.buttons['io']['load'])#, 2, 0)
-        self.loadSaveButtonLayout.addWidget(self.XnatButtons.buttons['io']['save'])#, 0, 0) 
-        #
-        # Add widgets to layout
-        #
-        self.viewerLayout.addLayout(self.searchRowLayout, 0, 0, 1, 1)
         self.viewerLayout.addWidget(self.XnatView.viewWidget, 2, 0)
-        self.viewerLayout.addLayout(self.loadSaveButtonLayout, 2, 1)
         #
-        # Add viewer layout to group box and main layout.
+        # Add Load / Save Buttons to Layout
+        #
+        self.viewerLayout.addLayout(self.XnatButtons.loadSaveButtonLayout, 2, 1)
+        #
+        # Add viewer layout to group box.
         #
         self.viewerGroupBox.setLayout(self.viewerLayout)
-        self.viewerGroupBox.setChecked(True)
-        self.viewerGroupBox.setEnabled(False)
+        #
+        # Add viewer groupBox to main layout.
+        #
         self.mainLayout.addWidget(self.viewerGroupBox)
+
+
+        
+        #--------------------------------
+        # Set TOOLS Group Box.
+        #-------------------------------- 
+        #
+        # Add tools layout to group box.
+        #
+        self.toolsGroupBox.setLayout(self.XnatButtons.toolsLayout)   
+        #
+        # Add tools groupBox to main layout.
+        #
+        self.mainLayout.addWidget(self.toolsGroupBox)
         
 
-
-        #--------------------------------
-        # Tools layout.
-        #-------------------------------- 
-        self.toolsLayout = qt.QHBoxLayout()
-        self.toolsLayout.addWidget(self.XnatButtons.buttons['io']['delete'])
-        self.toolsLayout.addSpacing(15)
-        self.toolsLayout.addWidget(self.XnatButtons.buttons['io']['addProj'])
-        self.toolsLayout.addSpacing(15)
-        self.toolsLayout.addWidget(self.XnatButtons.buttons['io']['test'])
-        self.toolsLayout.addStretch()
-        #
-        # Filter
-        #
-        self.toolsLayout.addStretch()
-        filterLabel = qt.QLabel("Project filter:")
-        self.toolsLayout.addWidget(filterLabel)
-        self.toolsLayout.addSpacing(15)
-        self.toolsLayout.addWidget(self.XnatButtons.buttons['filter']['accessed'])
-        #
-        # Add tools layout to group box and main layout.
-        #
-        self.toolsGroupBox.setLayout(self.toolsLayout)
-        self.toolsGroupBox.setChecked(False)
-        self.toolsGroupBox.setEnabled(False)
-        self.mainLayout.addWidget(self.toolsGroupBox)
-
-
-
+        
         #--------------------------------
         # Add main layout to main collapsible button.
         #-------------------------------- 
         self.mainLayout.addStretch()
         mainCollapsibleButton.setLayout(self.mainLayout)
-       
+        
+
+        
+        #--------------------------------
+        # Closes the collapsible group boxes except
+        # the login.
+        #-------------------------------- 
+        self.onLoginFailed()
+
+
+
+        #--------------------------------
+        # Add main Collapsible button to layout registered
+        # to Slicer.
+        #--------------------------------
+        self.layout.addWidget(mainCollapsibleButton)
+
+        
+        
+        #--------------------------------
+        # Event Connectos
+        #-------------------------------- 
+
+        #
+        # Login Menu event.
+        #
+        self.XnatLoginMenu.loginButton.connect('clicked()', self.onLoginButtonClicked)
+        #
+        # Button event.
+        #
+        self.XnatButtons.buttons['io']['load'].connect('clicked()', self.onLoadClicked)
+        self.XnatButtons.buttons['io']['save'].connect('clicked()', self.onSaveClicked)
+        self.XnatButtons.buttons['io']['delete'].connect('clicked()', self.onDeleteClicked)
+        self.XnatButtons.buttons['io']['addProj'].connect('clicked()', self.onAddProjectClicked)
+        #
+        # Filter Button event.
+        #
+        for key in self.XnatButtons.buttons['filter']:
+            self.XnatButtons.buttons['filter'][key].connect('clicked()', self.onFilterButtonClicked)
+        #
+        # Test button event.
+        #
+        self.XnatButtons.buttons['io']['test'].connect('clicked(boolean*)', self.onTestClicked)
+        #
+        # Search Bar event.
+        #
+        self.XnatSearchBar.searchBox.connect("returnPressed()", self.XnatView.searchEntered)
 
 
         
@@ -603,13 +607,13 @@ class XnatSlicerWidget:
         #--------------------
         # Maximize and enable the tools group box.
         #--------------------      
-        self.toolsGroupBox.setChecked(False)
+        self.toolsGroupBox.setChecked(True)
         self.toolsGroupBox.setEnabled(True)
 
 
 
         
-    def onLoginFaled(self):
+    def onLoginFailed(self):
         """ Disable the relevant collapsible 
             group boxes. 
         """
@@ -634,3 +638,155 @@ class XnatSlicerWidget:
         #--------------------      
         self.toolsGroupBox.setChecked(False)
         self.toolsGroupBox.setEnabled(False)
+
+
+
+
+    def onLoginButtonClicked(self):
+        """ Event function for when the login button is clicked.
+            Steps below.
+        """        
+
+        #--------------------
+        # Store the current username in settings
+        #--------------------
+        self.settings.setCurrUsername(self.XnatLoginMenu.hostDropdown.currentText, self.XnatLoginMenu.usernameLine.text)
+
+        
+        #--------------------
+        # Clear the current XnatView.
+        #--------------------
+        self.XnatView.clear()
+
+
+        #--------------------
+        # Derive the XNAT host URL by mapping the current item in the host
+        # dropdown to its value pair in the settings.  
+        #--------------------
+        if self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText):
+            self.currHostUrl = qt.QUrl(self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText))
+            #
+            # Call the 'beginXnat' function from the MODULE.
+            #
+            self.loggedIn = True
+            self.beginXnat()
+        else:
+            print "%s The host '%s' doesn't appear to have a valid URL"%(self.utils.lf(), self.XnatLoginMenu.hostDropdown.currentText) 
+            pass  
+
+
+
+
+    def onDeleteClicked(self, button=None):
+        """ Starts Delete workflow.
+        """  
+
+        deleter = XnatDeleteWorkflow(self)
+        deleter.beginWorkflow()
+
+
+
+            
+    def onSaveClicked(self):        
+        """ Starts Save workflow.
+        """     
+        
+        self.lastButtonClicked = "save" 
+        self.XnatView.setEnabled(False)
+        saver = XnatSaveWorkflow(self)
+        saver.beginWorkflow()
+
+
+        
+
+    def onTestClicked(self):        
+        """ Starts Save workflow.
+        """     
+        self.lastButtonClicked = "test" 
+        self.XnatView.setEnabled(True)
+        self.tester.runTest()
+
+
+        
+        
+    def onLoadClicked(self):
+        """ Starts Load workflow.
+        """
+        
+        self.lastButtonClicked = "load"
+        self.XnatView.setEnabled(False)
+        loader = XnatLoadWorkflow(self)
+        loader.beginWorkflow()
+
+
+            
+          
+    def onAddProjectClicked(self):
+        """ Adds a project folder to the server.
+        """
+
+        self.addProjEditor = XnatAddProjEditor(self, self, self.XnatIo)
+        self.addProjEditor.show()
+
+
+
+
+    def onFilterButtonClicked(self):
+        """ As stated.  Handles the toggling of filter
+            buttons relative to one another. O(4n).
+        """
+
+        #-----------------
+        # Count down buttons
+        #------------------
+        checkedButtons = 0
+        buttonLength = len(self.XnatButtons.buttons['filter'])
+        for key in self.XnatButtons.buttons['filter']:
+           currButton = self.XnatButtons.buttons['filter'][key]
+           if currButton.isChecked():
+               checkedButtons += 1
+
+               
+               
+        #-----------------
+        # If there are no down buttons, apply the ['all']
+        # filter and return.
+        #------------------
+        if checkedButtons == 0:
+            for key in self.XnatButtons.buttons['filter']:
+                self.XnatButtons.buttons['filter'][key].setDown(False)
+                self.XnatButtons.buttons['filter'][key].setChecked(False)
+            self.currentlyToggledFilterButton = ''
+            self.XnatView.loadProjects(['all'])
+            return
+ 
+
+        
+        #-----------------
+        # If a new button has been clicked
+        # then set it as the self.currentlyToggledFilterButton. 
+        #------------------
+        for key in self.XnatButtons.buttons['filter']:
+            currButton = self.XnatButtons.buttons['filter'][key]
+            if currButton.isChecked() and self.currentlyToggledFilterButton != currButton:
+                self.currentlyToggledFilterButton = currButton
+                break
+
+            
+                
+        #-----------------
+        # Un-toggle previously toggled buttons.
+        #-----------------
+        for key in self.XnatButtons.buttons['filter']:
+            currButton = self.XnatButtons.buttons['filter'][key]
+            if currButton.isChecked() and self.currentlyToggledFilterButton != currButton:
+                currButton.setDown(False)
+
+                
+
+        #-----------------
+        # Apply method
+        #------------------
+        for key in self.XnatButtons.buttons['filter']:
+            if self.currentlyToggledFilterButton == self.XnatButtons.buttons['filter'][key]:
+                self.XnatView.loadProjects([self.currentlyToggledFilterButton.text.lower()])
