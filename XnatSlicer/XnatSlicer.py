@@ -19,7 +19,7 @@ sys.path.append(LIB_PATH)
 #
 # Include UI folder.
 #
-sys.path.append(os.path.join(LIB_PATH, 'ui2'))
+sys.path.append(os.path.join(LIB_PATH, 'ui'))
 #
 # Include utils folder.
 #
@@ -31,6 +31,7 @@ sys.path.append(os.path.join(LIB_PATH, 'io'))
 
 
 
+from XnatGlobals import *
 from XnatFileInfo import *
 from XnatAddProjEditor import *
 from XnatLoadWorkflow import *
@@ -54,6 +55,7 @@ from XnatError import *
 
 
 
+
 comment = """
 XnatSlicer.py contains the central classes for managing 
 all of the XnatSlicer functions and abilities.  XnatSlicer.py
@@ -69,8 +71,15 @@ class XnatSlicer:
   """ The class that ultimately registers the module
       with Slicer.
   """
+  
   def __init__(self, parent):
+      """ Init function.
+      """
 
+      #--------------------------------
+      # Registers the title and relevant information
+      # parameters to Slicer
+      #--------------------------------
       parent.title = "XNATSlicer"
       parent.categories = ["XNATSlicer"]
       parent.dependencies = []
@@ -118,11 +127,18 @@ class XnatSlicerWidget:
             self.parent.show()
 
 
-            
+
+        #--------------------------------
+        # Init Xnat GLOBALS
+        #--------------------------------
+        self.GLOBALS = XnatGlobals() 
+
+
+        
         #--------------------------------
         # Init Xnat Utils
         #--------------------------------
-        self.utils = XnatUtils()   
+        self.utils = XnatUtils(self)   
 
 
 
@@ -152,7 +168,7 @@ class XnatSlicerWidget:
         #--------------------------------
         # Xnat settings
         #--------------------------------
-        self.settings = XnatSettings(slicer.qMRMLWidget(), self.utils.MODULE_URIS['settings'], self)
+        self.settings = XnatSettings(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
         self.settingsPopup = XnatSettingsWindow(self)
 
 
@@ -199,16 +215,7 @@ class XnatSlicerWidget:
         self.downloadPopup = XnatDownloadPopup(MODULE = self)
         #self.uploadPopup = XnatDownloadPopup(MODULE = self)
 
-
-      
-        #--------------------------------
-        # Layouts
-        #--------------------------------
-        self.viewerLayout = None
-        self.loginLayout = None
-        self.XnatViewLayout = qt.QGridLayout()
-        
-        
+                
         
         #--------------------------------
         # LoadWorkflows
@@ -238,6 +245,15 @@ class XnatSlicerWidget:
         # Tester
         #--------------------------------
         self.tester = XnatSlicerTest(self)
+
+
+
+        #--------------------------------
+        # Clean the temp dir
+        #--------------------------------
+        self.cleanCacheDir(200)
+
+
         
         self.parent.show()
 
@@ -346,115 +362,145 @@ class XnatSlicerWidget:
     def initGUI(self):  
         """ As stated.
         """
-        
+                
         #--------------------------------
-        # Login Section
+        # Main Collapsible Button
         #--------------------------------
-        loginCollapsibleButton = ctk.ctkCollapsibleButton()
-        loginCollapsibleButton.text = "XNAT Login"
+        mainCollapsibleButton = ctk.ctkCollapsibleButton()
+        mainCollapsibleButton.text = "XNATSlicer"
+
+
+
+        #--------------------------------
+        # Login Group Box
+        #--------------------------------
+        self.loginGroupBox = ctk.ctkCollapsibleGroupBox()
+        self.loginGroupBox.setTitle("Login")
 
 
         
         #--------------------------------
-        # Viewer Section
+        # Tools Group Box
         #--------------------------------
-        viewerCollapsibleButton = ctk.ctkCollapsibleButton()
-        viewerCollapsibleButton.text = "XNAT Viewer"
+        self.toolsGroupBox = ctk.ctkCollapsibleGroupBox()
+        self.toolsGroupBox.setTitle("Tools")
 
 
+
         #--------------------------------
-        # Tools Section
+        # Viewer Group Box
         #--------------------------------
-        toolsCollapsibleButton = ctk.ctkCollapsibleButton()
-        toolsCollapsibleButton.text = "Tools"
+        self.viewerGroupBox = ctk.ctkCollapsibleGroupBox()
+        self.viewerGroupBox.setTitle("Viewer")
+
 
         
         
         #--------------------------------
         # Add all sections to parent layout.
         #--------------------------------
-        self.layout.addWidget(loginCollapsibleButton)
-        self.layout.addWidget(viewerCollapsibleButton)
-        self.layout.addWidget(toolsCollapsibleButton)
+        self.layout.addWidget(mainCollapsibleButton)
 
-        
-        
+
+
         #--------------------------------
-        # Define section layouts.
-        #--------------------------------
-        self.loginLayout = qt.QVBoxLayout(loginCollapsibleButton)
-        self.viewerLayout = qt.QVBoxLayout(viewerCollapsibleButton) 
-        self.toolsLayout = qt.QVBoxLayout(toolsCollapsibleButton) 
+        # DEFINE: Main layout
+        #--------------------------------        
+        self.mainLayout = qt.QVBoxLayout()
 
 
         
+        #--------------------------------
+        # LOGIN layout.
+        #--------------------------------        
+        self.loginGroupBox.setLayout(self.XnatLoginMenu.loginLayout)
+        self.loginGroupBox.setChecked(True)
+        self.mainLayout.addWidget(self.loginGroupBox)
+
+
 
         #--------------------------------
-        # Clean the temp dir
-        #--------------------------------
-        self.cleanCacheDir(200)
-
-
-
-        #--------------------------------
-        # Top Widgets Row 
-        #--------------------------------
-        self.topButtonRowLayout = qt.QHBoxLayout()
+        # Viewer layout.
+        #--------------------------------   
+        self.viewerLayout = qt.QGridLayout()  
         #
-        # Search
+        # Search Row
         #
-        searchLabel = qt.QLabel("Search:")
-        self.topButtonRowLayout.addWidget(searchLabel)
+        self.searchRowLayout = qt.QStackedLayout()
+        self.searchRowLayout.setStackingMode(1)
         self.searchBox = qt.QLineEdit()
         self.searchBox.connect("returnPressed()", self.XnatView.searchEntered)
-        self.topButtonRowLayout.addWidget(self.searchBox)
-
-        
-        
-        #--------------------------------
-        # Load/Save buttons
-        #--------------------------------
-        self.buttonColumnLayout = qt.QVBoxLayout()
-        self.buttonColumnLayout.addWidget(self.XnatButtons.buttons['io']['load'])#, 2, 0)
-        self.buttonColumnLayout.addWidget(self.XnatButtons.buttons['io']['save'])#, 0, 0) 
 
 
+        searchButton = qt.QPushButton("Search:")
+        size = qt.QSize(26,26)
+        searchButton.setFixedSize(size)
+        searchButton.setStyleSheet("background: none")
+        #searchButton.setStyleSheet("border: none")
+
         
+        self.searchRowLayout.addWidget(self.searchBox)
+        self.searchRowLayout.addWidget(searchButton)
+        searchButton.setStyleSheet('qproperty-alignment: AlignRight')
+        
+        
+        self.searchRowLayout.setAlignment(searchButton, 0x0002)
+        #
+        # Load / Save Buttons
+        #
+        self.loadSaveButtonLayout = qt.QVBoxLayout()
+        self.loadSaveButtonLayout.addWidget(self.XnatButtons.buttons['io']['load'])#, 2, 0)
+        self.loadSaveButtonLayout.addWidget(self.XnatButtons.buttons['io']['save'])#, 0, 0) 
+        #
+        # Add widgets to layout
+        #
+        self.viewerLayout.addLayout(self.searchRowLayout, 0, 0, 1, 1)
+        self.viewerLayout.addWidget(self.XnatView.viewWidget, 2, 0)
+        self.viewerLayout.addLayout(self.loadSaveButtonLayout, 2, 1)
+        #
+        # Add viewer layout to group box and main layout.
+        #
+        self.viewerGroupBox.setLayout(self.viewerLayout)
+        self.viewerGroupBox.setChecked(True)
+        self.viewerGroupBox.setEnabled(False)
+        self.mainLayout.addWidget(self.viewerGroupBox)
+        
+
+
         #--------------------------------
-        # Tool Row (XNAT IO)
-        #--------------------------------
-        self.toolRowLayout = qt.QHBoxLayout()
-        self.toolRowLayout.addWidget(self.XnatButtons.buttons['io']['delete'])
-        self.toolRowLayout.addSpacing(15)
-        self.toolRowLayout.addWidget(self.XnatButtons.buttons['io']['addProj'])
-        self.toolRowLayout.addSpacing(15)
-        self.toolRowLayout.addWidget(self.XnatButtons.buttons['io']['test'])
-        self.toolRowLayout.addStretch()
+        # Tools layout.
+        #-------------------------------- 
+        self.toolsLayout = qt.QHBoxLayout()
+        self.toolsLayout.addWidget(self.XnatButtons.buttons['io']['delete'])
+        self.toolsLayout.addSpacing(15)
+        self.toolsLayout.addWidget(self.XnatButtons.buttons['io']['addProj'])
+        self.toolsLayout.addSpacing(15)
+        self.toolsLayout.addWidget(self.XnatButtons.buttons['io']['test'])
+        self.toolsLayout.addStretch()
         #
         # Filter
         #
-        self.toolRowLayout.addStretch()
+        self.toolsLayout.addStretch()
         filterLabel = qt.QLabel("Project filter:")
-        self.toolRowLayout.addWidget(filterLabel)
-        self.toolRowLayout.addSpacing(15)
-        self.toolRowLayout.addWidget(self.XnatButtons.buttons['filter']['accessed'])
+        self.toolsLayout.addWidget(filterLabel)
+        self.toolsLayout.addSpacing(15)
+        self.toolsLayout.addWidget(self.XnatButtons.buttons['filter']['accessed'])
+        #
+        # Add tools layout to group box and main layout.
+        #
+        self.toolsGroupBox.setLayout(self.toolsLayout)
+        self.toolsGroupBox.setChecked(False)
+        self.toolsGroupBox.setEnabled(False)
+        self.mainLayout.addWidget(self.toolsGroupBox)
 
-        
+
+
         #--------------------------------
-        # XnatViewer
-        #--------------------------------
-        self.XnatViewLayout.addLayout(self.topButtonRowLayout, 0, 0, 1, 1)
-        self.XnatViewLayout.addWidget(self.XnatView.viewWidget, 2, 0)
-        self.XnatViewLayout.addLayout(self.buttonColumnLayout, 2, 1)
+        # Add main layout to main collapsible button.
+        #-------------------------------- 
+        self.mainLayout.addStretch()
+        mainCollapsibleButton.setLayout(self.mainLayout)
        
-
-        
-        #--------------------------------
-        # Apply to globals
-        #--------------------------------      
-        self.loginLayout.addLayout(self.XnatLoginMenu.loginLayout)
-        self.viewerLayout.addLayout(self.XnatViewLayout)
-        self.toolsLayout.addLayout(self.toolRowLayout)
 
 
         
@@ -463,7 +509,7 @@ class XnatSlicerWidget:
         """ Empties contents of the temp directory based upon maxSize
         """
         import math
-        folder = self.utils.CACHE_URI
+        folder = self.GLOBALS.CACHE_URI
         folder_size = 0
 
 
@@ -530,11 +576,61 @@ class XnatSlicerWidget:
         # Begin communicator
         #--------------------
         self.XnatView.begin()
-        return
-        try:
-            self.XnatView.begin()
-        except Exception, e:
-            print("XnatSlicer Module Login Error: %s"%(str(e)))
-            qt.QMessageBox.warning(slicer.util.mainWindow(), "Login error!", "%s"%('There appears to be a login error.'))
+
 
       
+
+    def onLoginSuccessful(self):
+        """ Enables the relevant collapsible 
+            group boxes. 
+        """
+
+        #--------------------
+        # Minimize the login group box.
+        #--------------------      
+        self.loginGroupBox.setChecked(False)
+
+        
+
+        #--------------------
+        # Maximize and enable the viewer group box.
+        #--------------------      
+        self.viewerGroupBox.setChecked(True)
+        self.viewerGroupBox.setEnabled(True)
+
+
+        
+        #--------------------
+        # Maximize and enable the tools group box.
+        #--------------------      
+        self.toolsGroupBox.setChecked(False)
+        self.toolsGroupBox.setEnabled(True)
+
+
+
+        
+    def onLoginFaled(self):
+        """ Disable the relevant collapsible 
+            group boxes. 
+        """
+
+        #--------------------
+        # Maximize the login group box.
+        #--------------------      
+        self.loginGroupBox.setChecked(True)
+
+        
+
+        #--------------------
+        # Minimize and disable the viewer group box.
+        #--------------------      
+        self.viewerGroupBox.setChecked(False)
+        self.viewerGroupBox.setEnabled(False)
+
+
+        
+        #--------------------
+        # Minimize and disable the tools group box.
+        #--------------------      
+        self.toolsGroupBox.setChecked(False)
+        self.toolsGroupBox.setEnabled(False)
