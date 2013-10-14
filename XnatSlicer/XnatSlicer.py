@@ -478,9 +478,8 @@ class XnatSlicerWidget:
         
         
         #--------------------------------
-        # Event Connectos
+        # Event Connectors
         #-------------------------------- 
-
         #
         # Login Menu event.
         #
@@ -504,7 +503,7 @@ class XnatSlicerWidget:
         #
         # Search Bar event.
         #
-        self.XnatSearchBar.searchBox.connect("returnPressed()", self.XnatView.searchEntered)
+        self.XnatSearchBar.connect(self.XnatView.searchEntered)
 
 
         
