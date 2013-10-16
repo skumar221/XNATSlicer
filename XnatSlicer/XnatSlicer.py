@@ -391,7 +391,9 @@ class XnatSlicerWidget:
         self.viewerGroupBox = ctk.ctkCollapsibleGroupBox()
         self.viewerGroupBox.setTitle("Viewer")
 
-
+        self.detailsGroupBox = ctk.ctkCollapsibleGroupBox()
+        self.detailsGroupBox.setTitle("Details")
+        
         
 
         #--------------------------------
@@ -436,6 +438,20 @@ class XnatSlicerWidget:
         # Add viewer groupBox to main layout.
         #
         self.mainLayout.addWidget(self.viewerGroupBox)
+
+
+
+        #--------------------------------
+        # Set DETAILS Group Box.
+        #-------------------------------- 
+        #
+        # Add detauls layout to group box.
+        #
+        #self.toolsGroupBox.setLayout(self.XnatButtons.toolsLayout)   
+        #
+        # Add detailss groupBox to main layout.
+        #
+        self.mainLayout.addWidget(self.detailsGroupBox)
 
 
         
@@ -567,7 +583,7 @@ class XnatSlicerWidget:
 
         
         #--------------------
-        # Init communicator.
+        # Init XnatIo.
         #--------------------
         self.XnatIo.setup(MODULE = self, 
                                     host = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
@@ -610,6 +626,13 @@ class XnatSlicerWidget:
         self.toolsGroupBox.setEnabled(True)
 
 
+        #--------------------
+        # Maximize and enable the details group box.
+        #--------------------      
+        self.detailsGroupBox.setChecked(True)
+        self.detailsGroupBox.setEnabled(True)
+
+
 
         
     def onLoginFailed(self):
@@ -639,7 +662,15 @@ class XnatSlicerWidget:
         self.toolsGroupBox.setEnabled(False)
 
 
+    
+        #--------------------
+        # Minimize and disable the details group box.
+        #--------------------      
+        self.detailsGroupBox.setChecked(False)
+        self.detailsGroupBox.setEnabled(False)
 
+
+        
 
     def onLoginButtonClicked(self):
         """ Event function for when the login button is clicked.
@@ -680,8 +711,8 @@ class XnatSlicerWidget:
         """ Starts Delete workflow.
         """  
 
-        deleter = XnatDeleteWorkflow(self)
-        deleter.beginWorkflow()
+        xnatDeleteWorkflow = XnatDeleteWorkflow(self, self.XnatView.getCurrItemName())
+        xnatDeleteWorkflow.beginWorkflow()
 
 
 
