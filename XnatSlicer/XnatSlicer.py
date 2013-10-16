@@ -39,7 +39,7 @@ from XnatUtils import *
 from XnatScenePackager import *
 from XnatSessionManager import *
 from XnatTimer import *
-from XnatSettings import *
+from XnatSettingsFile import *
 from XnatTreeView import *
 from XnatSearchBar import *
 from XnatIo import *
@@ -53,6 +53,9 @@ from XnatFileLoadWorkflow import *
 from XnatFilter import *
 from XnatSlicerTest import *
 from XnatError import *
+from XnatSettingManager import *
+from XnatHostManager import *
+from XnatTreeViewManager import *
 
 
 
@@ -142,6 +145,12 @@ class XnatSlicerWidget:
         self.utils = XnatUtils(self)   
 
 
+        #--------------------------------
+        # Xnat IO
+        #--------------------------------
+        self.XnatIo = XnatIo()
+
+        
 
         #--------------------------------
         # Construct all needed directories
@@ -167,17 +176,23 @@ class XnatSlicerWidget:
 
         
         #--------------------------------
-        # Xnat settings
+        # Xnat xnatSettingsWindow
         #--------------------------------
-        self.settings = XnatSettings(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
-        self.settingsPopup = XnatSettingsWindow(self)
+        self.settingsFile = XnatSettingsFile(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
+        self.xnatSettingsWindow = XnatSettingsWindow(self)
+        #
+        # Add XnatHostManager (communicates to XnatSettings)
+        # to xnatSettingsWindow
+        #
+        self.hostManager = XnatHostManager('Host Manager', self)
+        self.xnatSettingsWindow.addSetting(self.hostManager.title, widget = self.hostManager.frame)
+        #
+        # Add XnatTreeViewManager (communicates to XnatTreeView)
+        # to xnatSettingsWindow
+        #
+        self.treeViewManager = XnatTreeViewManager('Tree View Manager',self)
+        self.xnatSettingsWindow.addSetting(self.treeViewManager.title, widget = self.treeViewManager.frame)
 
-
-            
-        #--------------------------------
-        # Xnat Communicator
-        #--------------------------------
-        self.XnatIo = XnatIo()
 
 
       
@@ -193,6 +208,7 @@ class XnatSlicerWidget:
         #--------------------------------
         self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, MODULE = self)
         self.XnatLoginMenu.loadDefaultHost()   
+        self.XnatLoginMenu.setOnManageHostsButtonClicked(self.xnatSettingsWindow.showWindow)
 
 
 
@@ -508,10 +524,10 @@ class XnatSlicerWidget:
         self.XnatButtons.buttons['io']['delete'].connect('clicked()', self.onDeleteClicked)
         self.XnatButtons.buttons['io']['addProj'].connect('clicked()', self.onAddProjectClicked)
         #
-        # Filter Button event.
+        # Sort Button event.
         #
-        for key in self.XnatButtons.buttons['filter']:
-            self.XnatButtons.buttons['filter'][key].connect('clicked()', self.onFilterButtonClicked)
+        for key, button in self.treeViewManager.buttons['sort'].iteritems():
+            button.connect('clicked()', self.onFilterButtonClicked)
         #
         # Test button event.
         #
@@ -586,7 +602,7 @@ class XnatSlicerWidget:
         # Init XnatIo.
         #--------------------
         self.XnatIo.setup(MODULE = self, 
-                                    host = self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
+                                    host = self.settingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
                                     user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 
         
@@ -680,7 +696,7 @@ class XnatSlicerWidget:
         #--------------------
         # Store the current username in settings
         #--------------------
-        self.settings.setCurrUsername(self.XnatLoginMenu.hostDropdown.currentText, self.XnatLoginMenu.usernameLine.text)
+        self.settingsFile.setCurrUsername(self.XnatLoginMenu.hostDropdown.currentText, self.XnatLoginMenu.usernameLine.text)
 
         
         #--------------------
@@ -693,8 +709,8 @@ class XnatSlicerWidget:
         # Derive the XNAT host URL by mapping the current item in the host
         # dropdown to its value pair in the settings.  
         #--------------------
-        if self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText):
-            self.currHostUrl = qt.QUrl(self.settings.getAddress(self.XnatLoginMenu.hostDropdown.currentText))
+        if self.settingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText):
+            self.currHostUrl = qt.QUrl(self.settingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText))
             #
             # Call the 'beginXnat' function from the MODULE.
             #
