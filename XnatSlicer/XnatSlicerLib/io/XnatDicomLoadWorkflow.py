@@ -1,3 +1,5 @@
+import imp, os, inspect, sys, slicer
+
 from XnatLoadWorkflow import *
 import DICOMScalarVolumePlugin 
 
@@ -116,10 +118,10 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
                 #
                 # If valud, add to "downloadables" if DICOM
                 #
-                if self.utils.isDICOM(filename.rsplit('.')[1]):
+                if self.MODULE.utils.isDICOM(filename.rsplit('.')[1]):
                     self.downloadables.append(fileFolderUri + "/" + filename)
                 else:
-                    print  "%s Not a usable file: '%s' "%(self.utils.lf(), (filename))
+                    print  "%s Not a usable file: '%s' "%(self.MODULE.utils.lf(), (filename))
 
 
 
@@ -151,7 +153,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # if they exist.
         #--------------------
         if os.path.exists(self.localDst):
-            self.utils.removeFilesInDir(self.localDst)
+            self.MODULE.utils.removeFilesInDir(self.localDst)
         if not os.path.exists(self.localDst): 
             os.mkdir(self.localDst)
 
@@ -261,6 +263,15 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         zipFolders = self.MODULE.XnatIo.getFiles(_dict)
 
 
+        
+        #--------------------
+        # Reenable the XnatView so the user
+        # can interact with it.
+        #--------------------
+        self.MODULE.XnatView.setEnabled(True)
+        slicer.app.processEvents()
+
+        
             
         #--------------------
         # Inventory downloaded zipfile
@@ -274,7 +285,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             # Remove existing extract path if it exists
             #
             if os.path.exists(extractPath): 
-                self.utils.removeDirsAndFiles(extractPath)
+                self.MODULE.utils.removeDirsAndFiles(extractPath)
 
                 
             #    
@@ -284,14 +295,13 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             #
             if not os.path.exists(zipFile):
                 print "%s exiting workflow..."%(self.MODULE.utils.lf())  
-                self.MODULE.XnatView.setEnabled(True) 
                 return False
 
 
             #
             # Decompress zips.
             #
-            self.utils.decompressFile(zipFile, extractPath)
+            self.MODULE.utils.decompressFile(zipFile, extractPath)
 
 
             #
@@ -301,7 +311,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             print "%s Inventorying downloaded files..."%(self.MODULE.utils.lf())  
             for root, dirs, files in os.walk(extractPath):
                 for relFileName in files:          
-                    downloadedDICOMS.append(self.utils.adjustPathSlashes(os.path.join(root, relFileName)))
+                    downloadedDICOMS.append(self.MODULE.utils.adjustPathSlashes(os.path.join(root, relFileName)))
            
 
             
@@ -310,7 +320,6 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Show a popup informing the user if it's not.
         # The user has to restart the process if it's not.
         #--------------------
-        self.MODULE.XnatView.viewWidget.setEnabled(False) 
         m = slicer.util.mainWindow()
         if not slicer.dicomDatabase:
             msg =  """It doesn\'t look like your DICOM database directory is setup. Please set it up in the DICOM module and try your download again."""
@@ -323,7 +332,17 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Add DICOM files to slicer.dicomDataase
         #--------------------
         i = ctk.ctkDICOMIndexer()
-        i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
+        try:
+            i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
+        except Exception, e:
+            #
+            # If the database is uninitialized, then initialize it.
+            #
+            errorString = str(e)
+            if 'uninitialized ctkDICOMItem' in errorString:
+                print (self.MODULE.utils.lf(), "The slicer.dicomDabase is unitialized (%s).  Initializing it."%(errorString))
+                slicer.dicomDatabase.initialize()
+                i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
 
 
         
@@ -388,14 +407,6 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         dicomScalarVolumePlugin.load(loadables[highestFileCountIndex])
                     
-
-            
-        #--------------------
-        # Reenable the XnatView so the user
-        # can interact with it.
-        #--------------------
-        self.MODULE.XnatView.setEnabled(True)
-
 
       
         return True

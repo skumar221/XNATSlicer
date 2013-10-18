@@ -32,129 +32,9 @@ TODO :
 
 class XnatUtils(object):
     
-    def __init__(self, parent=None):   
+    def __init__(self, MODULE):
+        self.MODULE = MODULE   
         pass
-
-
-    
-
-    @property
-    def otherExtensions(self):
-        return []
-
-
-    
-    
-    @property
-    def doNotCache(self):
-        return [".raw"]
-
-
-
-    
-    @property
-    def dicomExtensions(self):
-        return [".dcm", ".ima"]
-
-
-    
-
-    @property
-    def decompressibles(self):
-        return  [".gz", ".zip", ".tar"]
-
-
-
-    
-    @property
-    def otherReadableExtensions(self):
-        return self.dicomExtensions + [".nii", 
-                                       ".nrrd", 
-                                       ".img", 
-                                       ".ima",
-                                       ".IMA",
-                                       ".nhdr", 
-                                       ".dc", 
-                                       ".raw.gz", 
-                                       ".gz", 
-                                       ".vtk"]
-    
-    @property
-    def mrmlExtensions(self):
-        return [".mrml"]
-
-
-
-    
-    @property
-    def fontName(self):
-        return "Arial"
-
-
-    
-    
-    @property
-    def fontSize(self):
-        return 10
-
-
-    
-    
-    @property
-    def buttonSizeMed(self):
-        return qt.QSize(45, 45)
-
-
-
-    
-    @property
-    def buttonSizeSmall(self):
-        return qt.QSize(30, 30)
-
-
-    
-    
-    @property
-    def XnatRootDir(self):
-        return "data"
-
-
-    
-    @property
-    def LIB_URI(self):
-        return os.path.dirname(os.path.abspath( __file__ ))
-
-
-    
-    @property
-    def ROOT_URI(self):
-        return os.path.dirname(self.LIB_URI)
-
-    
-
-    @property
-    def CACHE_URI(self):
-        return os.path.join(self.ROOT_URI, 'Cache')
-
-
-    
-    @property
-    def RESOURCES_URI(self):
-        return os.path.join(self.ROOT_URI, 'Resources')
-
-    
-    
-    @property
-    def MODULE_URIS(self):
-        return {
-            "home" : self.ROOT_URI,
-            "settings": os.path.join(self.ROOT_URI, "Settings"),
-            "projects" : os.path.join(self.CACHE_URI, "projects"),
-            "downloads" : os.path.join(self.CACHE_URI, "downloads"),
-            "uploads" : os.path.join(self.CACHE_URI, "uploads"), 
-            "icons" : os.path.join(self.RESOURCES_URI, "Icons"),                       
-        }
-
 
 
         
@@ -166,7 +46,7 @@ class XnatUtils(object):
         #---------------------
         # Make the module paths if they don't exist.
         #---------------------
-        for key, val in self.MODULE_URIS.iteritems():
+        for key, val in self.MODULE.GLOBALS.LOCAL_URIS.iteritems():
             if not os.path.exists(val):    
                 os.makedirs(val)
 
@@ -180,6 +60,7 @@ class XnatUtils(object):
                 2:"experiments",
                 3:"scans"}
 
+
     
     @property
     def osType(self):
@@ -189,96 +70,7 @@ class XnatUtils(object):
             return "mac"
         elif slicer.app.os.lower() == "linux": 
             return "linux"
-
-
-        
-
-    @property
-    def labelFontBold(self):
-        return qt.QFont(self.fontName, self.fontSize, 100, False)
-
-
     
-   
-    @property
-    def labelFont(self):
-        return qt.QFont(self.fontName, self.fontSize, 10, False)
-
-
-    
-    
-    @property
-    def labelFontItalic(self):
-        return qt.QFont(self.fontName, self.fontSize, 10, True)
-
-
-    
-     
-    @property
-    def XnatRoot(self):
-        return "/data/archive"
-
-
-
-    
-    @property
-    def homePath(self):
-        return self.MODULE_URIS["home"]
-
-
-    
-    
-    @property
-    def utilSharedPath(self):
-        return self.MODULE_URIS["utilShared"]
-
-    
-    
-    @property
-    def iconPath(self):
-        return self.MODULE_URIS["icons"]
-
-    
-    
-    @property
-    def settingsPath(self):
-        return self.MODULE_URIS["settings"]
-
-
-    
-    
-    @property
-    def downloadPath(self):
-        return self.MODULE_URIS["download"]
-
-
-    
-    
-    @property
-    def tempPath(self):
-        return self.MODULE_URIS["temp"]
-
-
-    
-    
-    @property
-    def tempUploadPath(self):
-        return self.MODULE_URIS["tempUpload"]
-
-
-    
-    
-    @property
-    def projectPath(self):
-        return self.MODULE_URIS["project"]
-
-
-    
-    
-    @property
-    def remoteFilePath(self):
-        return self.MODULE_URIS["remoteFile"] 
-
 
     
     
@@ -333,22 +125,7 @@ class XnatUtils(object):
     
     @property
     def requiredSlicerFolders(self):
-        return [self.sharedDirName, self.slicerFolderName]
-
-
-    
-    
-    @property
-    def slicerHelperFolders(self):
-        return [self.sharedDirName]
-
-
-    
-    
-    @property
-    def metadataFileName(self):
-        return ".metadata"
-
+        return [self.slicerFolderName]
 
     
     
@@ -368,7 +145,7 @@ class XnatUtils(object):
     
     @property
     def dicomDBBackupFN(self):
-        return self.adjustPathSlashes(os.path.join(self.MODULE_URIS['settings'], "slicerDICOMDBBackup.txt")) 
+        return self.adjustPathSlashes(os.path.join(self.LOCAL_URIS['settings'], "slicerDICOMDBBackup.txt")) 
 
 
 
@@ -417,7 +194,6 @@ class XnatUtils(object):
         return ['project',
                 'xsiType',
                 'ID',
-                'xnat:subjectassessordata/id',
                 'insert_date',
                 'label',
                 'date',
@@ -482,6 +258,28 @@ class XnatUtils(object):
 
 
 
+
+    def getMetadataTagsByXnatLevel(self, xnatLevel):
+        """ Returns the appropriate tag list by the given
+            'xnatLevel' argument.
+        """
+
+        if 'projects' in xnatLevel:
+            return self.XnatMetadataTags_projects
+        elif 'subjects' in xnatLevel:
+            return self.XnatMetadataTags_subjects
+        elif 'experiments' in xnatLevel:
+            return self.XnatMetadataTags_experiments
+        elif 'resources' in xnatLevel:
+            return self.XnatMetadataTags_resources   
+        elif 'scans' in xnatLevel:
+            return self.XnatMetadataTags_scans
+        elif 'files' in xnatLevel:
+            return self.XnatMetadataTags_files
+        elif 'Slicer' in xnatLevel:
+            return self.XnatMetadataTags_files     
+
+        
 
     def uniqify(self, seq):
         """ Returns only unique elements in a list, while 
@@ -731,7 +529,7 @@ class XnatUtils(object):
     def writeDebugToFile(self, debugStr):
         """ Writes a string to a file for debugging purposes.
         """
-        f = open(os.path.join(self.homePath, "DebugLog.txt"), 'a')
+        f = open(os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['home'], "DebugLog.txt"), 'a')
         f.write(str(datetime.datetime.now()) + ": " + debugStr + "\n")            
         f.close()
 
@@ -743,11 +541,10 @@ class XnatUtils(object):
             by Slicer and/or XNATSlicer.
         """
         if len(ext) > 0 and ext[0] != '.':   ext = "." + ext
-        arr = (self.dicomExtensions + 
-               self.mrmlExtensions + 
-               self.otherReadableExtensions + 
-               self.packageExtensions + 
-               self.otherExtensions)
+        arr = (self.MODULE.GLOBALS.DICOM_EXTENSIONS + 
+               self.MODULE.GLOBALS.MRML_EXTENSIONS + 
+               self.MODULE.GLOBALS.ALL_LOADABLE_EXTENSIONS + 
+               self.packageExtensions)
         for item in arr:
             if ext == item:
                 return True
@@ -773,7 +570,7 @@ class XnatUtils(object):
     def isDICOM(self, ext = None):
         """ As stated.
         """
-        return self.isExtension(ext, self.dicomExtensions)
+        return self.isExtension(ext, self.MODULE.GLOBALS.DICOM_EXTENSIONS)
 
 
 
@@ -781,7 +578,7 @@ class XnatUtils(object):
     def isMRML(self, ext = None): 
         """ As stated.
         """    
-        return self.isExtension(ext, self.mrmlExtensions)
+        return self.isExtension(ext, self.MODULE.GLOBALS.MRML_EXTENSIONS)
 
 
        
@@ -881,7 +678,7 @@ class XnatUtils(object):
     def isDecompressible(self, filename):
         """ Determine if a file can be decompressed.
         """
-        for ext in self.decompressibles:
+        for ext in self.MODULE.GLOBALS.DECOMPRESSIBLE_EXTENSIONS:
             if filename.endswith(ext):
                 return True
         return False
@@ -1178,3 +975,50 @@ class XnatUtils(object):
             y = screenMainPos.y() + mainWindow.height/2 - positionable.height/2
             
         positionable.move(qt.QPoint(x,y))
+
+
+
+
+    def makeXnatUriDictionary(self, xnatUri):
+        """ Splits apart the 'path' into the various
+            XNAT folder levels, then returns it as a dictionary.
+        """
+        uriDict = {"projects":None, "subjects":None, "experiments":None, "scans":None, "resources":None, "files":None}
+        uriList = xnatUri.split("/")
+        for i in range(0, len(uriList)):
+            for k, v in self.xnatDepthDict.iteritems():
+                if uriList[i] == v:
+                    if (i+1) < len(uriList):
+                        uriDict[uriList[i]] = uriList[i+1]
+        return uriDict
+
+
+
+
+    def generateButton(self, iconOrLabel="", toolTip="", font = qt.QFont('Arial', 10, 10, False),  size = None, enabled=False):
+        """ Creates a qt.QPushButton(), with the arguments.  Sets text, font,
+        toolTip, icon, size, and enabled state.
+        """
+        
+        button = qt.QPushButton()
+        
+        
+        
+        #--------------------
+        # Set either Icon or label, depending on
+        # whehter the icon file exists.
+        #--------------------
+        iconPath = os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['icons'], iconOrLabel)
+        if os.path.exists(iconPath):
+            button.setIcon(qt.QIcon(iconPath))
+        else:
+            button.setText(iconOrLabel)
+
+        
+            button.setToolTip(toolTip)
+            button.setFont(font)
+            if size:
+                button.setFixedSize(size)
+                
+        button.setEnabled(enabled) 
+        return button

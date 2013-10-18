@@ -35,7 +35,15 @@ class XnatIo(object):
 
         
     def setup(self, MODULE, host, user, password):
+        """ Setup function.  Initializes the internal variables. 
+            A 'setup' paradigm is employed, as opposed
+            to an 'init' paradim, because the XnatIo object is created, but
+            not logged into until the user enters the relvant information.
+        """
 
+        #-------------------
+        # Set relevant variables (all required)
+        #-------------------
         self.projectCache = None
         self.MODULE = MODULE
         self.host = host
@@ -43,11 +51,19 @@ class XnatIo(object):
         self.password = password
 
 
+        
+        #-------------------
+        # Tracking dictionary for download modal.
+        #-------------------
         self.downloadTracker = {
             'totalDownloadSize': {'bytes': None, 'MB': None},
             'downloadedSize': {'bytes': None, 'MB': None},
         }
 
+
+        #-------------------
+        # Relevant objects for httpsRequests
+        #-------------------        
         self.userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
         self.authenticationHeader = { 'Authorization' : 'Basic %s' %(self.userAndPass) }
         self.fileDict = {};
@@ -56,11 +72,10 @@ class XnatIo(object):
 
     
     def getFilesByUrl(self, srcDstMap, withProgressBar = True, fileOrFolder = None): 
+        """ Returns a list of files provided but the URLs contianed within
+            the 'srcDstMap' argument.  Other arguments are self-explanatory.
+        """
 
-        print self.MODULE.utils.lf(), srcDstMap
-
-        timeStart = time.time()
-        
         #--------------------
         # Reset total size of downloads for all files
         #-------------------------
@@ -69,10 +84,9 @@ class XnatIo(object):
         downloadFolders = []
 
 
-        t = time.time()
-        print (self.MODULE.utils.lf(), t, "Remove existing - start")
+        
         #-------------------------
-        # Remove existing dst files
+        # Remove existing dst files from their local URL
         #-------------------------
         clearedDirs = []
         for src, dst in srcDstMap.iteritems(): 
@@ -82,113 +96,128 @@ class XnatIo(object):
                     self.MODULE.utils.removeFileInDir(basename)
                     clearedDirs.append(basename)
                     
-        print (self.MODULE.utils.lf(), t-time.time(), "Remove existing - end")
-
+       
         
         #-------------------------
-        # Download files
+        # If we're downloading a single file...
         #-------------------------
         if fileOrFolder == "file":
             for src, dst in srcDstMap.iteritems():
                 print("%s file download\nsrc: '%s' \ndst: '%s'"%(self.MODULE.utils.lf(), src, dst))
-
                 fName = os.path.basename(src)
                 fUri = "/projects/" + src.split("/projects/")[1]
                 self.get(src, dst)
 
-                                    
+
+                
+        #-------------------------
+        # Otherwise download folder...
+        #-------------------------                                   
         elif fileOrFolder == "folder":
             import tempfile
             xnatFileFolders = []
-
-
-            t = time.time()
-            print (self.MODULE.utils.lf(), t, "Determine source folders - start")
-
-            #---------------------
-            # Determine source folders, create new dict based on basename
-            #---------------------
+            #
+            # Determine source folders from XNAT host, 
+            # add them to the list 'xnatFileFolders'
+            #
             for src, dst in srcDstMap.iteritems():
-                print("FOLDER D/L src:%s\tdst:%s"%(src, dst))
                 srcFolder = os.path.dirname(src)
                 if not srcFolder in xnatFileFolders:
-                    xnatFileFolders.append(srcFolder)
-                    
-            print (self.MODULE.utils.lf(), t-time.time(), "Determine source folders - end")
-                    
-                    
-            #--------------------
-            # Get file with progress bar
-            #--------------------
-            for f in xnatFileFolders:
+                    xnatFileFolders.append(srcFolder)                 
+            #
+            # Loop through folders to create a dictionary
+            # that maps the remote URIs with local URIs 
+            # for downloading.
+            #
+            for xnatFileFolder in xnatFileFolders:
                 if withProgressBar: 
-                    
-                    
-                    # Sting cleanup
-                    src = (f + "?format=zip")                 
-                    dst = tempfile.mktemp('', 'XnatDownload', self.MODULE.utils.tempPath) + ".zip"
+                    #
+                    # Create src, dst strings.
+                    #
+                    src = (xnatFileFolder + "?format=zip")                 
+                    dst = tempfile.mktemp('', 'XnatDownload', self.MODULE.GLOBALS.LOCAL_URIS['downloads']) + ".zip"
                     downloadFolders.append(self.MODULE.utils.adjustPathSlashes(dst))
-
-                    # remove existing
+                    #
+                    # Remove existing dst files, if they exist.
+                    #
                     if os.path.exists(dst): 
                         self.MODULE.utils.removeFile(dst)
-
-                        
-                    # Init download
+                    # 
+                    # Begin the download process.
+                    #
                     print("%s folder downloading %s to %s"%(self.MODULE.utils.lf(), src, dst))
                     self.get(src, dst)
 
-                    
-                   
-        timeEnd = time.time()
-        totalTime = (timeEnd-timeStart)
 
+                    
+        #-------------------------
+        # Return 'downloadFolders'.
+        #------------------------- 
         return downloadFolders
 
 
 
     
-    def upload(self, localSrc, xnatDst, delExisting = True):
-        """ Uploading using urllib2
+    @property
+    def queryArguments(self):
+        """ For appending to a URL when querying for metadata.
         """
+        return {'accessible' : 'accessible=true',
+                'imagesonly' : 'xsiType=xnat:imageSessionData',
+                }
 
-        #--------------------        
-        # Encoding cleanup
-        #-------------------- 
-        xnatDst = str(xnatDst).encode('ascii', 'ignore')
 
+    
+    
+    def upload(self, localSrcUri, remoteDstUri, delExisting = True):
+        """ Upload a file to an XNAT host using Python's 'urllib2' library.
+            The argument 'localSrcUri' provides the relvant path to
+            the file that will be uploaded.  The argument 'remoteDstUri'
+            provides the relevant path to the destination on a given
+            XNAT host.  
+        """
 
         
         #-------------------- 
-        # Read file
+        # Read 'localSrcUri'
         #-------------------- 
-        f = open(localSrc, 'rb')
+        f = open(localSrcUri, 'rb')
         filebody = f.read()
         f.close()
 
 
 
         #-------------------- 
-        # Delete existing
+        # Delete existing remoteDstUri from XNAT host.
         #-------------------- 
         if delExisting:
-            self.httpsRequest('DELETE', xnatDst, '')
-
-            
-        print "%s Uploading\nsrc: '%s'\nxnatDst: '%s'"%(self.MODULE.utils.lf(), localSrc, xnatDst)
+            self.httpsRequest('DELETE', remoteDstUri, '')
+        print "%s Uploading\nsrc: '%s'\nremoteDstUri: '%s'"%(self.MODULE.utils.lf(), localSrcUri, remoteDstUri)
 
 
-
+        
         #-------------------- 
-        # Get request and connection
+        # Clean 'remoteDstUri' string and endcode
         #-------------------- 
-        req = urllib2.Request(xnatDst)
+        if not remoteDstUri.startswith(self.host + '/data'):
+            remoteDstUri = self.host + '/data' + remoteDstUri
+        print remoteDstUri
+        remoteDstUri = str(remoteDstUri).encode('ascii', 'ignore')
+
+
+        
+        #-------------------- 
+        # Get request and connection from XNAT host using
+        # the URIs provided and the methods of urllib2
+        #-------------------- 
+        req = urllib2.Request(remoteDstUri)
         connection = httplib.HTTPSConnection (req.get_host())  
 
 
 
         #-------------------- 
-        # Make authentication header
+        # Make the authentication header to 
+        # pass to the connection.
         #-------------------- 
         userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")       
         header = { 'Authorization' : 'Basic %s' %  userAndPass, 'content-type': 'application/octet-stream'}    
@@ -196,25 +225,29 @@ class XnatIo(object):
 
 
         #-------------------- 
-        # REST call
+        # Do 'PUT' REST call, providing the file
+        # and the authentication header.
         #-------------------- 
         connection.request ('PUT', req.get_selector(), body = filebody, headers = header)
 
 
 
         #-------------------- 
-        # Response return
+        # Get and return the response from the connetion.
         #-------------------- 
-        response = connection.getresponse ()
+        response = connection.getresponse()
+        #print "response: ", response.read()  
         return response
-        #print "response: ", response.read()   
-
-
+        
 
         
         
-    def httpsRequest(self, restMethod, xnatSelector, body='', headerAdditions={}):
-        """ Description
+    def httpsRequest(self, restMethod, xnatUri, body='', headerAdditions={}):
+        """ Allows the user to make httpsRequests to an XNAT host
+            using RESTful methods provided in the argument 'restMethod'.  The argument
+            'xnatUri' is the URI that points to a given location to conduct the
+            rest call.  This could be a file or filder using the compatible
+            REST methods.
         """
 
         #-------------------- 
@@ -224,14 +257,14 @@ class XnatIo(object):
 
 
         #-------------------- 
-        # Clean url
+        # Clean URL
         #-------------------- 
         prepender = self.host.encode("utf-8") + '/data'
-        url =  prepender +  xnatSelector.encode("utf-8") if not prepender in xnatSelector else xnatSelector
+        url =  prepender +  xnatUri.encode("utf-8") if not prepender in xnatUri else xnatUri
 
 
         #-------------------- 
-        # Get request
+        # Get request using 'urllib2'
         #-------------------- 
         req = urllib2.Request (url)
 
@@ -249,7 +282,7 @@ class XnatIo(object):
 
 
         #-------------------- 
-        # REST call
+        # Conduct REST call
         #-------------------- 
         connection.request(restMethod, req.get_selector (), body = body, headers = header)
         #print ('%s httpsRequest: %s %s')%(self.MODULE.utils.lf(), restMethod, url)
@@ -263,17 +296,19 @@ class XnatIo(object):
 
 
     
-    def delete(self, selStr):
-        """ Description
+    def delete(self, xnatUri):
+        """ Deletes a given file or folder from an XNAT host
+            based on the 'xnatUri' argument.  Calls on the internal
+            'httpsRequest' RESTfully.
         """
-        print "%s deleting %s"%(self.MODULE.utils.lf(), selStr)
-        self.httpsRequest('DELETE', selStr, '')
+        print "%s deleting %s"%(self.MODULE.utils.lf(), xnatUri)
+        self.httpsRequest('DELETE', xnatUri, '')
 
 
         
         
     def cancelDownload(self):
-        """ Set's the download state to 0.  The open buffer in the 'get' method
+        """ Set's the download state to 0.  The open buffer in the 'GET' method
             will then read this download state, and cancel out.
         """
         print self.MODULE.utils.lf(), "Canceling download."
@@ -286,7 +321,8 @@ class XnatIo(object):
 
         
     def downloadFailed(self, windowTitle, msg):
-        """ Description
+        """ Opens a QMessageBox informing the user
+            of the faile download.
         """
         qt.QMessageBox.warning(None, windowTitle, msg)
 
@@ -294,7 +330,7 @@ class XnatIo(object):
             
 
     def getFile(self, srcDstMap, withProgressBar = True):
-        """ Description
+        """ As stated.
         """
         return self.getFilesByUrl(srcDstMap, fileOrFolder = "file")
 
@@ -302,32 +338,39 @@ class XnatIo(object):
 
     
     def getFiles(self, srcDstMap, withProgressBar = True):
-        """ Description
+        """ As stated.
         """
-        # Reset popup
         return self.getFilesByUrl(srcDstMap, fileOrFolder = "folder")
     
 
 
     
-    def get(self, XnatSrc, dst, showProgressIndicator = True):
-        """ Descriptor
+    def get(self, xnatSrcUri, localDstUri, showProgressIndicator = True):
+        """ RESTfully calls on a 'GET' command to a given XNAT host and
+            then downloads the response to the 'localDstUri' argument.
         """
 
+        #-------------------- 
+        # A download state of '1' indicates
+        # that the user hasn't cancelled the download.
+        #-------------------- 
         self.downloadState = 1
+
+        
         
         #-------------------- 
-        # Set the path
+        # Set the src URI based on the 
+        # internal variables of XnatIo.
         #-------------------- 
-        XnatSrc = self.host + "/data/archive" + XnatSrc if not self.host in XnatSrc else XnatSrc
+        xnatSrcUri = self.host + "/data/archive" + xnatSrcUri if not self.host in xnatSrcUri else xnatSrcUri
 
         
 
         #-------------------- 
-        # Authentication handler
+        # Construct the authentication handler
         #-------------------- 
         passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        passman.add_password(None, XnatSrc, self.user, self.password)
+        passman.add_password(None, xnatSrcUri, self.user, self.password)
         authhandler = urllib2.HTTPBasicAuthHandler(passman)
         opener = urllib2.build_opener(authhandler)
         urllib2.install_opener(opener)
@@ -335,45 +378,47 @@ class XnatIo(object):
 
         
         #-------------------- 
-        # Begin to open the file to read in bytes
+        # Open the local destination file 
+        # so that it can start reading in the buffers.
         #-------------------- 
-        XnatFile = open(dst, "wb")
+        XnatFile = open(localDstUri, "wb")
       
 
 
         #-------------------- 
-        # Get the response URL
+        # Get the response URL from the XNAT host.
         #-------------------- 
         errorString = ""
         try:
-            print self.MODULE.utils.lf(), "XnatSrc: ", XnatSrc
-            response = urllib2.urlopen(XnatSrc)
+            print self.MODULE.utils.lf(), "xnatSrcUri: ", xnatSrcUri
+            response = urllib2.urlopen(xnatSrcUri)
+
+        #
+        # If the urllib2 version fails (some servers do not like
+        # the communication method), then use httplib.
+        #
         except Exception, e:
             errorString += str(e) + "\n"
-
-            #-------------------
-            # If the urllib2 version fails, try the httplib version
-            #-------------------
+ 
             try:
                 print self.MODULE.utils.lf(), "urllib2 get failed.  Attempting httplib version."
                 #------------
                 # HTTP LIB VERSION
                 #-----------
-
                 #
                 # Reset popup
                 #
                 self.MODULE.downloadPopup.reset()
-                self.MODULE.downloadPopup.setDownloadFilename(XnatSrc) 
+                self.MODULE.downloadPopup.setDownloadFilename(xnatSrcUri) 
                 self.MODULE.downloadPopup.show()
                 #
-                # Credentials
+                # Establish Credentials
                 #
-                url = XnatSrc
+                url = xnatSrcUri
                 userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")
                 authenticationHeader = { 'Authorization' : 'Basic %s' %(userAndPass) }
                 #
-                # Clean REST method
+                # Clean REST method string
                 #
                 restMethod = 'GET'
                 #
@@ -381,20 +426,20 @@ class XnatIo(object):
                 #
                 url = url.encode("utf-8")
                 #
-                # Get request
+                # Begin request.
                 #
                 req = urllib2.Request (url)
                 #
-                # Get connection
+                # Get the connection
                 #
                 connection = httplib.HTTPSConnection (req.get_host ()) 
                 #
-                # Merge the authentication header with any other headers
+                # Merge the authentication header with any other headers.
                 #
                 headerAdditions={}
                 header = dict(authenticationHeader.items() + headerAdditions.items())
                 #
-                # REST call
+                # Conduct the REST call.
                 #
                 connection.request (restMethod, req.get_selector (), body= '', headers=header)
                 print "%s Xnat request - %s %s"%(self.MODULE.utils.lf(), restMethod, url)
@@ -405,10 +450,14 @@ class XnatIo(object):
                 data = response.read()           
                 XnatFile.close()
                 #
-                # write to file
+                # Write the response data to file.
                 #
-                with open(dst, 'wb') as f:
+                with open(localDstUri, 'wb') as f:
                     f.write(data)
+
+                #
+                # Enable the view widget.
+                #
                 self.MODULE.XnatView.setEnabled(True)
                 self.MODULE.downloadPopup.hide()
                 return
@@ -425,7 +474,7 @@ class XnatIo(object):
         # Get the content size, first by checking log, then by reading header
         #-------------------- 
         self.downloadTracker['downloadedSize']['bytes'] = 0   
-        self.downloadTracker['totalDownloadSize'] = self.getSize(XnatSrc)
+        self.downloadTracker['totalDownloadSize'] = self.getSize(xnatSrcUri)
   
         if not self.downloadTracker['totalDownloadSize']['bytes']:
           
@@ -437,7 +486,7 @@ class XnatIo(object):
 
             
         #-------------------- 
-        # Adjust MODULE UI
+        # Adjust MODULE View UI.
         #-------------------- 
         self.MODULE.XnatView.setEnabled(False)
 
@@ -525,9 +574,9 @@ class XnatIo(object):
         #-------------------- 
         # Read buffers (cyclical)
         #-------------------- 
-        fileDisplayName = os.path.basename(XnatSrc) if not 'format=zip' in XnatSrc else XnatSrc.split("/subjects/")[1]  
+        fileDisplayName = os.path.basename(xnatSrcUri) if not 'format=zip' in xnatSrcUri else xnatSrcUri.split("/subjects/")[1]  
         bytesRead = buffer_read(response = response, fileToWrite = XnatFile, 
-                                buffer_size = 8192, currSrc = XnatSrc, fileDisplayName = fileDisplayName)
+                                buffer_size = 8192, currSrc = xnatSrcUri, fileDisplayName = fileDisplayName)
 
 
         
@@ -540,16 +589,16 @@ class XnatIo(object):
     
             
         
-    def getJson(self, url):
-        """ Returns a json object from a given URL using
+    def getJson(self, xnatUri):
+        """ Returns a json object from a given XNATURI using
             the internal method 'httpsRequest'.
         """
 
         #-------------------- 
         # Get the response from httpRequest
         #--------------------      
-        response = self.httpsRequest('GET', url).read()
-        print "%s %s"%(self.MODULE.utils.lf(), url)
+        response = self.httpsRequest('GET', xnatUri).read()
+        print "%s %s"%(self.MODULE.utils.lf(), xnatUri)
         #print "Get JSON Response: %s"%(response)
 
 
@@ -573,16 +622,17 @@ class XnatIo(object):
 
     
     
-    def getXnatUriAt(self, url, level):
-        """ Returns the XNAT path from 'url' at 'level',
+    def getXnatUriAt(self, xnatUri, level):
+        """ Returns the XNAT path from 'xnatUri' at the 
+            provided 'level' by splicing 'xnatUri' accordingly.
         """
-        #print "%s %s"%(self.MODULE.utils.lf(), url, level)
+        #print "%s %s"%(self.MODULE.utils.lf(), xnatUri, level)
         if not level.startswith('/'):
             level = '/' + level
-        if level in url:
-            return  url.split(level)[0] + level
+        if level in xnatUri:
+            return  xnatUri.split(level)[0] + level
         else:
-            raise Exception("%s invalid get level '%s' parameter: %s"%(self.MODULE.utils.lf(), url, level))
+            raise Exception("%s invalid get level '%s' parameter: %s"%(self.MODULE.utils.lf(), xnatUri, level))
 
         
 
@@ -609,7 +659,8 @@ class XnatIo(object):
         
 
         #-------------------- 
-        # Parse result dictionary
+        # Parse result dictionary and 
+        # return the boolean.
         #-------------------- 
         for i in self.getJson(parentDir):
             if os.path.basename(fileUri) in i['Name']:
@@ -620,13 +671,17 @@ class XnatIo(object):
 
     
     def getSize(self, fileUri):
-        """ Descriptor
+        """ Retrieves a tracked file's size and 
+            converts it to MB based on the 'self' variable
+            'fileDict' which contains the raw byte size 
+            of the given file.
         """
         #print "%s %s"%(self.MODULE.utils.lf(), fileUri)
+        #--------------------
+        # Query the tracked files by the name
+        # of the fileUri.
+        #--------------------
         bytes = 0
-       
-        
-        # Query logged files
         fileName = os.path.basename(fileUri)
         if fileName in self.fileDict:
             bytes = int(self.fileDict[fileName]['Size'])
@@ -634,22 +689,12 @@ class XnatIo(object):
 
         return {"bytes": None, "MB" : None}
 
-    
-
-    @property
-    def queryArguments(self):
-        return {'accessible' : 'accessible=true',
-                'imagesonly' : 'xsiType=xnat:imageSessionData',
-                }
-
-
-    
-
 
     
     
     def applyQueryArgumentsToUri(self, queryUri, queryArguments):
-        """ Descriptor
+        """ Using the static variable self.queryArguments dictionary,
+            appends the relevant arguments to a given queryURI.
         """
         queryArgumentstring = ''
         for i in range(0, len(queryArguments)):
@@ -659,7 +704,6 @@ class XnatIo(object):
                 queryArgumentstring += '&'
                 
             queryArgumentstring += self.queryArguments[queryArguments[i].lower()]
-        
         return queryUri + queryArgumentstring
         
 
@@ -667,7 +711,12 @@ class XnatIo(object):
 
     
     def getFolderContents(self, queryUris, metadataTags, queryArguments = None):   
-        """ Descriptor
+        """ Returns the contents of a given folder provided in the arguments
+            'queryUris'.  Returns an object based on the 'metadataTags' argument
+            that the 'queryUri' gets return.  The 'queryArguments' parameter
+            deals generally with fitering certain contents within a given folder. 
+            For instance, to get projects only the user has access to, the URI needs
+            to be appended with '?accessible=True'.
         """
 
         returnContents = {}
@@ -693,11 +742,14 @@ class XnatIo(object):
            
            
         #-------------------- 
-        # Acquire contents
+        # Acquire contents via 'self.getJson'
         #-------------------- 
         contents = []
         for queryUri in queryUris:
             newQueryUri = queryUri
+            #
+            # Apply query arguments.
+            #
             if queryArguments:
                 newQueryUri = self.applyQueryArgumentsToUri(queryUri, queryArguments)
             print "%s query path: %s"%(self.MODULE.utils.lf(), newQueryUri)
@@ -716,18 +768,25 @@ class XnatIo(object):
             #
             contents =  contents + json
             #
-            # Store projects in a dictionary. 'self.projectCache'
-            # is reset if the user logs into a new host or 
+            # If we want the projects, store projects in a dictionary. 
+            # 'self.projectCache' is reset if the user logs into a new host or 
             # logs in a again.
             #
             if queryUri.endswith('/projects'):
                 self.projectCache = contents
+
+
+                
+        #-------------------- 
+        # Exit out if there are non-Json or XML values.
+        #-------------------- 
         if str(contents).startswith("<?xml"): return [] # We don't want text values
 
         
 
         #-------------------- 
-        # Get other attributes with the contents
+        # Get other attributes with the contents 
+        # for metadata tracking.
         #-------------------- 
         for content in contents:
             for metadataTag in metadataTags:
@@ -740,7 +799,7 @@ class XnatIo(object):
                     returnContents[metadataTag].append(content[metadataTag])
 
 
-                    
+            
         #-------------------- 
         # Track projects and files in global dict
         #-------------------- 
@@ -752,8 +811,13 @@ class XnatIo(object):
                 #print "%s %s"%(self.MODULE.utils.lf(), self.fileDict)
             elif queryUri.endswith('/projects'):
                 self.projectCache = returnContents
-                            
-        #return childNames, (sizes if len(sizes) > 0 else None)
+
+
+                
+        #-------------------- 
+        # Return the contents of the folder as a
+        # dictionary of arrays
+        #-------------------- 
         return returnContents
 
 
@@ -762,9 +826,9 @@ class XnatIo(object):
     def getResources(self, folder):
         """ Gets the contents of a 'resources' folder
             in a given XNAT host.  'resources' folders 
-            demand a bit mores specifity in the metadata manipulation.
+            demand a bit mors specifity in the metadata manipulation.
             Furthermore, 'resources' folders are frequently accessed
-            as part of the Slicer file location within an experiment.
+            as part of the Slicer file location within an 'experiment'.
         """
 
         #-------------------- 
@@ -841,21 +905,26 @@ class XnatIo(object):
     
         
     def makeDir(self, XnatUri): 
-        """ Makes a directory in Xnat via PUT.
+        """ Makes a directory in Xnat via a PUT command.
         """ 
         result = self.httpsRequest('PUT', XnatUri)
         #print "%s Put Dir %s \n%s"%(self.MODULE.utils.lf(), XnatUri, r)
         return result
 
-    
 
-    def search(self, searchString, level = None):
+
+            
+
+    def search(self, searchString):
         """ Utilizes the XNAT search query function
-            to on all levels of xnat.
+            to on all levels of XNAT based on the provided
+            searchString.  Searches through the available
+            columns as described below.
         """
 
         searchUris = []
         resultsDict = {}
+
         
  
         #-------------------- 
@@ -866,8 +935,14 @@ class XnatIo(object):
         levelTags['subjects'] = ['ID', 'label']
         levelTags['experiments'] = ['ID', 'label']
 
-        levels = ['projects', 'subjects', 'experiments']
 
+        
+        #-------------------- 
+        # Looping through all of the levels,
+        # constructing a searchQuery for each based
+        # on the releant columns.
+        #--------------------       
+        levels = ['projects', 'subjects', 'experiments']
         for level in levels:
             resultsDict[level] = []
             for levelTag in levelTags[level]:
@@ -882,15 +957,6 @@ class XnatIo(object):
                 resultsDict[level] = resultsDict[level] + self.getJson(searchStr)
 
 
-        #-------------------- 
-        # Scans
-        #-------------------- 
-
-
-        #-------------------- 
-        # Slicer files
-        #-------------------- 
-
         
         return resultsDict
 
@@ -898,7 +964,9 @@ class XnatIo(object):
 
 
 ############################
-# Static Vars
+# 
+#     STATIC VARIABLES
+#
 ############################
 
 
@@ -919,18 +987,18 @@ XnatIo.relevantMetadataDict = {
       'last_accessed_497',
       'id'
       'ID'
-#    'insert_user',
-#    'pi',
-#    'insert_date',
-#    'description',
-#    'secondary_ID',
-#    'pi_lastname',
-#    'pi_firstname',
-#    'project_invs',	
-#    'project_access_img',	
-#    'user_role_497',	
-#    'quarantine_status'
-#    'URI',
+    'insert_user',
+    'pi',
+    'insert_date',
+    'description',
+    'secondary_ID',
+    'pi_lastname',
+    'pi_firstname',
+    'project_invs',	
+    'project_access_img',	
+    'user_role_497',	
+    'quarantine_status'
+    'URI',
 ],
 
 
@@ -938,11 +1006,11 @@ XnatIo.relevantMetadataDict = {
 'subjects' : [
      'ID',
      'label'
-#    'insert_date',
-#    'insert_user',
-#    'totalRecords'
-#    'project',
-#    'URI',
+    'insert_date',
+    'insert_user',
+    'totalRecords'
+    'project',
+    'URI',
 ],
 
 
@@ -950,60 +1018,60 @@ XnatIo.relevantMetadataDict = {
 'experiments' : [
     'ID',
     'label'
-#    'insert_date',
-#    'totalRecords',
-#    'date',
-#   'project',
-#   'xsiType',
-#   'ID',
-#   'xnat:subjectassessordata/id',
-#   'URI',
+    'insert_date',
+    'totalRecords',
+    'date',
+   'project',
+   'xsiType',
+   'ID',
+   'xnat:subjectassessordata/id',
+   'URI',
 ],
 
 
 
 'scans' : [
     'series_description',
-#    'note',
-#    'type',
-#   'xsiType',
-#   'quality',
-#   'xnat_imagescandata_id',
-#   'URI',
+    'note',
+    'type',
+   'xsiType',
+   'quality',
+   'xnat_imagescandata_id',
+   'URI',
 ],
 
 
 
 'resources' : [
-#    'element_name',
-#    'category',
-#    'cat_id',
-#    'xnat_abstractresource_id',
-#    'cat_desc'
+    'element_name',
+    'category',
+    'cat_id',
+    'xnat_abstractresource_id',
+    'cat_desc'
 ],
 
 
 
 'files' : [
     'Size',
-#    'file_format',
-#    'file_content',
-#    'collection',
-#    'file_tags',
-#    'cat_ID',
-#    'URI'
+    'file_format',
+    'file_content',
+    'collection',
+    'file_tags',
+    'cat_ID',
+    'URI'
 ],
 
 
 
 'slicer' : [
     'Size',
-#    'file_format',
-#    'file_content',
-#    'collection',
-#    'file_tags',
-#    'cat_ID',
-#    'URI'
+    'file_format',
+    'file_content',
+    'collection',
+    'file_tags',
+    'cat_ID',
+    'URI'
 ]
         
 }

@@ -3,7 +3,6 @@ from __main__ import vtk, ctk, qt, slicer
 import os
 
 from XnatSettings import *
-import XnatLoginMenuUI
 
 
 
@@ -48,35 +47,35 @@ class XnatLoginMenu(object):
         #--------------------
         # Create Username and password lines 
         #--------------------
-        self.usernameLabel, self.passwordLabel, self.usernameLine, self.passwordLine = XnatLoginMenuUI.makeCredentialsWidgets(self)
+        self.usernameLabel, self.passwordLabel, self.usernameLine, self.passwordLine = makeCredentialsWidgets(self)
 
 
         
         #--------------------
         # Create login button
         #--------------------
-        self.loginButton = XnatLoginMenuUI.makeLoginButton(self)
+        self.loginButton = makeLoginButton(self)
         
 
         
         #--------------------
         # Create host dropdown.
         #--------------------
-        self.hostDropdown = XnatLoginMenuUI.makeHostDropdown(self)
+        self.hostDropdown = makeHostDropdown(self)
         
 
 
         #--------------------
         # Create settings button.
         #--------------------
-        self.settingsButton = XnatLoginMenuUI.makeSettingsButton(self)  
+        self.manageHostsButton = makeManageHostsButton(self)  
         
 
         
         #--------------------
         # Create login layout.
         #--------------------
-        self.loginLayout = XnatLoginMenuUI.makeLoginLayout(self)
+        self.loginLayout = makeLoginLayout(self)
 
 
 
@@ -86,9 +85,8 @@ class XnatLoginMenu(object):
         self.usernameLine.connect('cursorPositionChanged(int, int)', self.onUsernameLineEdited)  
         self.passwordLine.connect('cursorPositionChanged(int, int)', self.onPasswordLineEdited)
         self.passwordLine.connect('returnPressed()', self.simulateLoginClicked)
-        self.loginButton.connect('clicked()', self.loginButtonClicked)
         self.hostDropdown.connect('currentIndexChanged(const QString&)', self.onHostDropdownClicked)
-        self.settingsButton.connect('pressed()', self.onSettingsButtonClicked)
+        self.manageHostsButton.connect('pressed()', self.onManageHostsButtonClicked)
 
 
 
@@ -109,7 +107,7 @@ class XnatLoginMenu(object):
         # Get the dictionary from settings and the key to 
         # the dropdown widget.
         #--------------------
-        hostDict = self.MODULE.settings.getHostNameAddressDictionary()
+        hostDict = self.MODULE.settingsFile.getHostNameAddressDictionary()
         for name in hostDict:     
             self.MODULE.XnatLoginMenu.hostDropdown.addItem(name)       
 
@@ -130,7 +128,7 @@ class XnatLoginMenu(object):
         #--------------------
         # Set host dropdown to default stored hostName.
         #--------------------
-        defaultName = self.MODULE.settings.getDefault()
+        defaultName = self.MODULE.settingsFile.getDefault()
         self.setHostDropdownByName(defaultName)
 
 
@@ -166,7 +164,7 @@ class XnatLoginMenu(object):
         # Does the username exist in the settings file?
         #--------------------
         if self.currHostName: 
-            currUser = self.MODULE.settings.getCurrUsername(self.currHostName).strip()
+            currUser = self.MODULE.settingsFile.getCurrUsername(self.currHostName).strip()
             #
             # If it does, and it's not a '' string, then apply it to the
             # usernameLine....
@@ -196,14 +194,24 @@ class XnatLoginMenu(object):
         self.loginButton.animateClick()
 
 
+
+
+
+    def setOnManageHostsButtonClicked(self, callback):
+        """ Allows user to set the onClick event function
+            when the settings button is clicked.
+        """
+        self.manageHostsButtonCallback = callback
+
+
         
         
-    def onSettingsButtonClicked(self):
+    def onManageHostsButtonClicked(self):
         """ Event function for when the settings button
             is clicked.  Displays the XnatSettingsPopup 
             from the MODULE.
         """
-        self.MODULE.settingsPopup.showWindow()
+        self.manageHostsButtonCallback('host manager')
 
 
 
@@ -239,35 +247,113 @@ class XnatLoginMenu(object):
 
             
             
-    def loginButtonClicked(self):
-        """ Event function for when the login button is clicked.
-            Steps below.
-        """        
 
-        #--------------------
-        # Store the current username in settings
-        #--------------------
-        self.MODULE.settings.setCurrUsername(self.hostDropdown.currentText, self.usernameLine.text)
+
+
+
+
+
+
+def makeCredentialsWidgets(XnatLoginMenu):
+    """ Makes the username and password lines
+        and lables.
+    """
+
+    #--------------------
+    # Username + password label and lines.
+    #--------------------
+    usernameLabel = qt.QLabel('username:')
+    usernameLabel.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT_BOLD)
+    
+    passwordLabel = qt.QLabel('password:')
+    passwordLabel.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT_BOLD)    
+    
+    usernameLine = qt.QLineEdit()   
+    passwordLine = qt.QLineEdit() # encrypted
+    
+    usernameLine.setFixedWidth(100)
+    passwordLine.setFixedWidth(100)
+
+    
+    #--------------------
+    # Sets aesthetics.
+    #--------------------
+    usernameLine.setText(XnatLoginMenu.defaultUsernameText)
+    usernameLine.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT_ITALIC)
+    passwordLine.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT_ITALIC) 
+    passwordLine.setText(XnatLoginMenu.defaultPasswordText)
+    passwordLine.setCursorPosition(0)
+
 
         
-        #--------------------
-        # Clear the current XnatView.
-        #--------------------
-        self.MODULE.XnatView.clear()
+    return usernameLabel, passwordLabel, usernameLine, passwordLine
 
 
-        #--------------------
-        # Derive the XNAT host URL by mapping the current item in the host
-        # dropdown to its value pair in the settings.  
-        #--------------------
-        if self.MODULE.settings.getAddress(self.hostDropdown.currentText):
-            self.currHostUrl = qt.QUrl(self.MODULE.settings.getAddress(self.hostDropdown.currentText))
-            #
-            # Call the 'beginXnat' function from the MODULE.
-            #
-            self.MODULE.loggedIn = True
-            self.MODULE.beginXnat()
-        else:
-            print "%s The host '%s' doesn't appear to have a valid URL"%(self.MODULE.utils.lf(), self.hostDropdown.currentText) 
-            pass  
 
+        
+def makeHostDropdown(XnatLoginMenu):
+    """ Initiates the dropdown that allows the user to select hosts
+    """
+    
+    hostDropdown = qt.QComboBox()
+    hostDropdown.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT)
+    hostDropdown.toolTip = "Select Xnat host"
+    return hostDropdown
+
+
+
+        
+def makeLoginButton(XnatLoginMenu):
+    """ Connects the login to the first treeView call
+    """
+    
+    plt = qt.QPalette()
+    plt.setColor(qt.QPalette().Button, qt.QColor(255,255,255))  
+    loginButton = qt.QPushButton("Login")
+    loginButton.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT)    
+    loginButton.toolTip = "Login to selected Xnat host"    
+    loginButton.setFixedSize(48, 24)
+    return loginButton
+
+
+
+
+def makeManageHostsButton(XnatLoginMenu):
+    """ Initiates the button aesthetics for the button 
+        that opens the manage hosts popup 
+    """
+    
+    manageHostsButton = qt.QPushButton('+')
+    #manageHostsButton.setIcon(qt.QIcon(os.path.join(XnatLoginMenu.MODULE.GLOBALS.LOCAL_URIS['icons'], 'gear.png')) )
+    manageHostsButton.toolTip = "Manage XNAT hosts."
+    manageHostsButton.setFixedSize(24, 24)
+
+    return manageHostsButton
+
+
+
+
+def makeLoginLayout(XnatLoginMenu):
+    """ As stated.
+    """
+
+    #--------------------
+    # Username/Password Row
+    #--------------------
+    credentialsRow = qt.QHBoxLayout()
+    credentialsRow.addWidget(XnatLoginMenu.manageHostsButton)
+    credentialsRow.addWidget(XnatLoginMenu.hostDropdown)
+    credentialsRow.addSpacing(20)
+    credentialsRow.addWidget(XnatLoginMenu.usernameLine)
+    credentialsRow.addWidget(XnatLoginMenu.passwordLine)
+    credentialsRow.addWidget(XnatLoginMenu.loginButton)
+    
+
+    
+    #--------------------
+    # Everything related to logging in.
+    #--------------------
+    loginLayout = qt.QGridLayout() 
+    loginLayout.addLayout(credentialsRow, 0,2)
+    
+    return loginLayout

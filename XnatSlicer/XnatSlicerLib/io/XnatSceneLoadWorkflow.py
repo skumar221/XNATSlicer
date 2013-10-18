@@ -100,7 +100,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
                 z.extractall(destDir)
                 for root, subFolders, files in os.walk(destDir):
                     for file in files:
-                        fileURLs.append(self.utils.adjustPathSlashes(os.path.join(root,file)))
+                        fileURLs.append(self.MODULE.utils.adjustPathSlashes(os.path.join(root,file)))
             except Exception, e:
                 print ("Extraction error: %s"%(str(e)))
 
@@ -119,7 +119,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
             # MRB files decompress to a folder of the same name.  
             # Need to move all the files back to destDir.
             #
-            fileURLs = self.utils.moveDirContents(mrbDir, destDir) 
+            fileURLs = self.MODULE.utils.moveDirContents(mrbDir, destDir) 
         return fileURLs
 
 
@@ -133,7 +133,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         #-------------------------
         # Decompress scene, get files
         #-------------------------
-        extractDir = self.utils.tempPath
+        extractDir = self.MODULE.GLOBALS.LOCAL_URIS['downloads']
         tempUnpackDir = os.path.join(extractDir, currXnatFileInfo.basenameNoExtension)
         fileList = self.decompressSlicerBundle(currXnatFileInfo.localURI, tempUnpackDir)
 
@@ -193,7 +193,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         #-------------------------
         # Define relevant paths.
         #-------------------------
-        newRemoteDir = self.utils.getAncestorUri(remoteURI, "resources")
+        newRemoteDir = self.MODULE.utils.getAncestorUri(remoteURI, "resources")
         filePathsToChange = {}
 
 
@@ -221,7 +221,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         # Therefore it's necessary to parse the MRML and convert
         # all absolute URIs to relative.
         #-------------------------
-        newMRMLFile = self.utils.appendFile(mrmlFiles[0], "-LOCALIZED")       
+        newMRMLFile = self.MODULE.utils.appendFile(mrmlFiles[0], "-LOCALIZED")       
         #
         # NOTE: Parsing of the MRML is needed because node filePaths are absolute, not relative.
         # TODO: Submit a change request for absolute path values to Slicer
@@ -254,7 +254,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         #-------------------------
         # Establish caching directories
         #-------------------------
-        sceneDir = os.path.join(self.utils.projectPath, sceneName)
+        sceneDir = os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['projects'], sceneName)
         if not os.path.exists(sceneDir): os.mkdir(sceneDir)       
         self.cachePathDict = {'localFiles': os.path.join(sceneDir, 'localFiles'),
                               'cacheManager': os.path.join(sceneDir, 'cacheManagement'),
@@ -271,15 +271,15 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
                 except Exception, e: 
                     print("Couldn't make the following directory: %s\nRef. Error: %s"%(value, str(e)))# {} for some strange reason!").format(str(value))
             else:
-                #print (self.utils.lf() + "REMOVING EXISTING FILES IN '%s'"%(value))
-                self.utils.removeFilesInDir(value)
+                #print (self.MODULE.utils.lf() + "REMOVING EXISTING FILES IN '%s'"%(value))
+                self.MODULE.utils.removeFilesInDir(value)
 
 
                 
         #-------------------------
         # Move unpacked contents to new directory
         #-------------------------
-        self.utils.moveDirContents(extractDir, self.cachePathDict['localFiles'])
+        self.MODULE.utils.moveDirContents(extractDir, self.cachePathDict['localFiles'])
 
         
 

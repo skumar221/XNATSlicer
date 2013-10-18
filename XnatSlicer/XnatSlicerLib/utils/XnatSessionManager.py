@@ -35,7 +35,7 @@ class XnatSessionArgs(dict):
         self['host'] = None
         self['username'] = None
         self['saveLevel'] = None
-        self['saveDir'] = None
+        self['saveUri'] = None
         self['otherDirs'] = None
         self['fileName'] = None 
         self['sessionStart'] = str(datetime.datetime.now())
@@ -53,7 +53,7 @@ class XnatSessionArgs(dict):
 
         
     def __setitem__(self, key, value):
-        """ Assigns a value to a key.  User cannot keys into object. 
+        """ Assigns a value to a key.  User cannot add keys to object. 
         """
         if (key not in self) and (not self.inserting):
              raise KeyError("XnatSessionArgs is immutable -- you can't insert keys.")
@@ -70,7 +70,7 @@ class XnatSessionArgs(dict):
         self['host'] = self.MODULE.XnatLoginMenu.hostDropdown.currentText
         self['username'] = self.MODULE.XnatLoginMenu.usernameLine.text        
         self['saveLevel'] = saveLevelDir
-        self['saveDir'] = slicerDir
+        self['saveUri'] = slicerDir
         if os.path.basename(os.path.dirname(filePath)) == 'files':
             self["fileName"] = os.path.basename(filePath) 
         else:
@@ -101,7 +101,7 @@ class XnatSessionManager(object):
         """ Init function.
         """
         self.MODULE = MODULE
-        self.sessionFileName = os.path.join(self.MODULE.utils.MODULE_URIS['settings'], 'SessionLog.txt')
+        self.sessionFileName = os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['settings'], 'SessionLog.txt')
         self.sessionArgs = None
         self.saveItem = None
 

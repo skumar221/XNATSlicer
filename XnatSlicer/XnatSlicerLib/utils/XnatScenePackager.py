@@ -44,9 +44,7 @@ class XnatScenePackager(object):
         #-------------------
         # Init variables.
         #-------------------
-        XnatIo = args['XnatIo'] 
-        XnatDir = args['saveDir']
-        XnatSharedDir = args['sharedDir']
+        xnatDir = args['saveUri']
         sceneName = args['fileName'] 
         metadata = args['metadata']      
         packageName = os.path.basename(sceneName.split(".")[0])  
@@ -56,7 +54,7 @@ class XnatScenePackager(object):
         #-------------------
         # Create a directory for packaging.
         #-------------------
-        tempDir = os.path.join(self.MODULE.utils.tempUploadPath, packageName)
+        tempDir = os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['uploads'], packageName)
         #print self.MODULE.utils.lf() +  "CREATE PACKAGE DIRECTORY: %s"%(tempDir)
 
 

@@ -324,7 +324,7 @@ class FileSaveDialog(XnatSaveDialog):
         # Set onClick connections.
         #--------------------  
         buttonRow.connect('clicked(QAbstractButton*)', self.onButtonClicked)
-        self.MODULE.XnatView.selectItem_byPath((self.MODULE.XnatView.sessionManager.sessionArgs['saveLevel']))
+        self.MODULE.XnatView.selectItem_byUri(self.MODULE.XnatView.sessionManager.sessionArgs['saveLevel'])
 
 
 
@@ -368,8 +368,7 @@ class FileSaveDialog(XnatSaveDialog):
             #
             # UI config
             #
-            self.MODULE.XnatButtons.buttons['load'].setEnabled(True)
-            self.MODULE.XnatButtons.buttons['delete'].setEnabled(True) 
+            self.MODULE.XnatView.setEnabled(True)
 
 
             

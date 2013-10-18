@@ -24,7 +24,7 @@ class XnatDeleteWorkflow(object):
     """ Descriptor above.
     """
     
-    def __init__(self, MODULE):
+    def __init__(self, MODULE, uriName):
         """ Init function.
         """
 
@@ -41,7 +41,7 @@ class XnatDeleteWorkflow(object):
         #--------------------
         self.deleteDialog = qt.QMessageBox()
         self.deleteDialog.setIcon(qt.QMessageBox.Warning)
-        self.deleteDialog.setText("Are you sure you want to delete the file: '%s' from Xnat?"%(self.MODULE.XnatView.viewWidget.currentItem().text(self.MODULE.XnatView.column_name)))   
+        self.deleteDialog.setText("Are you sure you want to delete the '%s' from Xnat?"%(uriName))   
         self.deleteDialog.connect('buttonClicked(QAbstractButton*)', self.beginWorkflow)
         self.deleteDialog.addButton(qt.QMessageBox.Ok)
         self.deleteDialog.addButton(qt.QMessageBox.Cancel)  
@@ -69,12 +69,7 @@ class XnatDeleteWorkflow(object):
             #
             # Construct the full delete string based on type of tree item deleted
             #
-            delStr = self.MODULE.XnatView.getXnatDir(self.MODULE.XnatView.getParents(self.MODULE.XnatView.viewWidget.currentItem()))
-            if (('files' in self.MODULE.XnatView.viewWidget.currentItem().text(self.MODULE.XnatView.column_category))
-                or (self.MODULE.utils.slicerFolderName in self.MODULE.XnatView.viewWidget.currentItem().text(self.MODULE.XnatView.column_category))):
-                delStr = delStr
-            else:
-                delStr = os.path.dirname(delStr)
+            delStr = self.MODULE.XnatView.constructXnatUri()
 
                 
             #
@@ -86,11 +81,7 @@ class XnatDeleteWorkflow(object):
             #
             # Set currItem to parent of deleted item and expand it. 
             #
-            # TODO: Consider setting the current item to the deleted 
-            # sibling above or below it.  If no siblings, then go to parent.
-            #
-            self.MODULE.XnatView.viewWidget.setCurrentItem(self.MODULE.XnatView.viewWidget.currentItem().parent())
-            self.MODULE.XnatView.onTreeItemExpanded(self.MODULE.XnatView.viewWidget.currentItem())
+            self.MODULE.XnatView.removeCurrItem()
 
 
 

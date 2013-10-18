@@ -33,6 +33,12 @@ class XnatView(object):
 
 
         
+        #--------------------
+        # For for populating details window.
+        #--------------------
+        self.nodeClickedCallbacks = []
+
+        
         
     def loadProjects(self):
         """ To be inherited by child class.
@@ -57,12 +63,15 @@ class XnatView(object):
             projectContents = self.MODULE.XnatIo.getFolderContents(queryUris = ['/projects'], 
                                                                               metadataTags = self.MODULE.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
+
+            
             #
             # If the class name of the Json is 'XnatError'
             # return out, with the error.
             #
             if projectContents.__class__.__name__ == 'XnatError':
                 qt.QMessageBox.warning( None, "Login error", projectContents.errorMsg)
+                self.MODULE.onLoginFailed()
                 return
 
 
@@ -73,14 +82,31 @@ class XnatView(object):
         #----------------------
         projectsLoaded = self.loadProjects(filters = None, projectContents = projectContents)
         if projectsLoaded:
+            self.MODULE.onLoginSuccessful()
             self.MODULE.XnatButtons.setEnabled(buttonKey='addProj', enabled=True) 
-
-            
 
 
             
         
     def clear(self):
-        """ As stated.
+        """ Calls the viewWidget's clear function, which is 
+            specified in the subclass or in the QWidget.
         """
         self.viewWidget.clear()
+
+
+        
+
+    def addNodeClickedCallback(self, callback):
+        """ 
+        """
+        self.nodeClickedCallbacks.append(callback)
+
+
+    
+
+    def runNodeClickedCallbacks(self, *args):
+        """
+        """
+        for callback in self.nodeClickedCallbacks:
+            callback(args)

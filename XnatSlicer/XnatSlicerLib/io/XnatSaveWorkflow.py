@@ -71,12 +71,13 @@ class XnatSaveWorkflow(object):
             #
             # Construct new sessionArgs
             #
-            fullPath = self.MODULE.XnatView.getXnatDir(self.MODULE.XnatView.getParents(self.MODULE.XnatView.viewWidget.currentItem()))
-            remoteURI = self.MODULE.settings.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + fullPath
+            fullPath = self.MODULE.XnatView.constructXnatUri(self.MODULE.XnatView.getParents(self.MODULE.XnatView.viewWidget.currentItem()))
+            remoteURI = self.MODULE.settingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + fullPath
             sessionArgs = XnatSessionArgs(MODULE = self.MODULE, srcPath = fullPath)
             sessionArgs['sessionType'] = "scene upload - unlinked"
-            sessionArgs.printAll()
-            return
+            self.MODULE.XnatView.sessionManager.startNewSession(sessionArgs)
+            self.MODULE.XnatView.setEnabled(False)
+            FileSaveDialog(self.MODULE, self)
 
 
 
@@ -124,7 +125,7 @@ class XnatSaveWorkflow(object):
         #------------------------
         # Upload package  
         #------------------------   
-        uploadStr = self.MODULE.XnatView.sessionManager.sessionArgs['saveDir'] + "/" + os.path.basename(packageFileName)    
+        uploadStr = self.MODULE.XnatView.sessionManager.sessionArgs['saveUri'] + "/" + os.path.basename(packageFileName)    
         self.MODULE.XnatIo.upload(packageFileName, uploadStr)
         slicer.app.processEvents()
   
@@ -159,7 +160,7 @@ class XnatSaveWorkflow(object):
         # Set variables
         #------------------------
         currDir = os.path.dirname(selectedDir)
-        saveDir = ""
+        saveUri = ""
         
         #
         # NOTE: 'saveLevel' is the same as an XnatLevel.  (i.e. 
@@ -194,7 +195,7 @@ class XnatSaveWorkflow(object):
         # and XnatSaveLevel derived above.
         #------------------------
         if self.MODULE.XnatView.sessionManager.currSessionInfo:
-            saveDir = self.MODULE.utils.constructSlicerSaveUri(currUri = self.MODULE.XnatView.sessionManager.currSessionInfo['RemoteURI'], xnatLevel = saveLevel)
+            saveUri = self.MODULE.utils.constructSlicerSaveUri(currUri = self.MODULE.XnatView.sessionManager.currSessionInfo['RemoteURI'], xnatLevel = saveLevel)
         else:
             return None            
 
@@ -204,13 +205,13 @@ class XnatSaveWorkflow(object):
         # DEPRECATED: for other saving schemes like share files
         #------------------------
         otherRequiredDirs = []
-        baseDir = saveDir.split(self.MODULE.utils.slicerFolderName)[0]
+        baseDir = saveUri.split(self.MODULE.utils.slicerFolderName)[0]
         for folderName in self.MODULE.utils.requiredSlicerFolders:
             otherRequiredDirs.append("%s%s/files/"%(baseDir, folderName))
 
 
             
-        return {'saveDir': saveDir, 'others': otherRequiredDirs}
+        return {'saveUri': saveUri, 'others': otherRequiredDirs}
 
 
                     

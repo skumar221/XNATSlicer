@@ -39,7 +39,6 @@ class XnatLoadWorkflow(object):
     def __init__(self, MODULE):
         """ Parent init.
         """
-        self.utils = XnatUtils()
         self.MODULE = MODULE       
         self.loadFile = None
         self.newMRMLFile = None
@@ -97,9 +96,9 @@ class XnatLoadWorkflow(object):
         for folder, subs, files in os.walk(rootDir):
             for file in files:
                 extension =  os.path.splitext(file)[1].lower() 
-                if self.utils.isDICOM(ext = extension):
+                if self.MODULE.utils.isDICOM(ext = extension):
                     dicoms.append(os.path.join(folder,file))                   
-                if self.utils.isMRML(ext = extension): 
+                if self.MODULE.utils.isMRML(ext = extension): 
                     mrmls.append(os.path.join(folder,file))  
         return {'MRMLS':mrmls, 'ALLIMAGES': allImages, 'DICOMS': dicoms}
 
@@ -124,9 +123,9 @@ class XnatLoadWorkflow(object):
             file = str(file)
             extension =  os.path.splitext(file)[1].lower() 
             if extension or (extension != ""):
-                if self.utils.isDICOM(ext = extension):
+                if self.MODULE.utils.isDICOM(ext = extension):
                     dicoms.append(file)                   
-                if self.utils.isMRML(ext = extension): 
+                if self.MODULE.utils.isMRML(ext = extension): 
                     mrmls.append(file)
                 else:
                     others.append(file)
@@ -165,7 +164,7 @@ class XnatLoadWorkflow(object):
         #
         currItem = self.MODULE.XnatView.viewWidget.currentItem()
         pathObj = self.MODULE.XnatView.getXnatUriObject(currItem)
-        remoteURI = self.MODULE.settings.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
+        remoteURI = self.MODULE.settingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
         #    
         # Check path string if at the scan level -- adjust accordingly.
         #
@@ -174,7 +173,7 @@ class XnatLoadWorkflow(object):
         #
         # Construct dst string (the local file to be downloaded).
         #
-        dst = os.path.join(self.MODULE.utils.downloadPath,  currItem.text(self.MODULE.XnatView.getColumn('MERGED_LABEL')))
+        dst = os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['downloads'],  currItem.text(self.MODULE.XnatView.getColumn('MERGED_LABEL')))
             
 
             
