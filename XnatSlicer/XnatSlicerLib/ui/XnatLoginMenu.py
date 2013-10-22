@@ -90,6 +90,13 @@ class XnatLoginMenu(object):
 
 
 
+        #--------------------
+        # Define the widgets list.
+        #--------------------
+        self.widgets = [self.manageHostsButton, self.usernameLine, self.passwordLine, self.hostDropdown, self.loginButton]
+
+        
+
         
     def resetHostDropdown(self):
         """ Clears the host dropdown widget and then

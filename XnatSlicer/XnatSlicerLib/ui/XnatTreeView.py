@@ -36,18 +36,8 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         self.viewWidget = qt.QTreeWidget()
         self.viewWidget.setHeaderHidden(False)       
-        treeWidgetSize = qt.QSize(100, 200)
-        self.viewWidget.setBaseSize(treeWidgetSize)
-
-
-
-        #----------------------
-        # Search Tree Widget
-        # (Exists for the purposes
-        # of conducting searches -- no 
-        # hierarchy to the nodes)
-        #----------------------
-        self.searchWidget = qt.QTreeWidget()
+        #treeWidgetSize = qt.QSize(100, 200)
+        #self.viewWidget.setBaseSize(treeWidgetSize)
 
         
         
@@ -111,7 +101,7 @@ class XnatTreeView(XnatView.XnatView):
         """ Intializes the columns of the qTreeViewWidget
             tailoring XNAT metadata to columns.  There are merged 
             columns that blend two or more columns together
-            and there are singule columns associated with single
+            and there are single columns associated with single
             XNAT metadata values.
         """
         self.columns = {}
