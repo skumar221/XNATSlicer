@@ -439,8 +439,8 @@ class XnatTreeView(XnatView.XnatView):
                                expandible = [0] * len(projectContents['MERGED_LABEL']))
             self.showColumnsByNodeLevel(['projects', 'subjects'])
             self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
-            self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
-
+            #self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
+            self.viewWidget.connect("currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)", self.manageTreeNode)
 
 
         #----------------------
@@ -826,7 +826,6 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         self.resizeColumns()
 
-
         
         #------------------------
         # Selectively pull the relevant columns, based on
@@ -842,7 +841,7 @@ class XnatTreeView(XnatView.XnatView):
         # Run the callbacks that feeds the dictionary
         # into the Details GroupBox.
         #    
-        self.runNodeClickedCallbacks(detailsDict)
+        self.runNodeChangedCallbacks(detailsDict)
 
         
 

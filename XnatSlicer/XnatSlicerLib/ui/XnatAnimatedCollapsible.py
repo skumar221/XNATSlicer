@@ -23,7 +23,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
         """
 
         qt.QFrame.__init__(self)
-
+        self.hide()
         self.MODULE = MODULE
         self.rightArrowChar = u'\u25b8'
         self.downArrowChar = u'\u25be'
@@ -53,28 +53,32 @@ class XnatAnimatedCollapsible(qt.QFrame):
 
 
         self.title = title
+
+
         
         #----------------
         # 
         #----------------
-        self.button = qt.QPushButton()
+        self.button = qt.QPushButton(self)
         self.button.setFixedHeight(self.toggleHeight)
         self.button.setFixedWidth(self.toggleWidth)
         self.button.setCheckable(True)
         self.button.setStyleSheet('border: none; background-color: white; margin-left: 5px;')
         self.setButtonText(True)
+     
 
 
         
         #----------------
         # 
         #----------------
-        self.frame = qt.QFrame()
+        self.frame = qt.QFrame(self)
         #
         # To prevent style sheet inheritance
         #
         self.frame.setObjectName('animFrame')
         self.frame.setStyleSheet('#animFrame {margin-top: 9px; border: 2px solid lightgray}')
+
         
 
         
@@ -84,6 +88,10 @@ class XnatAnimatedCollapsible(qt.QFrame):
         self.stackedLayout = qt.QStackedLayout()
         self.stackedLayout.addWidget(self.frame)
         self.stackedLayout.addWidget(self.button)
+        #
+        # To make sure the button is on top.
+        #
+        self.stackedLayout.setCurrentIndex(1)
         self.stackedLayout.setStackingMode(1)
 
 
@@ -113,11 +121,23 @@ class XnatAnimatedCollapsible(qt.QFrame):
 
 
         
+    def setAnimationDuration(self, duration):
+        """ As stated.
+        """
+        self.animDuration = duration;
+
+
+        
+        
     def addToLayout(self, layout):
         """ Adds a layout to the self identifier.
         """
         self.frame.setLayout(layout)
-        self.button.setChecked(True)
+        tempDuration = self.animDuration
+        self.animDuration = 0
+        self.onToggle(True)
+        self.animDuration = tempDuration
+        #self.show()
         
 
 
@@ -175,6 +195,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
 
 
 
+
     def hideContentsWidgets(self):
         """ As stated.
         """
@@ -202,17 +223,19 @@ class XnatAnimatedCollapsible(qt.QFrame):
         if self.animateCallback:
             self.animateCallback()
         self.setFixedHeight(variant.height())
-        self.MODULE.mainLayout.update()
 
 
         
 
         
-    def onToggle(self, toggled):
+    def onToggle(self, toggled, animDuration = None):
         """ Constructs an executes an animation for the widget
             once the title button is toggled.
         """
 
+        if not animDuration: 
+            animDuration = self.animDuration
+            
         #---------------- 
         # Clear animation
         #---------------- 
@@ -253,7 +276,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
         #
         # Set the duration
         #
-        anim.setDuration(self.animDuration)	
+        anim.setDuration(animDuration)	
 
         #
         # Set the easing curve
@@ -299,8 +322,12 @@ class XnatAnimatedCollapsible(qt.QFrame):
                 #
                 # Run callbacks
                 #
+                if self.animateCallback:
+                    self.animateCallback()
                 if self.expandCallback:
                     self.expandCallback()
+                        
+                
             else:                
                 #
                 # Set the height

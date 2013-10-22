@@ -105,7 +105,7 @@ class XnatGlobals(object):
     
     @property
     def BUTTON_SIZE_SMALL(self):
-        return qt.QSize(26, 26)
+        return qt.QSize(28, 28)
 
 
     @property

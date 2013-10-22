@@ -40,6 +40,7 @@ class XnatView(object):
 
         
         
+        
     def loadProjects(self):
         """ To be inherited by child class.
         """
@@ -63,8 +64,6 @@ class XnatView(object):
             projectContents = self.MODULE.XnatIo.getFolderContents(queryUris = ['/projects'], 
                                                                               metadataTags = self.MODULE.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
-
-            
             #
             # If the class name of the Json is 'XnatError'
             # return out, with the error.
@@ -105,7 +104,7 @@ class XnatView(object):
 
     
 
-    def runNodeClickedCallbacks(self, *args):
+    def runNodeChangedCallbacks(self, *args):
         """
         """
         for callback in self.nodeClickedCallbacks:

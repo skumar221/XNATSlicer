@@ -1017,8 +1017,12 @@ class XnatUtils(object):
         
             button.setToolTip(toolTip)
             button.setFont(font)
-            if size:
-                button.setFixedSize(size)
+
+        if size:
+            button.setFixedHeight(size.height())
+            button.setFixedWidth(size.width())
+
+                
                 
         button.setEnabled(enabled) 
         return button

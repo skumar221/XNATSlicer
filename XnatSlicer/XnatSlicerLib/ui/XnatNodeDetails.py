@@ -24,12 +24,15 @@ class XnatNodeDetails(object):
         self.MODULE = MODULE
         self.widget = qt.QTextEdit()
         self.widget.setFont(self.MODULE.GLOBALS.LABEL_FONT)
-        self.widget.setFixedHeight(70)
-        self.widgetLayout = qt.QHBoxLayout()
-        self.widgetLayout.addWidget(self.widget)
+        self.widget.setFixedHeight(65)
+        #
+        # NOTE: fixes a scaling error.
+        #
+        self.scrollBar = self.widget.verticalScrollBar()
+        self.scrollBar.setStyleSheet('width: 15px')
         
         #--------------------
-        # 
+        # Placeholder.
         #--------------------
 
 
