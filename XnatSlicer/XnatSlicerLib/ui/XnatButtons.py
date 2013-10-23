@@ -89,6 +89,36 @@ class XnatButtons(object):
     
 
 
+
+    def getButtonList(self, keys):
+        """ Returns a list of buttons as provided by
+            key.
+        """
+        buttonArr = []
+
+
+        
+        #--------------------
+        # Convert 'keys' to list if it isn't one.
+        #--------------------
+        if isinstance(keys, basestring):
+            keys = [keys]
+
+
+            
+        #--------------------
+        # Loop through buttons, add to array
+        #--------------------
+        for groupName, buttonGroup in self.buttons.iteritems():
+            for buttonId in buttonGroup:
+                for key in keys:
+                    if buttonId.lower() == key.lower():
+                        buttonArr.append(buttonGroup[buttonId])
+
+
+        return buttonArr
+        
+        
         
     def setEnabled(self, buttonKey = None, enabled = True):
         """ Sets a button enabled or disabled as part of QT

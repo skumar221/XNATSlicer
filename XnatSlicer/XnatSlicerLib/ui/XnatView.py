@@ -23,10 +23,10 @@ TODO:  Consider sending more functions from XnatTreeView
 
 class XnatView(object):
 
-    def __init__(self, parent = None, MODULE = None):
+    def __init__(self, MODULE = None):
         """ Sets parent and MODULE parameters.
         """
-        self.parent = parent
+        
         self.MODULE = MODULE
         self.sessionManager = XnatSessionManager(self.MODULE)
         self.setup()
@@ -60,7 +60,7 @@ class XnatView(object):
         #----------------------
         projectContents = None
         if self.MODULE.XnatIo.projectCache == None:
-            self.viewWidget.clear()
+            self.clear()
             projectContents = self.MODULE.XnatIo.getFolderContents(queryUris = ['/projects'], 
                                                                               metadataTags = self.MODULE.utils.XnatMetadataTags_projects,
                                                                               queryArguments = ['accessible'])
@@ -84,14 +84,6 @@ class XnatView(object):
             self.MODULE.onLoginSuccessful()
             self.MODULE.XnatButtons.setEnabled(buttonKey='addProj', enabled=True) 
 
-
-            
-        
-    def clear(self):
-        """ Calls the viewWidget's clear function, which is 
-            specified in the subclass or in the QWidget.
-        """
-        self.viewWidget.clear()
 
 
         

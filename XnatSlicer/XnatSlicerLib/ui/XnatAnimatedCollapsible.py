@@ -7,7 +7,12 @@ import shutil
 
 
 comment = """
-XnatAnimatedCollapsible
+XnatAnimatedCollapsible is a collapsible widget that animates
+itself when the user toggles it.  Much like other QT widgets, 
+the user can set a layout (where the contents) reside to allow
+for the animation.  It should be noted that the user should 
+provide the specific widgets also, so they can be hidden/shown
+on the various toggle states (setContentsWidgets).
 
 TODO:        
 """
@@ -18,46 +23,71 @@ class XnatAnimatedCollapsible(qt.QFrame):
     """ Descriptor above.
     """
     
-    def __init__(self, MODULE, title, maxHeight = 300):
+    def __init__(self, MODULE, title, maxHeight = 250):
         """ Init function.
         """
-
+        
+        #--------------------
+        # Call parent init.
+        #--------------------
         qt.QFrame.__init__(self)
+
+
+        
+        #--------------------
+        # We hide the module first because
+        # it creates a flikering on loadup
+        #--------------------
         self.hide()
+
+
+        
+        #--------------------
+        # Set internal variables.
+        #--------------------        
         self.MODULE = MODULE
         self.rightArrowChar = u'\u25b8'
         self.downArrowChar = u'\u25be'
-
+        #
+        # Size
+        #
         self.minHeight = 28
         self.maxHeight = maxHeight
-        
         self.toggleHeight = 16
         self.toggleWidth = 80
-        self.animDuration = 350
         self.setStyleSheet('width: 100%')
+        #
+        # Animation duration
+        #
+        self.animDuration = 350
         
-
 
         
         #----------------
-        # 
+        # Set the easing curve.  See:
+        # http://harmattan-dev.nokia.com/docs/library/html/qt4/qeasingcurve.html
+        # for more options.
         #----------------
         self.easingCurve = qt.QEasingCurve(2);
 
+
         
         #----------------
-        # 
+        # Set the minimum hieght
         #----------------
         self.setMinimumHeight(self.minHeight)
         
 
-
+        
+        #----------------
+        # set  the Title
+        #----------------       
         self.title = title
 
 
         
         #----------------
-        # 
+        # Make button
         #----------------
         self.button = qt.QPushButton(self)
         self.button.setFixedHeight(self.toggleHeight)
@@ -67,10 +97,10 @@ class XnatAnimatedCollapsible(qt.QFrame):
         self.setButtonText(True)
      
 
-
         
         #----------------
-        # 
+        # Make the internal 'frame' and set the style
+        # accordingly.
         #----------------
         self.frame = qt.QFrame(self)
         #
@@ -80,10 +110,10 @@ class XnatAnimatedCollapsible(qt.QFrame):
         self.frame.setStyleSheet('#animFrame {margin-top: 9px; border: 2px solid lightgray}')
 
         
-
         
         #----------------
-        # 
+        # Stack the button on top of the frame via a 
+        # QStackedLayout
         #----------------
         self.stackedLayout = qt.QStackedLayout()
         self.stackedLayout.addWidget(self.frame)
@@ -97,26 +127,29 @@ class XnatAnimatedCollapsible(qt.QFrame):
 
 
         #----------------
-        # 
+        # Set the sayout
         #----------------        
         self.setLayout(self.stackedLayout)
 
 
 
-
+        #----------------
+        # Init the animation group and callbacks.
+        #----------------  
         self.animations = qt.QParallelAnimationGroup()
-        self.animateCallback = None
-        self.collapseCallback = None
-        self.expandCallback = None
+        self.onAnimate = None
+        self.onCollapse = None
+        self.onExpand = None
         self.ContentsWidgets = None
 
        
 
         #----------------
-        # 
+        # Set the default states after creation.
         #----------------
         self.button.setChecked(True)
-        self.button.connect('toggled(bool)', self.onToggle)
+        self.button.connect('toggled(bool)', self.setChecked)
+        self.toggled = True
         
 
 
@@ -130,43 +163,40 @@ class XnatAnimatedCollapsible(qt.QFrame):
         
         
     def addToLayout(self, layout):
-        """ Adds a layout to the self identifier.
+        """ Adds a layout to the internal frame
+            which will be the contents of the widget.
         """
         self.frame.setLayout(layout)
+
+
+        
+        #----------------
+        # Temporarily turn off the animation
+        # when adding contents.
+        #----------------
         tempDuration = self.animDuration
         self.animDuration = 0
-        self.onToggle(True)
+        self.setChecked(True)
         self.animDuration = tempDuration
-        #self.show()
         
 
 
 
     def setButtonText(self, toggled):
         """ Modifies the arrow character of the button
-            title to match the 'toggled' state.
+            title to match the 'toggled' state and also
+            sets the following text.
         """
-        arrowChr = ''
-        if toggled:
-            arrowChr = self.downArrowChar	
-        else:
-            arrowChr = self.rightArrowChar
+        arrowChr = self.downArrowChar if toggled else self.rightArrowChar
         self.button.setText(arrowChr + '  ' + self.title)
 
-
-        
-
-    def setChecked(self, checked):
-        """
-        """
-        self.onToggle(checked)
 
 
         
     def setOnCollapse(self, callback):
         """ As stated.
         """
-        self.collapseCallback = callback
+        self.onCollapse = callback
 
 
 
@@ -174,7 +204,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
     def setOnExpand(self, callback):
         """ As stated.
         """
-        self.expandCallback = callback
+        self.onExpand = callback
 
 
 
@@ -182,7 +212,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
     def setOnAnimate(self, callback):
         """ As stated.
         """
-        self.animateCallback = callback
+        self.onAnimate = callback
         
 
 
@@ -216,25 +246,88 @@ class XnatAnimatedCollapsible(qt.QFrame):
 
 
             
-    def onAnimate(self, variant):
-        """ Callback function during main animation
-            sequence.
+    def onAnimateMain(self, variant):
+        """ Function during main animation
+            sequence -- runs the 'onAnimate'
+            callback.
         """
-        if self.animateCallback:
-            self.animateCallback()
+        if self.onAnimate:
+            self.onAnimate()
         self.setFixedHeight(variant.height())
 
 
-        
 
         
-    def onToggle(self, toggled, animDuration = None):
+    def onAnimationFinished(self):
+        """ Callback function when the animation
+            finishes.
+        """
+
+
+        #---------------- 
+        # Call the animate function.
+        #---------------- 
+        self.onAnimateMain(qt.QSize(self.geometry.width(), self.geometry.height()))
+
+
+        
+        #---------------- 
+        # If the widget is toggled...
+        #---------------- 
+        if self.toggled:
+            #
+            # Set the height
+            #
+            self.setFixedHeight(self.maxHeight)
+            #
+            # Show contents
+            #
+            self.showContentsWidgets()
+            #
+            # Run callbacks, animate and end.
+            #
+            if self.onExpand:
+                self.onExpand()
+
+                
+
+        #---------------- 
+        # Otherwise...
+        #---------------- 
+        else:                
+            #
+            # Set the height
+            #
+            self.setFixedHeight(self.minHeight)
+            #
+            # Run callbacks
+            #
+            if self.onCollapse:
+                self.onCollapse()
+
+
+                
+
+        
+    def setChecked(self, toggled, animDuration = None):
         """ Constructs an executes an animation for the widget
             once the title button is toggled.
         """
 
+        #---------------- 
+        # Track whether collapsible was toggled.
+        #---------------- 
+        self.toggled = toggled
+
+
+        
+        #---------------- 
+        # Define the animation duration.
+        #----------------        
         if not animDuration: 
             animDuration = self.animDuration
+
+
             
         #---------------- 
         # Clear animation
@@ -287,7 +380,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
         # Set the start/end values depending on
         # the toggle state.
         #
-        if toggled:
+        if self.toggled:
             self.setMaximumHeight(self.maxHeight)
             anim.setStartValue(minSize)
             anim.setEndValue(maxSize)
@@ -299,9 +392,9 @@ class XnatAnimatedCollapsible(qt.QFrame):
             
        
         #---------------- 
-        # Connect callback during animation.
+        # Set callback during animation.
         #----------------
-        anim.valueChanged.connect(self.onAnimate)
+        anim.valueChanged.connect(self.onAnimateMain)
 
 
 
@@ -309,45 +402,13 @@ class XnatAnimatedCollapsible(qt.QFrame):
         # Connect the 'finished()' signal of the animation
         # to the finished callback...
         #----------------
-        def finishedCallback():
-            if toggled:
-                #
-                # Set the height
-                #
-                self.setFixedHeight(self.maxHeight)
-                #
-                # Show contents
-                #
-                self.showContentsWidgets()
-                #
-                # Run callbacks
-                #
-                if self.animateCallback:
-                    self.animateCallback()
-                if self.expandCallback:
-                    self.expandCallback()
-                        
-                
-            else:                
-                #
-                # Set the height
-                #
-                self.setFixedHeight(self.minHeight)
-                #
-                # Run callbacks
-                #
-                if self.collapseCallback:
-                    self.collapseCallback()
-        #
-        # Connect
-        #
-        anim.connect('finished()', finishedCallback)
+        anim.connect('finished()', self.onAnimationFinished)
 
 
         
         #---------------- 
-        # Add main animation to queue.  
-        # Start animation.
+        # Add main animation to queue and  
+        # start animation.
         #----------------       
         self.animations.addAnimation(anim)
         self.animations.start()

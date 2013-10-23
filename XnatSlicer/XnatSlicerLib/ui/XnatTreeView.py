@@ -5,14 +5,15 @@ import sys
 import shutil
 import urllib2
 
-import XnatView
+from XnatView import *
 from XnatTimer import *
 
 
 comment = """
-XnatTreeView is a subclass of the XnatView class.  It 
-uses QTreeWidget to describe the Xnat file system accessed,
-presenting them in a tree-node hierarchy.
+XnatTreeView is a subclass of both the XnatView class and the
+qt.QTreeWidget class.  It presents XNAT file system accessed
+in a tree-node hierarchy, with customized columns masks to avoid 
+visual clutter and maximize interactibility.
 
 The view classes (and subclasses) ultimately communicate
 with the load and save workflows.   
@@ -22,9 +23,8 @@ TODO:
 
 
 
-class XnatTreeView(XnatView.XnatView):
-    """ Inherits the XnatView class.  Uses a "Tree" type
-        approach to present the XNAT database hierarchy. 
+class XnatTreeView(XnatView, qt.QTreeWidget):
+    """ Inherits the XnatView class and the qt.QTreeWidget class. 
     """  
     
     def setup(self):
@@ -34,10 +34,10 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         # TreeView
         #----------------------
-        self.viewWidget = qt.QTreeWidget()
-        self.viewWidget.setHeaderHidden(False)       
+        qt.QTreeWidget.__init__(self)
+        self.setHeaderHidden(False)       
         #treeWidgetSize = qt.QSize(100, 200)
-        #self.viewWidget.setBaseSize(treeWidgetSize)
+        #self.setBaseSize(treeWidgetSize)
 
         
         
@@ -92,7 +92,15 @@ class XnatTreeView(XnatView.XnatView):
         #----------------------
         # Delete dialog
         #----------------------
-        self.deleteDialog = qt.QMessageBox()       
+        self.deleteDialog = qt.QMessageBox()   
+
+
+        
+        #--------------------
+        # NOTE: fixes a scaling error that occurs with the scroll 
+        # bar.  Have yet to pinpoint why this happens.
+        #--------------------
+        self.verticalScrollBar().setStyleSheet('width: 15px')
 
 
         
@@ -183,7 +191,7 @@ class XnatTreeView(XnatView.XnatView):
         #---------------------- 
         # Create columns based on 'allHeaders'
         #----------------------         
-        self.viewWidget.setColumnCount(len(allHeaders))
+        self.setColumnCount(len(allHeaders))
         headerLabels = []
         for header in allHeaders:
             try:
@@ -198,7 +206,7 @@ class XnatTreeView(XnatView.XnatView):
             except Exception, e:
                 #print e, "column init stuff"
                 continue
-        self.viewWidget.setHeaderLabels(headerLabels)
+        self.setHeaderLabels(headerLabels)
         self.showColumnsByNodeLevel()
 
 
@@ -273,7 +281,7 @@ class XnatTreeView(XnatView.XnatView):
                     #
                     # Combine non-essential columns into MERGED_INFO column
                     #
-                    #self.viewWidget.hideColumn(self.columns[key]['location'])
+                    #self.hideColumn(self.columns[key]['location'])
                     col = self.columns['MERGED_INFO']['location']
                     if value and len(value) > 1:
                         treeNode.setText(col, treeNode.text(col) + self.columns[key]['displayname'] + ': ' + value + ' ')
@@ -332,7 +340,7 @@ class XnatTreeView(XnatView.XnatView):
         """ Returns the 'MERGED_LABEL' value of the currenly 
             selectedItem
         """
-        return self.viewWidget.currentItem().text(self.columns['MERGED_LABEL']['location'])
+        return self.currentItem().text(self.columns['MERGED_LABEL']['location'])
         
 
 
@@ -340,7 +348,7 @@ class XnatTreeView(XnatView.XnatView):
     def removeCurrItem(self):
         """ Returns the currentItem
         """
-        self.viewWidget.currentItem().parent().removeChild(self.viewWidget.currentItem())
+        self.currentItem().parent().removeChild(self.currentItem())
 
     
 
@@ -351,7 +359,7 @@ class XnatTreeView(XnatView.XnatView):
         """
         for key in self.columns:
             if 'location' in self.columns[key]:
-                self.viewWidget.resizeColumnToContents(self.columns[key]['location'])
+                self.resizeColumnToContents(self.columns[key]['location'])
 
 
 
@@ -365,7 +373,7 @@ class XnatTreeView(XnatView.XnatView):
         # Hide all
         #----------------------
         #for i in range(0, len(self.columns)):
-        #    self.viewWidget.hideColumn(i)
+        #    self.hideColumn(i)
 
 
             
@@ -385,7 +393,7 @@ class XnatTreeView(XnatView.XnatView):
             for key in keys:
                 if key in self.columns and 'location' in self.columns[key]:
                     location = self.columns[key]['location']
-                    self.viewWidget.showColumn(location)
+                    self.showColumn(location)
 
                     
 
@@ -433,21 +441,21 @@ class XnatTreeView(XnatView.XnatView):
             #               
             projectContents['XNAT_LEVEL'] = ['projects' for p in projectContents['id']]
             projectContents['MERGED_LABEL'] = [p for p in projectContents['id']]
-            self.makeTreeItems(parentItem = self.viewWidget, 
+            self.makeTreeItems(parentItem = self, 
                                children = projectContents['MERGED_LABEL'], 
                                metadata = projectContents, 
                                expandible = [0] * len(projectContents['MERGED_LABEL']))
             self.showColumnsByNodeLevel(['projects', 'subjects'])
-            self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
-            #self.viewWidget.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
-            self.viewWidget.connect("currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)", self.manageTreeNode)
+            self.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
+            #self.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
+            self.connect("currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)", self.manageTreeNode)
 
 
         #----------------------
         # Define filter functions
         #----------------------            
         def filter_accessed():
-            self.viewWidget.sortItems(self.columns['last_accessed_497']['location'], 1)
+            self.sortItems(self.columns['last_accessed_497']['location'], 1)
             self.MODULE.treeViewManager.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
             def hideEmpty(child):
                 accessedText = child.text(self.columns['last_accessed_497']['location'])
@@ -457,7 +465,7 @@ class XnatTreeView(XnatView.XnatView):
 
 
         def filter_all():
-            self.viewWidget.sortItems(self.columns['MERGED_LABEL']['location'], 0)
+            self.sortItems(self.columns['MERGED_LABEL']['location'], 0)
             def showChild(child):
                 child.setHidden(False)
             self.loopProjectNodes(showChild)           
@@ -520,11 +528,11 @@ class XnatTreeView(XnatView.XnatView):
             to run a callback.
         """
         ind = 0
-        currChild = self.viewWidget.topLevelItem(ind)
+        currChild = self.topLevelItem(ind)
         while currChild:
             callback(currChild)
             ind += 1
-            currChild = self.viewWidget.topLevelItem(ind)
+            currChild = self.topLevelItem(ind)
 
 
             
@@ -536,14 +544,6 @@ class XnatTreeView(XnatView.XnatView):
         if self.sessionManager.sessionArgs:
             self.MODULE.XnatIo.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveUri']))
 
-
-            
-            
-    def setEnabled(self, bool):
-        """ (INHERITED from XnatView)  Enables or disables 
-            the view widget.
-        """
-        self.viewWidget.setEnabled(bool)
 
 
 
@@ -581,7 +581,7 @@ class XnatTreeView(XnatView.XnatView):
         # provided.
         #------------------------
         if not parents:
-            parents = self.getParents(self.viewWidget.currentItem())
+            parents = self.getParents(self.currentItem())
 
 
             
@@ -683,7 +683,7 @@ class XnatTreeView(XnatView.XnatView):
             of a treeItem and expands them.
         """ 
         self.manageTreeNode(item, 0)
-        self.viewWidget.setCurrentItem(item)
+        self.setCurrentItem(item)
         self.currItem = item
         if not 'files' in item.text(self.columns['XNAT_LEVEL']['location']):
             self.getChildren(item, expanded = True) 
@@ -698,7 +698,7 @@ class XnatTreeView(XnatView.XnatView):
             and does not expand them 
         """ 
         self.manageTreeNode(item, 0)
-        self.viewWidget.setCurrentItem(item)
+        self.setCurrentItem(item)
         self.currItem = item
         if not 'files' in item.text(self.columns['XNAT_LEVEL']['location']):
             self.getChildren(item, expanded = False)
@@ -719,7 +719,7 @@ class XnatTreeView(XnatView.XnatView):
             self.currItem = item
 
             
-        self.viewWidget.setCurrentItem(item)
+        self.setCurrentItem(item)
         self.currLoadable = None
 
         
@@ -953,7 +953,7 @@ class XnatTreeView(XnatView.XnatView):
             for x in range(0, item.childCount()):
                 child = item.child(x)
                 if child.text(self.columns['MERGED_LABEL']['location']) == childFileName:
-                    self.viewWidget.setCurrentItem(child)
+                    self.setCurrentItem(child)
                     self.currItem = child;
                     return   
 
@@ -977,8 +977,8 @@ class XnatTreeView(XnatView.XnatView):
         if method=="currItem":            
             
             # Sometimes we have to reset the curr item
-            if not self.viewWidget.currentItem(): 
-                self.viewWidget.setCurrentItem(self.currItem)
+            if not self.currentItem(): 
+                self.setCurrentItem(self.currItem)
                 
             # Derive parameters based on currItem
             self.sessionManager.startNewSession(sessionArgs)
@@ -1016,7 +1016,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Reload projects if it can't find the project initially
         #------------------------
-        if not self.viewWidget.findItems(pathDict['projects'],1): 
+        if not self.findItems(pathDict['projects'],1): 
             self.loadProjects()
 
 
@@ -1024,8 +1024,8 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Start by setting the current item at the project level, get its children
         #------------------------
-        self.viewWidget.setCurrentItem(self.viewWidget.findItems(pathDict['projects'],1)[0])
-        self.onTreeItemExpanded(self.viewWidget.currentItem())
+        self.setCurrentItem(self.findItems(pathDict['projects'],1)[0])
+        self.onTreeItemExpanded(self.currentItem())
 
 
         
@@ -1033,15 +1033,15 @@ class XnatTreeView(XnatView.XnatView):
         # Proceed accordingly to its lower levels
         #------------------------
         if (pathDict['subjects']):
-            self.viewWidget.setCurrentItem(self.findChild(self.viewWidget.currentItem(), pathDict['subjects']))
+            self.setCurrentItem(self.findChild(self.currentItem(), pathDict['subjects']))
             if (pathDict['experiments']):
-                self.viewWidget.setCurrentItem(self.findChild(self.viewWidget.currentItem(), pathDict['experiments']))
+                self.setCurrentItem(self.findChild(self.currentItem(), pathDict['experiments']))
                 if (pathDict['scans']):
-                    self.viewWidget.setCurrentItem(self.findChild(self.viewWidget.currentItem(), pathDict['scans']))
+                    self.setCurrentItem(self.findChild(self.currentItem(), pathDict['scans']))
         if (pathDict['resources']):
-            self.viewWidget.setCurrentItem(self.findChild(self.viewWidget.currentItem(), pathDict['resources']))
+            self.setCurrentItem(self.findChild(self.currentItem(), pathDict['resources']))
             if (pathDict['files']):
-                self.viewWidget.setCurrentItem(self.findChild(self.viewWidget.currentItem(), pathDict['files']))
+                self.setCurrentItem(self.findChild(self.currentItem(), pathDict['files']))
 
 
 
@@ -1059,7 +1059,7 @@ class XnatTreeView(XnatView.XnatView):
         #--------------------  
         if not item: return
         if setCurrItem: self.currItem = item
-        self.viewWidget.setCurrentItem(item)              
+        self.setCurrentItem(item)              
 
 
         
@@ -1178,7 +1178,7 @@ class XnatTreeView(XnatView.XnatView):
         #-------------------- 
         self.makeTreeItems(parentItem = item, children = childNames, metadata = metadata, expandible = expandible)
         item.setExpanded(True)
-        self.viewWidget.setCurrentItem(item) 
+        self.setCurrentItem(item) 
             
 
         
@@ -1290,16 +1290,9 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------    
         # SPECIAL CASE: If at project level, set parents accordingly.
         #------------------------
-        if str(parentItem.__class__) == "<class 'PythonQt.QtGui.QTreeWidget'>":
+        if str(parentItem.__class__) == "<class 'XnatTreeView.XnatTreeView'>":
             parentItem.addTopLevelItems(treeItems)
             return
-
-
-
-        #------------------------
-        # Add items to the search Widget
-        #------------------------
-        self.searchWidget.addTopLevelItems(treeItems)
         
 
         
@@ -1330,7 +1323,7 @@ class XnatTreeView(XnatView.XnatView):
         """
 
         print self.MODULE.utils.lf(), "Disconnecting item expanded."
-        self.viewWidget.disconnect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
+        self.disconnect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
         #SEARCH_TIMER = XnatTimer(self.MODULE)
 
 
@@ -1338,7 +1331,7 @@ class XnatTreeView(XnatView.XnatView):
         #------------------------
         # Deslect any selected items.
         #------------------------  
-        for selectedItem in self.viewWidget.selectedItems():
+        for selectedItem in self.selectedItems():
             selectedItem.setSelected(False)
 
 
@@ -1471,7 +1464,7 @@ class XnatTreeView(XnatView.XnatView):
                     # provided in the metadata json from REST get calls.
                     #
                     #SEARCH_TIMER.start("Getting projects after server query.")
-                    project = self.viewWidget.findItems(serverQueryResult['project'], 1 , self.columns['ID']['location'])[0]
+                    project = self.findItems(serverQueryResult['project'], 1 , self.columns['ID']['location'])[0]
                     #
                     # Show the ancestor 'project'.
                     #
@@ -1546,7 +1539,7 @@ class XnatTreeView(XnatView.XnatView):
                         # of the 'project'.  This happens as a result of the 'makeTreeItems'
                         # line below being called, and subsequent experiments being created.
                         #
-                        subject = self.viewWidget.findItems(serverQueryResult['subject_ID'], 1 | 64 , self.columns['ID']['location'])
+                        subject = self.findItems(serverQueryResult['subject_ID'], 1 | 64 , self.columns['ID']['location'])
                         if len(subject) > 0:
                             subject = subject[0]
                             
@@ -1556,7 +1549,7 @@ class XnatTreeView(XnatView.XnatView):
                         #
                         if not subject:
                             self.makeTreeItems(parentItem = project, children = [subjectLabel], metadata = subjectMetadata, expandible = [0])
-                            subject = self.viewWidget.findItems(serverQueryResult['subject_label'], 1 | 64 , self.columns['MERGED_LABEL']['location'])[0]
+                            subject = self.findItems(serverQueryResult['subject_label'], 1 | 64 , self.columns['MERGED_LABEL']['location'])[0]
                             subject.setHidden(False)
                             
                         #
@@ -1580,7 +1573,7 @@ class XnatTreeView(XnatView.XnatView):
         # the QTreeWidgetItems.
         #
         print self.MODULE.utils.lf(), "Re-connecting item expanded."
-        self.viewWidget.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
+        self.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
         self.resizeColumns()
 
     
@@ -1595,7 +1588,7 @@ class XnatTreeView(XnatView.XnatView):
         #--------------------
         # Allow for multi-node selection
         #--------------------
-        self.viewWidget.setSelectionMode(2)
+        self.setSelectionMode(2)
 
 
         
@@ -1605,8 +1598,8 @@ class XnatTreeView(XnatView.XnatView):
         # every node. columns * O(n) at least.
         #--------------------
         items = []
-        for columnNumber in range(0, self.viewWidget.columnCount):
-            results = self.viewWidget.findItems(searchString, 1 | 64 , columnNumber)
+        for columnNumber in range(0, self.columnCount):
+            results = self.findItems(searchString, 1 | 64 , columnNumber)
             if results:
                 #
                 # 'results' is returned as a tuple, so

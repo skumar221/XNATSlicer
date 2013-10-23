@@ -528,7 +528,7 @@ class XnatIo(object):
             #--------------------
             # Disable view widget
             #--------------------
-            self.MODULE.XnatView.viewWidget.setEnabled(False)
+            self.MODULE.XnatView.setEnabled(False)
 
 
             

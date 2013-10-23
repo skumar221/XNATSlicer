@@ -56,7 +56,8 @@ from XnatError import *
 from XnatSettingManager import *
 from XnatHostManager import *
 from XnatTreeViewManager import *
-
+from XnatNodeDetails import *
+from XnatAnimatedCollapsible import *
 
 
 
@@ -69,6 +70,7 @@ XnatSlicerLib classes and methods come together.
 
 TODO:
 """
+
 
 
 class XnatSlicer:
@@ -194,7 +196,6 @@ class XnatSlicerWidget:
         self.xnatSettingsWindow.addSetting(self.treeViewManager.title, widget = self.treeViewManager.frame)
 
 
-
       
         #--------------------------------
         # Xnat Filter
@@ -222,9 +223,20 @@ class XnatSlicerWidget:
         #--------------------------------
         # Viewer
         #--------------------------------
-        self.XnatView = XnatTreeView(parent = self.parent, MODULE = self)  
+        self.XnatView = XnatTreeView(MODULE = self)  
+
         
         
+        #--------------------------------
+        # Node Details
+        #--------------------------------
+        self.XnatNodeDetails = XnatNodeDetails(MODULE = self) 
+        #
+        # Link a node click to populate XnatNodeDetails.
+        #
+        self.XnatView.addNodeClickedCallback(self.XnatNodeDetails.setTextValue)
+
+
         
         #--------------------------------
         # Xnat Buttons
@@ -276,11 +288,6 @@ class XnatSlicerWidget:
         # Clean the temp dir
         #--------------------------------
         self.cleanCacheDir(200)
-
-
-        
-        self.parent.show()
-
 
       
 
@@ -396,22 +403,23 @@ class XnatSlicerWidget:
 
         
         #--------------------------------
-        # Make Group boxes
+        # Make Collapsible boxes
         #--------------------------------
-        self.loginGroupBox = ctk.ctkCollapsibleGroupBox()
-        self.loginGroupBox.setTitle("Login")
+        self.collapsibles = {}
+        self.collapsibles['login'] = XnatAnimatedCollapsible(self, 'Login', 60)
+        self.collapsibles['tools'] = XnatAnimatedCollapsible(self, 'Tools', 60)
+        self.collapsibles['viewer'] = XnatAnimatedCollapsible(self, 'Viewer')
+        self.collapsibles['details'] = XnatAnimatedCollapsible(self, 'Details', 125)
+        #
+        # Set callback to Update XNATSlicer's layout when animating.
+        #
+        def onAnimatedCollapsibleAnimate():
+            self.mainLayout.update()
+        for key, collapsible in self.collapsibles.iteritems():
+            collapsible.setOnAnimate(onAnimatedCollapsibleAnimate)
 
-        self.toolsGroupBox = ctk.ctkCollapsibleGroupBox()
-        self.toolsGroupBox.setTitle("Tools")
 
-        self.viewerGroupBox = ctk.ctkCollapsibleGroupBox()
-        self.viewerGroupBox.setTitle("Viewer")
-
-        self.detailsGroupBox = ctk.ctkCollapsibleGroupBox()
-        self.detailsGroupBox.setTitle("Details")
-        
-        
-
+            
         #--------------------------------
         # DEFINE: Main layout
         #--------------------------------        
@@ -422,11 +430,11 @@ class XnatSlicerWidget:
         #--------------------------------
         # Set LOGIN Group Box.
         #--------------------------------        
-        self.loginGroupBox.setLayout(self.XnatLoginMenu.loginLayout)
+        self.collapsibles['login'].addToLayout(self.XnatLoginMenu.loginLayout)         
         #
-        # Add login group box to widget.
+        # Make the animted collapsible aware of its contents widgets.
         #
-        self.mainLayout.addWidget(self.loginGroupBox)
+        self.collapsibles['login'].setContentsWidgets(self.XnatLoginMenu.widgets)
 
 
         
@@ -434,26 +442,14 @@ class XnatSlicerWidget:
         # Set VIEWER Group Box.
         #--------------------------------   
         self.viewerLayout = qt.QGridLayout()  
-        #
-        # Add Search Bar to Layout
-        #
         self.viewerLayout.addWidget(self.XnatSearchBar.searchWidget, 0, 0, 1, 1)
-        #
-        # Add Viewer to Layout
-        #
-        self.viewerLayout.addWidget(self.XnatView.viewWidget, 2, 0)
-        #
-        # Add Load / Save Buttons to Layout
-        #
+        self.viewerLayout.addWidget(self.XnatView, 2, 0)
         self.viewerLayout.addLayout(self.XnatButtons.loadSaveButtonLayout, 2, 1)
+        self.collapsibles['viewer'].addToLayout(self.viewerLayout)
         #
-        # Add viewer layout to group box.
+        # Make the animted collapsible aware of its contents widgets.
         #
-        self.viewerGroupBox.setLayout(self.viewerLayout)
-        #
-        # Add viewer groupBox to main layout.
-        #
-        self.mainLayout.addWidget(self.viewerGroupBox)
+        self.collapsibles['viewer'].setContentsWidgets([self.XnatSearchBar.searchWidget, self.XnatView] + self.XnatButtons.getButtonList(['save', 'load']))
 
 
 
@@ -463,12 +459,15 @@ class XnatSlicerWidget:
         #
         # Add detauls layout to group box.
         #
-        #self.toolsGroupBox.setLayout(self.XnatButtons.toolsLayout)   
+        detailsLayout = qt.QVBoxLayout()
+        self.XnatNodeDetails.setFixedHeight(100)
+        detailsLayout.addWidget(self.XnatNodeDetails)
+        self.collapsibles['details'].addToLayout(detailsLayout)
         #
-        # Add detailss groupBox to main layout.
+        # Make the animted collapsible aware of its contents widgets.
         #
-        self.mainLayout.addWidget(self.detailsGroupBox)
-
+        self.collapsibles['details'].setContentsWidgets([self.XnatNodeDetails])
+        
 
         
         #--------------------------------
@@ -477,12 +476,21 @@ class XnatSlicerWidget:
         #
         # Add tools layout to group box.
         #
-        self.toolsGroupBox.setLayout(self.XnatButtons.toolsLayout)   
+        self.collapsibles['tools'].addToLayout(self.XnatButtons.toolsLayout) 
         #
-        # Add tools groupBox to main layout.
+        # Make the animted collapsible aware of its contents widgets.
         #
-        self.mainLayout.addWidget(self.toolsGroupBox)
+        self.collapsibles['tools'].setContentsWidgets(self.XnatButtons.getButtonList(['delete', 'addProj', 'test']))
+
+
         
+        #--------------------------------
+        # Add collapsibles to main layout.
+        #--------------------------------
+        keys = ['login', 'viewer', 'details', 'tools']
+        for key in keys:
+            self.mainLayout.addWidget(self.collapsibles[key])
+
 
         
         #--------------------------------
@@ -495,20 +503,26 @@ class XnatSlicerWidget:
         
         #--------------------------------
         # Closes the collapsible group boxes except
-        # the login.
+        # the login.  We set the anim
         #-------------------------------- 
         self.onLoginFailed()
 
 
-
+            
         #--------------------------------
         # Add main Collapsible button to layout registered
         # to Slicer.
         #--------------------------------
         self.layout.addWidget(mainCollapsibleButton)
+        #
+        # NOTE: Showing the collapsibles beforehhand creates flickering 
+        # when opening Slicer, hence we show them here to avoid that.
+        #
+        for key, collapsible in self.collapsibles.iteritems():
+            collapsible.show()
+        
+        
 
-        
-        
         #--------------------------------
         # Event Connectors
         #-------------------------------- 
@@ -538,7 +552,7 @@ class XnatSlicerWidget:
         self.XnatSearchBar.connect(self.XnatView.searchEntered)
 
 
-        
+
         
     def cleanCacheDir(self, maxSize):
         """ Empties contents of the temp directory based upon maxSize
@@ -623,30 +637,17 @@ class XnatSlicerWidget:
         #--------------------
         # Minimize the login group box.
         #--------------------      
-        self.loginGroupBox.setChecked(False)
-
-        
-
-        #--------------------
-        # Maximize and enable the viewer group box.
-        #--------------------      
-        self.viewerGroupBox.setChecked(True)
-        self.viewerGroupBox.setEnabled(True)
+        self.collapsibles['login'].setChecked(False)
 
 
         
         #--------------------
-        # Maximize and enable the tools group box.
-        #--------------------      
-        self.toolsGroupBox.setChecked(True)
-        self.toolsGroupBox.setEnabled(True)
-
-
-        #--------------------
-        # Maximize and enable the details group box.
-        #--------------------      
-        self.detailsGroupBox.setChecked(True)
-        self.detailsGroupBox.setEnabled(True)
+        # Maximize and enable the others.
+        #--------------------            
+        for key in self.collapsibles:
+            if key != 'login':
+                self.collapsibles[key].setChecked(True)
+                self.collapsibles[key].setEnabled(True)
 
 
 
@@ -659,34 +660,21 @@ class XnatSlicerWidget:
         #--------------------
         # Maximize the login group box.
         #--------------------      
-        self.loginGroupBox.setChecked(True)
-
-        
-
-        #--------------------
-        # Minimize and disable the viewer group box.
-        #--------------------      
-        self.viewerGroupBox.setChecked(False)
-        self.viewerGroupBox.setEnabled(False)
+        self.collapsibles['login'].setChecked(True)
+        self.collapsibles['login'].setEnabled(True)
 
 
         
         #--------------------
-        # Minimize and disable the tools group box.
-        #--------------------      
-        self.toolsGroupBox.setChecked(False)
-        self.toolsGroupBox.setEnabled(False)
+        # Minimize and disable the others.
+        #--------------------            
+        for key in self.collapsibles:
+            if key != 'login':
+                self.collapsibles[key].setChecked(False)
+                self.collapsibles[key].setEnabled(False)
 
 
-    
-        #--------------------
-        # Minimize and disable the details group box.
-        #--------------------      
-        self.detailsGroupBox.setChecked(False)
-        self.detailsGroupBox.setEnabled(False)
-
-
-        
+            
 
     def onLoginButtonClicked(self):
         """ Event function for when the login button is clicked.

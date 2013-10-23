@@ -162,7 +162,7 @@ class XnatLoadWorkflow(object):
         # Acquire vars: current treeItem, the XnatPath, and the remote URI for 
         # getting the file.
         #
-        currItem = self.MODULE.XnatView.viewWidget.currentItem()
+        currItem = self.MODULE.XnatView.currentItem()
         pathObj = self.MODULE.XnatView.getXnatUriObject(currItem)
         remoteURI = self.MODULE.settingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
         #    
@@ -211,7 +211,7 @@ class XnatLoadWorkflow(object):
         #------------------------
         # Enable XnatView
         #------------------------
-        self.MODULE.XnatView.viewWidget.setEnabled(True)
+        self.MODULE.XnatView.setEnabled(True)
         self.lastButtonClicked = None
     
         

@@ -7,38 +7,44 @@ from XnatSettings import *
 
 
 comment = """
-XnatNodeDetails 
+XnatNodeDetails inherits QTextEdit and is the display widget
+for the details of a selected 'node' within an XnatView.  By 'details'
+we mean, it displays all of the relevant metadata pertaining to a given 
+XNAT node, whether it's a folder (project, subject, experiment, scan)
+or a file.
 
 TODO : 
 """
 
 
 
-class XnatNodeDetails(object):
-    """ 
+class XnatNodeDetails(qt.QTextEdit):
+    """ Descriptor above.
     """
 
     def __init__(self, MODULE = None):
         """ Init function.
         """
+
+        #--------------------
+        # Call parent init.
+        #--------------------
+        qt.QFrame.__init__(self)
         self.MODULE = MODULE
-        self.widget = qt.QTextEdit()
-        self.widget.setFont(self.MODULE.GLOBALS.LABEL_FONT)
-        self.widget.setFixedHeight(65)
-        #
-        # NOTE: fixes a scaling error.
-        #
-        self.scrollBar = self.widget.verticalScrollBar()
-        self.scrollBar.setStyleSheet('width: 15px')
+        self.setFont(self.MODULE.GLOBALS.LABEL_FONT)
+
+
         
         #--------------------
-        # Placeholder.
+        # NOTE: fixes a scaling error that occurs with the scroll 
+        # bar.  Have yet to pinpoint why this happens.
         #--------------------
+        self.verticalScrollBar().setStyleSheet('width: 15px')
 
 
 
         
-    def setText(self, detailsDict):
+    def setTextValue(self, detailsDict):
         """ Sets the text of the widget based on a key-value pair
             styling method.
         """
@@ -72,5 +78,11 @@ class XnatNodeDetails(object):
         for key in priorityTags:
             if key in detailsDict:
                 detailsText += "\n<b>%s</b>:\n%s\n"%(key, detailsDict[key]) + '<br>'
-        self.widget.setText(detailsText)
+
+
+
+        #--------------------
+        # Call parent 'setText'
+        #-------------------- 
+        self.setText(detailsText)
 

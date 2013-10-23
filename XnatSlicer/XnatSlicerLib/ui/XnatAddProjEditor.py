@@ -97,9 +97,9 @@ class XnatAddProjEditor(object):
         p = None
         s = None
         proj = ""
-        if (self.MODULE.XnatView.viewWidget.currentItem() != None):
-            p = self.MODULE.XnatView.getParentItemByCategory(self.MODULE.XnatView.viewWidget.currentItem(), "projects")
-            s = self.MODULE.XnatView.getParentItemByCategory(self.MODULE.XnatView.viewWidget.currentItem(), "subjects")
+        if (self.MODULE.XnatView.currentItem() != None):
+            p = self.MODULE.XnatView.getParentItemByCategory(self.MODULE.XnatView.currentItem(), "projects")
+            s = self.MODULE.XnatView.getParentItemByCategory(self.MODULE.XnatView.currentItem(), "subjects")
             proj = p.text(self.MODULE.XnatView.column_name)
             self.projDD.setCurrentIndex(self.projDD.findText(proj))
         else:
