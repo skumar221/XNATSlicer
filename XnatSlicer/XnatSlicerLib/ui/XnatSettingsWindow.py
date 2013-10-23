@@ -15,7 +15,7 @@ TODO:
 
 
 
-class XnatSettingsWindow:
+class XnatSettingsWindow(qt.QTabWidget):
     """ Popup window for managing user-inputted XnatSettings, 
         such as host names and default users.
     """
@@ -23,42 +23,29 @@ class XnatSettingsWindow:
     def __init__(self, MODULE):  
         """ Descriptor
         """      
+        #--------------------
+        # Call parent init.
+        #--------------------
+        qt.QTabWidget.__init__(self)
+
+        
         self.MODULE = MODULE
         self.settingsDict = {}
 
 
-        #--------------------
-        # Make window.
-        #--------------------
-        self.window = qt.QWidget()
-        self.window.setFixedWidth(700)
-        self.window.setFixedHeight(600)
-        self.window.setWindowModality(2)
-        self.window.hide()
-
-        
-
-        #--------------------
-        # Make master layout.
-        #--------------------
-        self.masterLayout = qt.QGridLayout()
-        self.window.setLayout(self.masterLayout)
-        
-
-        
-        #--------------------
-        # Make SettingsLister
-        #--------------------
-        self.settingsLister = SettingsLister(self.MODULE, self.showSettingWidget)
-        self.masterLayout.addWidget(self.settingsLister, 0, 0)
+        self.setTabPosition(2)
 
 
         
         #--------------------
-        # Make settings area layout (where the settings widgets reside).
+        # Set sizes.
         #--------------------
-        self.settingsAreaLayout = qt.QStackedLayout()
-        self.masterLayout.addLayout(self.settingsAreaLayout, 0, 1)
+        self.setFixedWidth(700)
+        self.setFixedHeight(600)
+        self.setWindowModality(2)
+        self.hide()
+
+        
 
 
         
@@ -67,7 +54,7 @@ class XnatSettingsWindow:
         #--------------------
         self.doneButton = qt.QPushButton("Done")
         self.doneButton.connect('clicked()', self.doneClicked)
-        self.masterLayout.addWidget(self.doneButton, 1, 1)
+        #self.masterLayout.addWidget(self.doneButton, 1, 1)
 
 
 
@@ -77,47 +64,24 @@ class XnatSettingsWindow:
         """ Creates a new window, adjusts aesthetics, then shows.
         """ 
 
-        currSetting = None
-
-        
-        #--------------------
-        # Loop through settingsLister to find 
-        # the setting.
-        #--------------------
-        settingNames =  self.settingsLister.getSettingsAsList()
-        for name in settingNames:
-            if settingName.lower() in name.lower():
-                currSetting = name
-
-
-
-        #--------------------
-        # Select the setting in the
-        # 'settingsLister' text.
-        #--------------------
-        self.settingsLister.selectSetting(currSetting)
-
-
-        
-        #--------------------
-        # Show the window.
-        #--------------------
-        self.window.show()
-
-        
 
         #--------------------
         # Reposition window if argument is true.
         #--------------------
         if position:
-            self.window.show()
             mainWindow = slicer.util.mainWindow()
             screenMainPos = mainWindow.pos
-            x = screenMainPos.x() + mainWindow.width/2 - self.window.width/2
-            y = screenMainPos.y() + mainWindow.height/2 - self.window.height/2
-            self.window.move(qt.QPoint(x,y))
-        
-        self.window.raise_()
+            x = screenMainPos.x() + mainWindow.width/2 - self.width/2
+            y = screenMainPos.y() + mainWindow.height/2 - self.height/2
+            self.move(qt.QPoint(x,y))
+
+
+        #--------------------
+        # Show the window.
+        #--------------------
+        self.show()
+               
+        self.raise_()
         
 
 
@@ -127,7 +91,7 @@ class XnatSettingsWindow:
             to the relevant settings widget based on the 'settingsName'
             argument.
         """
-        self.settingsAreaLayout.setCurrentIndex(self.settingsDict[settingName])
+        #self.settingsAreaLayout.setCurrentIndex(self.settingsDict[settingName])
         
 
             
@@ -137,17 +101,18 @@ class XnatSettingsWindow:
         """ Hide window if done was clicked.
         """
         self.MODULE.XnatLoginMenu.loadDefaultHost()
-        self.window.hide()
+        self.hide()
 
 
 
 
-    def addSetting(self, settingsName, widget = None):
+    def addSetting(self, settingName, widget = None):
         """ Inserts a setting into the settings window.
         """
-        self.settingsLister.addSetting(settingsName)
-        self.settingsAreaLayout.addWidget(widget)
-        self.settingsDict[settingsName] = self.settingsAreaLayout.count() - 1
+        #self.settingsLister.addSettingToList(settingsName)
+        #self.settingsAreaLayout.addWidget(widget)
+        #self.settingsDict[settingsName] = self.settingsAreaLayout.count() - 1
+        self.addTab(widget, settingName)
 
 
 
@@ -285,7 +250,7 @@ class SettingsLister(qt.QTextEdit):
     
         
 
-    def addSetting(self, settingsName):
+    def addSettingToList(self, settingsName):
         """ Applies aesthetic scheme will adding name and Url.
         """
         #

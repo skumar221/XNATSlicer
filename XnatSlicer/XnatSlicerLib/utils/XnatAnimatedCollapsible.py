@@ -147,7 +147,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
         #----------------
         # Set the default states after creation.
         #----------------
-        self.button.setChecked(True)
+        #self.button.setChecked(True)
         self.button.connect('toggled(bool)', self.setChecked)
         self.toggled = True
         
@@ -314,6 +314,14 @@ class XnatAnimatedCollapsible(qt.QFrame):
             once the title button is toggled.
         """
 
+        #---------------- 
+        # We need to set the button state in case
+        # this method is programatically called.
+        #----------------         
+        self.button.setChecked(toggled)
+
+
+        
         #---------------- 
         # Track whether collapsible was toggled.
         #---------------- 

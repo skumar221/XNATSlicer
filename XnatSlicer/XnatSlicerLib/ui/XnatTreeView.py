@@ -456,7 +456,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #----------------------            
         def filter_accessed():
             self.sortItems(self.columns['last_accessed_497']['location'], 1)
-            self.MODULE.treeViewManager.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
+            self.MODULE.treeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
             def hideEmpty(child):
                 accessedText = child.text(self.columns['last_accessed_497']['location'])
                 if accessedText == '': 
@@ -475,7 +475,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #----------------------
         # If no 'filters'...
         #----------------------
-        defaultFilterButton = self.MODULE.treeViewManager.buttons['sort']['accessed']
+        defaultFilterButton = self.MODULE.treeViewSettings.buttons['sort']['accessed']
         defaultFilterFunction = filter_accessed
         if not filters or len(filters) == 0:
             #
