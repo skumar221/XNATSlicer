@@ -59,7 +59,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
         #
         # Animation duration
         #
-        self.animDuration = 350
+        self.animDuration = 250
         
 
         

@@ -17,9 +17,13 @@ sys.path.append(os.path.join(MODULE_PATH, 'Testing'))
 LIB_PATH = os.path.join(MODULE_PATH, "XnatSlicerLib")
 sys.path.append(LIB_PATH)
 #
-# Include UI folder.
+# Include ui folder.
 #
 sys.path.append(os.path.join(LIB_PATH, 'ui'))
+#
+# Include ui-settings folder.
+#
+sys.path.append(os.path.join(LIB_PATH, 'ui-settings'))
 #
 # Include utils folder.
 #
@@ -53,9 +57,9 @@ from XnatFileLoadWorkflow import *
 from XnatFilter import *
 from XnatSlicerTest import *
 from XnatError import *
-from XnatSettingManager import *
-from XnatHostManager import *
-from XnatTreeViewManager import *
+from XnatSettings import *
+from XnatHostSettings import *
+from XnatTreeViewSettings import *
 from XnatNodeDetails import *
 from XnatAnimatedCollapsible import *
 
@@ -183,17 +187,17 @@ class XnatSlicerWidget:
         self.settingsFile = XnatSettingsFile(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
         self.xnatSettingsWindow = XnatSettingsWindow(self)
         #
-        # Add XnatHostManager (communicates to XnatSettings)
+        # Add XnatHostSettings (communicates to XnatSettings)
         # to xnatSettingsWindow
         #
-        self.hostManager = XnatHostManager('Host Manager', self)
-        self.xnatSettingsWindow.addSetting(self.hostManager.title, widget = self.hostManager.frame)
+        #self.hostSettings = XnatHostSettings('Host Manager', self)
+        #self.xnatSettingsWindow.addSetting(self.hostSettings.title, widget = self.hostSettings)
         #
-        # Add XnatTreeViewManager (communicates to XnatTreeView)
+        # Add XnatTreeViewSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.treeViewManager = XnatTreeViewManager('Tree View Manager',self)
-        self.xnatSettingsWindow.addSetting(self.treeViewManager.title, widget = self.treeViewManager.frame)
+        self.treeViewSettings = XnatTreeViewSettings('Tree View Manager',self)
+        self.xnatSettingsWindow.addSetting(self.treeViewSettings.title, widget = self.treeViewSettings)
 
 
       
@@ -540,7 +544,7 @@ class XnatSlicerWidget:
         #
         # Sort Button event.
         #
-        for key, button in self.treeViewManager.buttons['sort'].iteritems():
+        for key, button in self.treeViewSettings.buttons['sort'].iteritems():
             button.connect('clicked()', self.onFilterButtonClicked)
         #
         # Test button event.
@@ -635,22 +639,33 @@ class XnatSlicerWidget:
         """
 
         #--------------------
+        # Maximize and enable the others.
+        # Create an animation chain.
+        #-------------------- 
+        def expandViewer():
+            self.collapsibles[ 'viewer' ].setChecked(True)
+            self.collapsibles[ 'viewer' ].setEnabled(True)
+        self.collapsibles['login'].setOnCollapse(expandViewer)
+            
+        def expandDetails():
+            self.collapsibles[ 'details' ].setChecked(True)
+            self.collapsibles[ 'details' ].setEnabled(True)
+        self.collapsibles['viewer'].setOnExpand(expandDetails)
+        def expandTools():
+            self.collapsibles[ 'tools' ].setChecked(True)
+            self.collapsibles[ 'tools' ].setEnabled(True)
+        self.collapsibles['details'].setOnExpand(expandTools)
+
+
+        
+        #--------------------
         # Minimize the login group box.
+        # Fires off a chain of animations.
         #--------------------      
         self.collapsibles['login'].setChecked(False)
 
 
         
-        #--------------------
-        # Maximize and enable the others.
-        #--------------------            
-        for key in self.collapsibles:
-            if key != 'login':
-                self.collapsibles[key].setChecked(True)
-                self.collapsibles[key].setEnabled(True)
-
-
-
         
     def onLoginFailed(self):
         """ Disable the relevant collapsible 
@@ -658,20 +673,30 @@ class XnatSlicerWidget:
         """
 
         #--------------------
-        # Maximize the login group box.
-        #--------------------      
-        self.collapsibles['login'].setChecked(True)
-        self.collapsibles['login'].setEnabled(True)
+        # Minimize and enable the others.
+        # Create an animation chain.
+        #-------------------- 
+        def expandViewer():
+            self.collapsibles[ 'viewer' ].setChecked(False)
+            self.collapsibles[ 'viewer' ].setEnabled(False)
+        self.collapsibles['login'].setOnExpand(expandViewer)
+            
+        def expandDetails():
+            self.collapsibles[ 'details' ].setChecked(False)
+            self.collapsibles[ 'details' ].setEnabled(False)
+        self.collapsibles['viewer'].setOnCollapse(expandDetails)
+        def expandTools():
+            self.collapsibles[ 'tools' ].setChecked(False)
+            self.collapsibles[ 'tools' ].setEnabled(False)
+        self.collapsibles['details'].setOnCollapse(expandTools)
 
 
         
         #--------------------
-        # Minimize and disable the others.
-        #--------------------            
-        for key in self.collapsibles:
-            if key != 'login':
-                self.collapsibles[key].setChecked(False)
-                self.collapsibles[key].setEnabled(False)
+        # Minimize the login group box.
+        # Fires off a chain of animations.
+        #--------------------      
+        self.collapsibles['login'].setChecked(True)
 
 
             
