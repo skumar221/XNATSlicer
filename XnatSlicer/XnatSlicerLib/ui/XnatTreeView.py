@@ -35,6 +35,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # TreeView
         #----------------------
         qt.QTreeWidget.__init__(self)
+        self.setAnimated(True)
         self.setHeaderHidden(False)       
         #treeWidgetSize = qt.QSize(100, 200)
         #self.setBaseSize(treeWidgetSize)

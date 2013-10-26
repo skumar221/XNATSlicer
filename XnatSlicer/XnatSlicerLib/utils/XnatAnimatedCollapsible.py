@@ -152,7 +152,19 @@ class XnatAnimatedCollapsible(qt.QFrame):
         self.toggled = True
         
 
+        
 
+    def supsendAnimationDuration(self, suspend):
+        """ As stated.
+        """
+        if suspend:
+            self.originalAnimDuration = self.animDuration
+            self.animDuration = 0    
+        else:
+            self.animDuration = self.originalAnimDuration
+
+
+            
         
     def setAnimationDuration(self, duration):
         """ As stated.
@@ -162,7 +174,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
 
         
         
-    def addToLayout(self, layout):
+    def setFrameLayout(self, layout):
         """ Adds a layout to the internal frame
             which will be the contents of the widget.
         """
@@ -174,10 +186,7 @@ class XnatAnimatedCollapsible(qt.QFrame):
         # Temporarily turn off the animation
         # when adding contents.
         #----------------
-        tempDuration = self.animDuration
-        self.animDuration = 0
         self.setChecked(True)
-        self.animDuration = tempDuration
         
 
 

@@ -46,6 +46,8 @@ pathTag = 'Paths'
 
 
 
+
+
 class XnatSettingsFile:
   """ Manager for handing the settings file.  Stored in QSettings standard through
       'XnatSettingsFile.ini'
@@ -76,7 +78,7 @@ class XnatSettingsFile:
                          'CNDA': 'https://cnda.wustl.edu'}  
     self.setup()
     self.currErrorMessage = ""
-    
+
 
 
     
@@ -117,6 +119,23 @@ class XnatSettingsFile:
 
 
 
+  
+  def saveCustomPropertiesToHost(self, hostName, tagValueDict):
+      """ Saves the custom metadata tags to the given host.
+      """
+      self.database.beginGroup(hostName)
+      itemsStr = ''
+      for tag, items in tagValueDict.iteritems(): 
+          if len(items) > 0:
+              for item in items:
+                  print item
+                  itemsStr += item + ','
+              
+              self.database.setValue(tag, itemsStr[:-1])
+      self.database.endGroup()
+
+
+      
   
   def saveHost(self, hostName, hostAddress, isModifiable=True, isDefault=False):
     """ Writes host to the QSettings.ini database.
@@ -283,14 +302,10 @@ class XnatSettingsFile:
         is also a defaulted host name.
     """   
 
-    self.database.beginGroup(hostName)
-    dbVal =  '%s'%(self.database.value(hostName + "/" + hostIsDefaultTag, ""))
-    dbVal = dbVal.lower()
-    retVal = False
-    if '1' in dbVal or 'true' in dbVal or dbVal == True: 
-        retVal = True
-    self.database.endGroup() 
-    return retVal
+    val = self.database.value(hostName + "/" + hostIsDefaultTag)
+    if not val or 'False' in val:
+        return False
+    return True
 
 
 
@@ -299,11 +314,25 @@ class XnatSettingsFile:
     """ As stated.  Determines if a given host
         can be modified by the user.
     """
-    title = unicode(str(self.database.value(hostName + "/" + hostIsModifiableTag, "")))
-    import unicodedata
-    return unicodedata.normalize('NFKD', title).encode('ascii','ignore')
+    val = self.database.value(hostName + "/" + hostIsModifiableTag)
+
+    if not val:
+        return True
+    if 'False' in val:
+        return False
+    return True
 
 
+
+
+  def getTagValues(self, hostName, tag):
+    """ As stated.  Determines if a given host
+        can be modified by the user.
+    """
+    val = self.database.value(hostName + "/" + tag)
+    return val
+
+  
 
   
   def getAddress(self, hostName):

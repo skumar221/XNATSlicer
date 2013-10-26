@@ -32,6 +32,15 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         super(XnatHostSettings, self).__init__(title, MODULE)
         
+
+
+        #
+        # Add section Label
+        #
+        bLabel = qt.QLabel('<b>Manage Hosts</b>')
+        self.masterLayout.addWidget(bLabel)
+        self.masterLayout.addSpacing(8)
+
         
         
         #--------------------
@@ -44,8 +53,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         # Host lister
         #--------------------      
-        self.hostLister = HostLister(clickCallback = self.listItemClicked)
-        
+        self.hostTable = HostTable(self.MODULE, clickCallback = self.hostRowClicked)
         
         
         #--------------------
@@ -78,8 +86,8 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         self.masterLayout.addStretch()
         self.frame.setLayout(self.masterLayout)
-
-
+        self.setWidget(self.frame)
+        self.frame.setFixedWidth(520)
 
         
         #--------------------
@@ -94,11 +102,11 @@ class XnatHostSettings(XnatSettings):
         
         
         
-    def listItemClicked(self, hostName):
+    def hostRowClicked(self):
         """ Callbcak for when a user clicks on a given item
         within the host editor.
         """
-        self.setButtonStates(self.hostLister.selectedText().split("\t")[0])
+        self.setButtonStates(self.hostTable.currentRowItems['name'])
         
         
         
@@ -107,6 +115,7 @@ class XnatHostSettings(XnatSettings):
         """ Enables / Disables button based upon the editable
         quality of the host.  Some hosts cannot be modified.
         """
+        print nameString, self.MODULE.settingsFile.isModifiable(nameString) 
         if self.MODULE.settingsFile.isModifiable(nameString):
             self.deleteButton.setEnabled(True)
             self.editButton.setEnabled(True)
@@ -125,13 +134,13 @@ class XnatHostSettings(XnatSettings):
         # Get host dictionary from XnatSettings
         #--------------------
         hostDictionary = self.MODULE.settingsFile.getHostNameAddressDictionary()  
-        
+        print "HOST DICT", hostDictionary
         
         
         #--------------------
         # Empty hostList in the editor.
         #--------------------
-        self.hostLister.setText("")
+        self.hostTable.clear()
         
         
         
@@ -140,14 +149,16 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         for name in hostDictionary:
             #
-            # Add name and URL to host list
-            #
-            self.hostLister.addNameAndUrl(name, hostDictionary[name])
-            #
             # Apply style if default
             #
-            if (self.MODULE.settingsFile.isDefault(name)):
-                self.hostLister.applyIsDefaultStyle()
+            setModfiable = [True, True]
+            if not self.MODULE.settingsFile.isModifiable(name):
+                setModfiable = [False, False]
+            #
+            # Add name and URL to host list
+            #
+            self.hostTable.addNameAndUrl(name, hostDictionary[name], setModfiable)
+
             #
             # Get curr username
             #
@@ -156,12 +167,7 @@ class XnatHostSettings(XnatSettings):
             # If there's a username, add it....
             #
             if len(currName) > 0:
-                self.hostLister.addUsername(currName) 
-            #
-            # Otherwise, insert newline.
-            #
-            else:
-                self.hostLister.insertPlainText("\n")
+                self.hostTable.addUsername(currName) 
 
 
 
@@ -180,20 +186,24 @@ class XnatHostSettings(XnatSettings):
     def deleteHost(self):
         """ As described
         """
+        
         #--------------------
         # Delete the selected host by
         # applying the text to the settings, and removing from there.
         #--------------------
-        hostStr = self.hostLister.selectedText().split("\t")
-        deleted = self.MODULE.settingsFile.deleteHost(hostStr[0])
+        hostStr = self.hostTable.currentRowItems
+        deleted = self.MODULE.settingsFile.deleteHost(hostStr['name'])
         
-        
+
+        print "DELETED?", deleted
         #--------------------
         # Reload everything
         #--------------------
         if deleted: 
             self.loadHosts()
             self.MODULE.XnatLoginMenu.loadDefaultHost()
+
+
             
         #--------------------
         # Close popup
@@ -211,7 +221,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         # Check if the nameLine is part of the defaut set
         #--------------------
-        modifiable = not self.nameLine.text.strip("") in self.MODULE.settingsFile.defaultHosts
+        modifiable = self.MODULE.settingsFile.isModifiable(self.nameLine.text.strip(""))
 
 
 
@@ -228,7 +238,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         self.MODULE.settingsFile.saveHost(self.nameLine.text, self.urlLine.text, isModifiable = modifiable, isDefault = self.setDefault.isChecked())
 
-
+        
 
         #--------------------
         # Set default if checkbox is check
@@ -301,7 +311,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         # Layout for top part of frame (host list)
         #--------------------
-        self.masterLayout.addWidget(self.hostLister)
+        self.masterLayout.addWidget(self.hostTable)
         
         
         
@@ -309,6 +319,7 @@ class XnatHostSettings(XnatSettings):
         # Layout for bottom part of frame (buttons)
         #--------------------
         buttonLayout = qt.QHBoxLayout()
+        buttonLayout.addStretch()
         buttonLayout.addWidget(self.addButton)
         buttonLayout.addWidget(self.editButton)
         buttonLayout.addWidget(self.deleteButton)   
@@ -318,73 +329,183 @@ class XnatHostSettings(XnatSettings):
         
 
                   
-class HostLister(qt.QTextEdit):
+class HostTable(qt.QTableWidget):
     """ Inherits qt.QTextEdit to list the hosts in the 
         SettingsModal
     """
 
-
-    
-    def __init__(self, parent = None, clickCallback = None): 
+    def __init__(self, MODULE, clickCallback = None): 
         """ Init function.
         """
-        qt.QTextEdit.__init__(self, parent)
-        
-        self.currText = None        
-        self.setFixedHeight(120)
-        self.setReadOnly(True)
-        self.setLineWrapMode(False)
-        self.setHorizontalScrollBarPolicy(1)
-
+        qt.QTableWidget.__init__(self)
+        self.MODULE = MODULE
         self.clickCallback = clickCallback
-  
+        self.setup()
+        
+
 
 
         
-    def mouseReleaseEvent(self, event):
-        """ After the user clicks on a given line.
+    def setup(self):
         """
-        cursor = qt.QTextCursor(self.textCursor())
-        cursor.select(qt.QTextCursor.LineUnderCursor)
-        self.setTextCursor(cursor)
-        if cursor.selectedText():
-            self.currText = cursor.selectedText()
+        """
+        self.columnNames = ['Name', 'Url', 'Stored Login']
+        self.setSelectionBehavior(1)
+        self.setColumnCount(len(self.columnNames))
+        self.setHorizontalHeaderLabels(self.columnNames)
+        self.setColumnWidth(0, 150)
+        self.setColumnWidth(1, 200)
+        self.setColumnWidth(2, 150)
+        
+        self.setShowGrid(False)
+        self.verticalHeader().hide()
 
-        if self.clickCallback:
-            self.clickCallback(self.currText)
+        self.currentRowNumber = None
+        self.currentRowItems = None      
+
+        self.trackedItems = {}
+        
+        self.connect('currentCellChanged(int, int, int, int)', self.onCurrentCellChanged)
 
 
+
+    def printAll(self):
+        """
+        """
+        print "PRINT ALL", self.rowCount, self.columnCount 
+
+
+        
+
+    def getRowItems(self, rowNumber = None):
+        """
+        """
+        if not rowNumber:
+            rowNumber = self.currentRowNumber
+
+
+            
+        #--------------------
+        # This happens after a clear and 
+        # reinstantiation of rows.
+        #--------------------
+        if rowNumber == -1:
+            rowNumber = 0
+
+
+
+        #--------------------
+        # This happens after a clear and 
+        # reinstantiation of rows.
+        #--------------------
+        if self.trackedItems[rowNumber]:
+            returner = {}
+            for key, item in self.trackedItems[rowNumber].iteritems():
+                returner[key] = item.text()
                 
+            return returner
 
-    def addNameAndUrl(self, name, url):
-        """ Applies aesthetic scheme will adding name and Url.
+    
+
+    def clear(self):
+        """ Clears the table of all values, then reapplies
+            then reapplies the column headers.
         """
-        self.setTextColor(qt.QColor(0,0,0))
-        self.setFontItalic(False)
-        self.insertPlainText(name + "\t") 
-        self.setFontItalic(True)
-        self.setTextColor(qt.QColor(130,130,130))
-        self.insertPlainText(url + "\t" )
-        self.setTextColor(qt.QColor(0,0,0))
-        self.setFontItalic(False)
+        #--------------------
+        # We have to delete self.trackedItems
+        # because of a very bizarre memory management
+        # polciy set forth by QTableWidget
+        #--------------------
+        del self.trackedItems
+        self.trackedItems = {}
+        self.setRowCount(0)
+        #self.setup()
+        
+            
+    
+
+            
+    def onCurrentCellChanged(self, rowNum, colNum, oldRow, oldCol):
+        """
+        """
+        self.currentRowNumber = rowNum
+        self.currentRowItems = self.getRowItems()
+        #print "onCurrentCellChanged", self.currentRowItems
+        self.clickCallback()
 
 
+        
 
+        
+    def getColumn(self, colName):
+        """ Returns the column index if it's name matches the
+            'colName' argument.
+        """
+        for i in range(0, self.columnCount):
+            if self.horizontalHeaderItem(i).text().lower() == colName.lower():
+                return i
+
+
+            
+
+    def addNameAndUrl(self, name, url, setModfiable = [True, True]):
+        """ Adds a name and url to the table by adding a 
+            new row.
+        """
+
+        #--------------------
+        # 
+        #--------------------
+        flags = []
+        for state in setModfiable:
+            if state:
+                flags.append(None)
+            else:
+                flags.append(1)
+        
+        nameItem = qt.QTableWidgetItem(name)
+        if flags[0]:
+            nameItem.setFlags(flags[0])
+        
+        urlItem = qt.QTableWidgetItem(url)
+        if flags[1]:
+            urlItem.setFlags(flags[1])
+        
+        usernameItem = qt.QTableWidgetItem('No username stored.')
+
+        self.setSortingEnabled(False)
+        self.setRowCount(self.rowCount + 1)
+    
+
+
+        #--------------------
+        # 
+        #--------------------
+        self.trackedItems[self.rowCount-1] = {}
+        self.trackedItems[self.rowCount-1]['name'] = nameItem
+        self.trackedItems[self.rowCount-1]['url'] = urlItem
+        self.trackedItems[self.rowCount-1]['stored login'] = usernameItem
+
+        for key, item in self.trackedItems[self.rowCount-1].iteritems():
+            item.setFont(self.MODULE.GLOBALS.LABEL_FONT)
+
+        
+        self.setItem(self.rowCount-1, self.getColumn('name'), nameItem)
+        self.setItem(self.rowCount-1, self.getColumn('url'), urlItem)
+        self.setItem(self.rowCount-1, self.getColumn('stored login'), usernameItem)
+ 
+
+        self.setSortingEnabled(False)
+        print self.trackedItems
+        
+        
         
     def applyIsDefaultStyle(self):
         """ Stylistic display.
         """
-        self.setFontItalic(True)
-        self.setTextColor(qt.QColor(0,0,225))
-        self.insertPlainText("default")
-
-
-
-        
-    def selectedText(self):
-        """ Returns selected text.
-        """ 
-        return self.currText
+        #self.setFontItalic(True)
+        #self.setTextColor(qt.QColor(0,0,225))
+        #self.insertPlainText("default")
 
 
         
@@ -392,9 +513,11 @@ class HostLister(qt.QTextEdit):
     def addUsername(self, username):
         """ Stylistic adding of username.
         """
-        self.setFontItalic(True)
-        self.setTextColor(qt.QColor(20,20,20))
-        self.insertPlainText("\t(stored login): " + username + "\n")
+        #self.setFontItalic(True)
+        #self.setTextColor(qt.QColor(20,20,20))
+        #self.insertPlainText("\t(stored login): " + username + "\n")
+        self.trackedItems[self.rowCount-1]['stored login'].setText(username)
+        self.setItem(self.rowCount-1, self.getColumn('stored login'), self.trackedItems[self.rowCount-1]['stored login'])
 
 
 
@@ -488,22 +611,22 @@ def makeEditHostModal(hostEditor):
     #--------------------
     # Get selected strings from host list.
     #--------------------
-    selHost = hostEditor.hostLister.selectedText().split("\t")
+    selHost = hostEditor.hostTable.currentRowItems
 
 
     
     #--------------------
     # Populate the line edits from selecting strings.
     #--------------------
-    hostEditor.nameLine.setText(selHost[0])
-    hostEditor.urlLine.setText(selHost[1])
+    hostEditor.nameLine.setText(selHost['name'])
+    hostEditor.urlLine.setText(selHost['url'])
 
 
 
     #--------------------
     # Prevent editing of default host. 
     #--------------------
-    if selHost[0].strip("") in hostEditor.MODULE.settingsFile.defaultHosts:
+    if not hostEditor.MODULE.settingsFile.isModifiable(selHost['name']):
         hostEditor.nameLine.setReadOnly(True)
         hostEditor.nameLine.setFont(hostEditor.MODULE.GLOBALS.LABEL_FONT_ITALIC)
         hostEditor.nameLine.setEnabled(False)
@@ -605,7 +728,7 @@ def makeDeleteHostModal(hostEditor):
     #--------------------
     # get selected strings from host list
     #--------------------
-    selHost = hostEditor.hostLister.selectedText().split("\t")
+    selHost = hostEditor.hostTable.currentRowItems
 
 
     
@@ -625,7 +748,7 @@ def makeDeleteHostModal(hostEditor):
     messageLabel.insertPlainText("Are you sure you want to delete the host ") 
     messageLabel.setFontItalic(True)
     messageLabel.setFontWeight(100)    
-    messageLabel.insertPlainText(selHost[0])
+    messageLabel.insertPlainText(selHost['name'])
 
     messageLabel.setFontWeight(0)   
     messageLabel.insertPlainText(" ?")
@@ -677,9 +800,21 @@ def makeDeleteHostModal(hostEditor):
 def makeButtons(hostEditor):
     """ As described.
     """
-    addButton = qt.QPushButton("Add")
-    editButton = qt.QPushButton("Edit")
-    deleteButton = qt.QPushButton("Delete")
+    addButton = hostEditor.MODULE.utils.generateButton(iconOrLabel = 'Add', 
+                                                                               toolTip = "Need tool-tip.", 
+                                                                               font = hostEditor.MODULE.GLOBALS.LABEL_FONT,
+                                                                               size = qt.QSize(90, 20), 
+                                                                               enabled = True)
+    editButton = hostEditor.MODULE.utils.generateButton(iconOrLabel = 'Edit', 
+                                                                               toolTip = "Need tool-tip.", 
+                                                                               font = hostEditor.MODULE.GLOBALS.LABEL_FONT,
+                                                                               size = qt.QSize(90, 20), 
+                                                                               enabled = True)
+    deleteButton = hostEditor.MODULE.utils.generateButton(iconOrLabel = 'Delete', 
+                                                                               toolTip = "Need tool-tip.", 
+                                                                               font = hostEditor.MODULE.GLOBALS.LABEL_FONT,
+                                                                               size = qt.QSize(90, 20), 
+                                                                               enabled = True)
     
     deleteButton.setEnabled(False)
     editButton.setEnabled(False)  

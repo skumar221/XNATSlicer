@@ -23,31 +23,30 @@ class XnatSettingsWindow(qt.QTabWidget):
     def __init__(self, MODULE):  
         """ Descriptor
         """      
+        
         #--------------------
         # Call parent init.
         #--------------------
         qt.QTabWidget.__init__(self)
 
-        
+ 
         self.MODULE = MODULE
         self.settingsDict = {}
 
 
-        self.setTabPosition(2)
+        self.setTabPosition(0)
 
 
         
         #--------------------
         # Set sizes.
         #--------------------
-        self.setFixedWidth(700)
+        self.setFixedWidth(550)
         self.setFixedHeight(600)
         self.setWindowModality(2)
         self.hide()
 
         
-
-
         
         #--------------------
         # Add buttons.
@@ -57,13 +56,11 @@ class XnatSettingsWindow(qt.QTabWidget):
         #self.masterLayout.addWidget(self.doneButton, 1, 1)
 
 
-
         
         
     def showWindow(self, settingName = None, position = True):
         """ Creates a new window, adjusts aesthetics, then shows.
         """ 
-
 
         #--------------------
         # Reposition window if argument is true.
@@ -75,16 +72,24 @@ class XnatSettingsWindow(qt.QTabWidget):
             y = screenMainPos.y() + mainWindow.height/2 - self.height/2
             self.move(qt.QPoint(x,y))
 
+            
 
         #--------------------
         # Show the window.
         #--------------------
         self.show()
-               
         self.raise_()
         
 
+        
+        #--------------------
+        # Sync the Metadata settings dropdown with the login menu
+        #--------------------
+        self.MODULE.metadataSettings.update()
+        
 
+
+        
 
     def showSettingWidget(self, settingName):
         """ Changes the settingsAreaLayout index (a QStackedLayout)

@@ -60,6 +60,8 @@ from XnatError import *
 from XnatSettings import *
 from XnatHostSettings import *
 from XnatTreeViewSettings import *
+from XnatMetadataSettings import *
+from XnatDetailsSettings import *
 from XnatNodeDetails import *
 from XnatAnimatedCollapsible import *
 
@@ -190,14 +192,26 @@ class XnatSlicerWidget:
         # Add XnatHostSettings (communicates to XnatSettings)
         # to xnatSettingsWindow
         #
-        #self.hostSettings = XnatHostSettings('Host Manager', self)
-        #self.xnatSettingsWindow.addSetting(self.hostSettings.title, widget = self.hostSettings)
+        self.hostSettings = XnatHostSettings('XNAT Hosts', self)
+        self.xnatSettingsWindow.addSetting(self.hostSettings.title, widget = self.hostSettings)
+        #
+        # Add XnatMetadataSettings (communicates to XnatTreeView)
+        # to xnatSettingsWindow
+        #
+        self.metadataSettings = XnatMetadataSettings('XNAT Metadata',self)
+        self.xnatSettingsWindow.addSetting(self.metadataSettings.title, widget = self.metadataSettings)
         #
         # Add XnatTreeViewSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.treeViewSettings = XnatTreeViewSettings('Tree View Manager',self)
+        self.treeViewSettings = XnatTreeViewSettings('Tree View Settings',self)
         self.xnatSettingsWindow.addSetting(self.treeViewSettings.title, widget = self.treeViewSettings)
+        #
+        # Add XnatDetailsSettings (communicates to XnatTreeView)
+        # to xnatSettingsWindow
+        #
+        self.detailsSettings = XnatDetailsSettings('Details Settings',self)
+        self.xnatSettingsWindow.addSetting(self.detailsSettings.title, widget = self.detailsSettings)
 
 
       
@@ -434,7 +448,7 @@ class XnatSlicerWidget:
         #--------------------------------
         # Set LOGIN Group Box.
         #--------------------------------        
-        self.collapsibles['login'].addToLayout(self.XnatLoginMenu.loginLayout)         
+        self.collapsibles['login'].setFrameLayout(self.XnatLoginMenu.loginLayout)         
         #
         # Make the animted collapsible aware of its contents widgets.
         #
@@ -449,7 +463,7 @@ class XnatSlicerWidget:
         self.viewerLayout.addWidget(self.XnatSearchBar.searchWidget, 0, 0, 1, 1)
         self.viewerLayout.addWidget(self.XnatView, 2, 0)
         self.viewerLayout.addLayout(self.XnatButtons.loadSaveButtonLayout, 2, 1)
-        self.collapsibles['viewer'].addToLayout(self.viewerLayout)
+        self.collapsibles['viewer'].setFrameLayout(self.viewerLayout)
         #
         # Make the animted collapsible aware of its contents widgets.
         #
@@ -466,7 +480,7 @@ class XnatSlicerWidget:
         detailsLayout = qt.QVBoxLayout()
         self.XnatNodeDetails.setFixedHeight(100)
         detailsLayout.addWidget(self.XnatNodeDetails)
-        self.collapsibles['details'].addToLayout(detailsLayout)
+        self.collapsibles['details'].setFrameLayout(detailsLayout)
         #
         # Make the animted collapsible aware of its contents widgets.
         #
@@ -480,7 +494,7 @@ class XnatSlicerWidget:
         #
         # Add tools layout to group box.
         #
-        self.collapsibles['tools'].addToLayout(self.XnatButtons.toolsLayout) 
+        self.collapsibles['tools'].setFrameLayout(self.XnatButtons.toolsLayout) 
         #
         # Make the animted collapsible aware of its contents widgets.
         #
@@ -507,10 +521,18 @@ class XnatSlicerWidget:
         
         #--------------------------------
         # Closes the collapsible group boxes except
-        # the login.  We set the anim
-        #-------------------------------- 
-        self.onLoginFailed()
-
+        # the login.  We set the animLength of each
+        # collapsible to 0 to avoid awkard load animations
+        #--------------------------------
+        for key, value in self.collapsibles.iteritems():
+            value.supsendAnimationDuration(True)
+            value.setChecked(False)
+            value.supsendAnimationDuration(False)
+            if key != 'login':
+                value.setEnabled(False)
+            else:
+                value.setChecked(True)
+            
 
             
         #--------------------------------
@@ -657,6 +679,17 @@ class XnatSlicerWidget:
         self.collapsibles['details'].setOnExpand(expandTools)
 
 
+            
+        #--------------------
+        # Clear the animation Chain when finished
+        #--------------------
+        def clearChain(): 
+            for key in self.collapsibles:
+                self.collapsibles[key].setOnExpand(None)
+                self.collapsibles[key].setOnCollapse(None)
+        self.collapsibles['tools'].setOnExpand(clearChain)
+
+
         
         #--------------------
         # Minimize the login group box.
@@ -676,19 +709,30 @@ class XnatSlicerWidget:
         # Minimize and enable the others.
         # Create an animation chain.
         #-------------------- 
-        def expandViewer():
+        def collapseViewer():
             self.collapsibles[ 'viewer' ].setChecked(False)
             self.collapsibles[ 'viewer' ].setEnabled(False)
-        self.collapsibles['login'].setOnExpand(expandViewer)
+        self.collapsibles['login'].setOnExpand(collapseViewer)
             
-        def expandDetails():
+        def collapseDetails():
             self.collapsibles[ 'details' ].setChecked(False)
             self.collapsibles[ 'details' ].setEnabled(False)
-        self.collapsibles['viewer'].setOnCollapse(expandDetails)
-        def expandTools():
+        self.collapsibles['viewer'].setOnCollapse(collapseDetails)
+        def collapseTools():
             self.collapsibles[ 'tools' ].setChecked(False)
             self.collapsibles[ 'tools' ].setEnabled(False)
-        self.collapsibles['details'].setOnCollapse(expandTools)
+        self.collapsibles['details'].setOnCollapse(collapseTools)
+
+        
+
+        #--------------------
+        # Clear the animation Chain when finished
+        #--------------------
+        def clearChain(): 
+            for key in self.collapsibles:
+                self.collapsibles[key].setOnExpand(None)
+                self.collapsibles[key].setOnCollapse(None)
+        self.collapsibles['tools'].setOnCollapse(clearChain)
 
 
         

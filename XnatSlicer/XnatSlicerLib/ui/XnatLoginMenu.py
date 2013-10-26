@@ -131,6 +131,7 @@ class XnatLoginMenu(object):
         #--------------------
         self.resetHostDropdown()
 
+        
 
         #--------------------
         # Set host dropdown to default stored hostName.
@@ -139,6 +140,7 @@ class XnatLoginMenu(object):
         self.setHostDropdownByName(defaultName)
 
 
+        
         #--------------------
         # Populate the stored user into the username line.
         #--------------------
@@ -153,8 +155,11 @@ class XnatLoginMenu(object):
             to the name specified in the 'hostName' argument by
             looping through all of its visible items.
         """
+
+        if not hostName:
+            return
         for i in range(0, self.hostDropdown.maxVisibleItems):
-            if self.hostDropdown.itemText(i).strip().lower() == hostName.strip().lower():
+            if self.hostDropdown.itemText(i).lower() == hostName.strip().lower():
                 self.hostDropdown.setCurrentIndex(i)
                 self.currHostName = self.hostDropdown.itemText(i)
                 break
@@ -254,11 +259,6 @@ class XnatLoginMenu(object):
 
             
             
-
-
-
-
-
 
 
 def makeCredentialsWidgets(XnatLoginMenu):
