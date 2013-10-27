@@ -1026,3 +1026,5 @@ class XnatUtils(object):
                 
         button.setEnabled(enabled) 
         return button
+
+

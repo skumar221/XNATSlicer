@@ -147,4 +147,118 @@ class XnatGlobals(object):
     
     @property
     def FONT_SIZE(self):
-        return 10
+        return 12
+
+
+    @property
+    def XNAT_SLICER_FOLDERS(self):
+        return ['projects', 'subjects', 'experiments', 'scans', 'slicer', 'files']
+
+
+
+    @property
+    def DEFAULT_XNAT_METADATA(self):
+        return {
+            
+        'LABELS' : [
+            'ID',
+            'id',
+            'name',
+            'Name',
+            'label',
+            ],
+            
+            
+            
+        'projects' : [
+            'last_accessed_497',
+            'id'
+            'ID'
+            'insert_user',
+            'pi',
+            'insert_date',
+            'description',
+            'secondary_ID',
+            'pi_lastname',
+            'pi_firstname',
+            'project_invs',	
+            'project_access_img',	
+            'user_role_497',	
+            'quarantine_status'
+            'URI',
+            ],
+                
+                
+                
+            'subjects' : [
+                'ID',
+                'label'
+                'insert_date',
+                'insert_user',
+                'totalRecords'
+                'project',
+                'URI',
+                ],
+                    
+                    
+                    
+            'experiments' : [
+                'ID',
+                'label'
+                'insert_date',
+                'totalRecords',
+                'date',
+                'project',
+                'xsiType',
+                'ID',
+                'xnat:subjectassessordata/id',
+                'URI',
+                ],
+                        
+                        
+                        
+            'scans' : [
+                'series_description',
+                'note',
+                'type',
+                'xsiType',
+                'quality',
+                'xnat_imagescandata_id',
+                'URI',
+                ],
+                            
+                            
+                            
+            'resources' : [
+                'element_name',
+                'category',
+                'cat_id',
+                'xnat_abstractresource_id',
+                'cat_desc'
+                ],
+                                
+                                
+                                
+            'files' : [
+                'Size',
+                'file_format',
+                'file_content',
+                'collection',
+                'file_tags',
+                'cat_ID',
+                'URI'
+                ],
+                                    
+                                    
+                                    
+            'slicer' : [
+                'Size',
+                'file_format',
+                'file_content',
+                'collection',
+                'file_tags',
+                'cat_ID',
+                'URI'
+                ]
+                
+                }

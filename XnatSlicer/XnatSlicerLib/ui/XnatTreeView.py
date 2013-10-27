@@ -162,10 +162,10 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         
         #---------------------- 
         # Merge 'self.columnKeyOrder' with
-        # the XnatIo's 'relevantMetadataDict'
+        # the self.MODULE.GLOBALS.DEFAULT_XNAT_METADATA
         #---------------------- 
         self.columnKeyOrder = dict(self.columnKeyOrder.items() + 
-                                   self.MODULE.XnatIo.relevantMetadataDict.items())
+                                   self.MODULE.GLOBALS.DEFAULT_XNAT_METADATA.items())
         
 
 
@@ -1284,6 +1284,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             # Add the items array
             #
             if treeNode:
+                treeNode.setFlags(1 | 4 | 8 | 32)
                 treeItems.append(treeNode) 
 
 

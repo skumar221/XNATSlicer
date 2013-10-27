@@ -5,7 +5,6 @@ import os
 from XnatLoadWorkflow import *
 from XnatSaveWorkflow import *
 from XnatDeleteWorkflow import *
-import XnatButtonsUI
 
 
 

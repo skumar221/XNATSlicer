@@ -5,6 +5,7 @@ import glob
 import sys
 
 from XnatSettings import *
+from XnatMetadataManager import *
 
 
 
@@ -88,7 +89,14 @@ class XnatTreeViewSettings(XnatSettings):
         mLabel = qt.QLabel('<b>Info. Column Metadata</b>')
         self.masterLayout.addWidget(mLabel)
         self.masterLayout.addSpacing(15)
-        self.metadataManager = self.makeMetadataManager(asLabels = False)
+
+        
+        self.metadataManager = XnatMetadataManager(self.MODULE)
+        self.metadataManager.setItemType('checkbox')
+        self.metadataManager.setCustomEditVisible(False)
+
+
+        
         self.masterLayout.addWidget(self.metadataManager)
 
         
@@ -98,10 +106,10 @@ class XnatTreeViewSettings(XnatSettings):
         #--------------------
         self.masterLayout.addStretch()
         self.frame.setLayout(self.masterLayout)
-        if self.collapsibles:
-            for key in self.collapsibles:
-                self.collapsibles[key].show() 
-                self.collapsibles[key].setChecked(False) 
+        if self.metadataManager.collapsibles:
+            for key in self.metadataManager.collapsibles:
+                self.metadataManager.collapsibles[key].show() 
+                self.metadataManager.collapsibles[key].setChecked(False) 
         self.setWidget(self.frame)
 
         

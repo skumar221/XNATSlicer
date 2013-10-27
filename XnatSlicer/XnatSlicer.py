@@ -23,7 +23,11 @@ sys.path.append(os.path.join(LIB_PATH, 'ui'))
 #
 # Include ui-settings folder.
 #
-sys.path.append(os.path.join(LIB_PATH, 'ui-settings'))
+sys.path.append(os.path.join(LIB_PATH, 'ui/settings-widgets'))
+#
+# Include ui-custom-widgets folder.
+#
+sys.path.append(os.path.join(LIB_PATH, 'ui/custom-qt-widgets'))
 #
 # Include utils folder.
 #
@@ -63,7 +67,9 @@ from XnatTreeViewSettings import *
 from XnatMetadataSettings import *
 from XnatDetailsSettings import *
 from XnatNodeDetails import *
-from XnatAnimatedCollapsible import *
+from XnatMetadataManager import *
+from AnimatedCollapsible import *
+from VariableItemListWidget import *
 
 
 
@@ -424,10 +430,10 @@ class XnatSlicerWidget:
         # Make Collapsible boxes
         #--------------------------------
         self.collapsibles = {}
-        self.collapsibles['login'] = XnatAnimatedCollapsible(self, 'Login', 60)
-        self.collapsibles['tools'] = XnatAnimatedCollapsible(self, 'Tools', 60)
-        self.collapsibles['viewer'] = XnatAnimatedCollapsible(self, 'Viewer')
-        self.collapsibles['details'] = XnatAnimatedCollapsible(self, 'Details', 125)
+        self.collapsibles['login'] = AnimatedCollapsible( 'Login', 60)
+        self.collapsibles['tools'] = AnimatedCollapsible( 'Tools', 60)
+        self.collapsibles['viewer'] = AnimatedCollapsible( 'Viewer')
+        self.collapsibles['details'] = AnimatedCollapsible( 'Details', 125)
         #
         # Set callback to Update XNATSlicer's layout when animating.
         #
