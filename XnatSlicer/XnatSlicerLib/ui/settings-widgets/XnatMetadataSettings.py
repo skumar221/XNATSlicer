@@ -60,30 +60,17 @@ class XnatMetadataSettings(XnatSettings):
         
         self.masterLayout.addLayout(labelLayout)
         self.masterLayout.addSpacing(15)
-        self.metadataManager = XnatMetadataManager(self.MODULE)
-        self.masterLayout.addWidget(self.metadataManager)
 
 
         #--------------------
         # Hide metadata manager buttons
         #--------------------
-        self.metadataManager.hideButtons()
-        self.metadataManager.setItemsEnabled(False)
-        #self.metadataManager.setItemType('checkbox')
-
-
-            
-        #--------------------
-        # Add to frame.
-        #--------------------
-        self.masterLayout.addStretch()
-        self.frame.setLayout(self.masterLayout)
-        if self.metadataManager.collapsibles:
-            for key in self.metadataManager.collapsibles:
-                self.metadataManager.collapsibles[key].show() 
-                self.metadataManager.collapsibles[key].setChecked(False) 
-        self.setWidget(self.frame)
-
+        #self.XnatMetadataManager.hideButtons()
+        #self.XnatMetadataManager.setItemsEnabled(False)
+        #self.masterLayout.addWidget(self.XnatMetadataManager)
+        self.addMetadataManager()
+        self.XnatMetadataManager.setItemsEnabled(False)
+        self.XnatMetadataManager.hideButtons()
 
 
 

@@ -6,6 +6,7 @@ import sys
 
 from AnimatedCollapsible import *
 from VariableItemListWidget import *
+from XnatMetadataManager import *
 
 
 comment = """
@@ -64,17 +65,32 @@ class XnatSettings(qt.QScrollArea):
         self.masterLayout = qt.QVBoxLayout()
 
 
-
-        #--------------------
-        # Meta keys
-        #--------------------
-        self.metaKeys = ['projects', 'subjects', 'experiments', 'scans', 'slicer', 'files']
-
-
+        self.XnatMetadataManager = XnatMetadataManager(self.MODULE)
 
         
+
+    def addMetadataManager(self):
+        """
+        """
+        
+        self.masterLayout.addWidget(self.XnatMetadataManager)
+
         
 
+        #--------------------
+        # Add to frame.
+        #--------------------
+        self.masterLayout.addStretch()
+        self.frame.setLayout(self.masterLayout)
+        if self.XnatMetadataManager.collapsibles:
+            for key in self.XnatMetadataManager.collapsibles:
+                self.XnatMetadataManager.collapsibles[key].show() 
+                self.XnatMetadataManager.collapsibles[key].setChecked(False) 
+        self.setWidget(self.frame)
+
+        
+
+        
     def addSpacing(self):
         """ As stated.
         """

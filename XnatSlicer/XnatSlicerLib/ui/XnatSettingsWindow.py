@@ -56,6 +56,31 @@ class XnatSettingsWindow(qt.QTabWidget):
         #self.masterLayout.addWidget(self.doneButton, 1, 1)
 
 
+
+        self.settingsWidgets = []
+
+
+
+        self.connect('currentChanged(int)', self.updateSettingWidgets)
+
+
+
+
+    def updateSettingWidgets(self, tabIndex):
+        """
+        """
+        print "\n UpdateSEttingWidgets", tabIndex, self.tabText(tabIndex)
+        #--------------------
+        # Remove the metadata editor from the previous settings.
+        #--------------------       
+        try:
+            for i in range(0, self.count):
+                self.settingsWidgets[i]['widget'].XnatMetadataManager.update()
+        except Exception, e:
+            print self.MODULE.utils.lf(), self.tabText(tabIndex), " doesn't have an XnatMetadataManagerObject"
+            print e
+
+            
         
         
     def showWindow(self, settingName = None, position = True):
@@ -96,7 +121,7 @@ class XnatSettingsWindow(qt.QTabWidget):
             to the relevant settings widget based on the 'settingsName'
             argument.
         """
-        #self.settingsAreaLayout.setCurrentIndex(self.settingsDict[settingName])
+        #self.settingsAreaLayout.setCurrentIndex(self.settingsWidgets[settingName])
         
 
             
@@ -116,8 +141,10 @@ class XnatSettingsWindow(qt.QTabWidget):
         """
         #self.settingsLister.addSettingToList(settingsName)
         #self.settingsAreaLayout.addWidget(widget)
-        #self.settingsDict[settingsName] = self.settingsAreaLayout.count() - 1
+        #self.settingsWidgets[settingsName] = self.settingsAreaLayout.count() - 1
+        self.settingsWidgets.append({'widget': widget, 'name': settingName})
         self.addTab(widget, settingName)
+        widget.update()
 
 
 

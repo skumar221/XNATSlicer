@@ -52,24 +52,10 @@ class XnatDetailsSettings(XnatSettings):
         self.masterLayout.addSpacing(15)
 
         
-        self.metadataManager = XnatMetadataManager(self.MODULE)
-        self.metadataManager.setItemType('checkbox')
-        
-        self.masterLayout.addWidget(self.metadataManager)
-
-        
-
-        #--------------------
-        # Add to frame.
-        #--------------------
-        self.masterLayout.addStretch()
-        self.frame.setLayout(self.masterLayout)
-        if self.metadataManager.collapsibles:
-            for key in self.metadataManager.collapsibles:
-                self.metadataManager.collapsibles[key].show() 
-                self.metadataManager.collapsibles[key].setChecked(False) 
-        self.setWidget(self.frame)
-
+        #self.XnatMetadataManager = XnatMetadataManager(self.MODULE)
+        self.addMetadataManager()
+        self.XnatMetadataManager.setItemType('checkbox')
+        self.XnatMetadataManager.setCustomEditVisible(False)
         
 
         

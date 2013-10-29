@@ -330,7 +330,10 @@ class XnatSettingsFile:
         can be modified by the user.
     """
     val = self.database.value(hostName + "/" + tag)
-    return val
+
+    if ',' in val:
+        return val.split(',')
+    return [val]
 
   
 

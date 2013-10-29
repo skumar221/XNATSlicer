@@ -38,6 +38,10 @@ class XnatMetadataManager(qt.QFrame):
         self.buttons = {}
         self.labels = {}
         self.buttonGrids = {}
+        self.editCustomButtons = {}
+
+        self.editCustomButtonGroup = qt.QButtonGroup()
+        self.editCustomButtonGroup.connect('buttonClicked(QAbstractButton*)', self.editCustomClicked)
 
         #--------------------
         # Construct grid layout.
@@ -75,8 +79,7 @@ class XnatMetadataManager(qt.QFrame):
             # Define the custom metadata tags for storing into 
             # the settings file
             #--------------------
-           
-            self.customMetadataTags[key] = 'customMetadataTags_' + key
+            self.customMetadataTags[key] = self.MODULE.GLOBALS.makeCustomMetadataTag(key)
 
 
 
@@ -97,24 +100,19 @@ class XnatMetadataManager(qt.QFrame):
             self.buttonGrids[key].addWidget(self.labels[key][1], 0, 1)
             
             #
-            # Add the 'addCustomType' button.
+            # Add the 'editCustom' button.
             #
 
-            addCustomTypeButton = self.MODULE.utils.generateButton(iconOrLabel = "Edit custom tags", 
+            self.editCustomButtons[key] = self.MODULE.utils.generateButton(iconOrLabel = "Edit custom tags for '%s'"%(key), 
                                                                                toolTip = "Adds a custom metadata tag to display in the 'Info' column.", 
                                                                                font = self.MODULE.GLOBALS.LABEL_FONT,
                                                                                size = qt.QSize(180, 20), 
                                                                                enabled = True)
-            self.buttonGrids[key].addWidget(addCustomTypeButton, 0, 2)
 
-            #
-            # Set the onclick method for the button
-            #
-            # if buttonOnClick:
-            # addCustomTypeButton.connect('clicked()', buttonOnClick)
-            if not key in self.buttons:
-                self.buttons[key] = []
-            self.buttons[key].append(addCustomTypeButton)   
+            self.buttonGrids[key].addWidget(self.editCustomButtons[key], 0, 2)
+            self.editCustomButtonGroup.addButton(self.editCustomButtons[key])
+            
+
 
 
             #
@@ -163,7 +161,7 @@ class XnatMetadataManager(qt.QFrame):
         #--------------------
         # Remove existing.
         #--------------------
-        #self.MODULE.settingsFile.saveCustomPropertiesToHost('CNDA', {self.customMetadataTags['projects'] : ['asdf','ab','cas','eer']})
+        #
 
 
         
@@ -171,9 +169,8 @@ class XnatMetadataManager(qt.QFrame):
     def hideButtons(self):
         """
         """
-        for key, buttons in self.buttons.iteritems():
-            for button in buttons:
-                button.hide()
+        for key, button in self.editCustomButtons.iteritems():
+            button.hide()
 
 
 
@@ -213,7 +210,20 @@ class XnatMetadataManager(qt.QFrame):
                    widget.item(i).setCheckState(0)
 
 
-                   
+
+
+
+    def editCustomClicked(self, button):
+        """
+        """
+        for key, _button in self.editCustomButtons.iteritems():
+            if button == _button:
+                self.MODULE.xnatSettingsWindow.setCurrentIndex(1) 
+                self.MODULE.metadataSettings.XnatMetadataManager.collapsibles[key].setChecked(True)
+            else:
+                self.MODULE.metadataSettings.XnatMetadataManager.collapsibles[key].setChecked(False)
+
+        
 
     def setCustomEditVisible(self, visible):
         """
@@ -233,11 +243,12 @@ class XnatMetadataManager(qt.QFrame):
         #self.hostDropdown.setCurrentIndex(self.MODULE.XnatLoginMenu.hostDropdown.currentIndex)
         for key in self.customScrollWidgets:
             self.customScrollWidgets[key].clear() 
-            self.customScrollWidgets[key].clear() 
 
-            
-            customMetadataItems = self.MODULE.settingsFile.getTagValues(self.hostDropdown.currentText, self.customMetadataTags[key])
-            if customMetadataItems:
-                customMetadataItems = customMetadataItems.split(',')
-                self.customScrollWidgets[key].addItems(customMetadataItems)
+            try:
+                #customMetadataItems = self.MODULE.settingsFile.getTagValues(self.MODULE.metadataSettings.hostDropdown.currentText, self.customMetadataTags[key])
+                self.customScrollWidgets[key].update()
+                    
+            except Exception, e:
+                print self.MODULE.utils.lf()
+                print str(e)
 

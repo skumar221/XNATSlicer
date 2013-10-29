@@ -90,27 +90,13 @@ class XnatTreeViewSettings(XnatSettings):
         self.masterLayout.addWidget(mLabel)
         self.masterLayout.addSpacing(15)
 
-        
-        self.metadataManager = XnatMetadataManager(self.MODULE)
-        self.metadataManager.setItemType('checkbox')
-        self.metadataManager.setCustomEditVisible(False)
+
+        self.addMetadataManager()
+        self.XnatMetadataManager.setItemType('checkbox')
+        self.XnatMetadataManager.setCustomEditVisible(False)
+        #self.masterLayout.addWidget(self.XnatMetadataManager)
 
 
-        
-        self.masterLayout.addWidget(self.metadataManager)
-
-        
-
-        #--------------------
-        # Add to frame.
-        #--------------------
-        self.masterLayout.addStretch()
-        self.frame.setLayout(self.masterLayout)
-        if self.metadataManager.collapsibles:
-            for key in self.metadataManager.collapsibles:
-                self.metadataManager.collapsibles[key].show() 
-                self.metadataManager.collapsibles[key].setChecked(False) 
-        self.setWidget(self.frame)
 
         
         

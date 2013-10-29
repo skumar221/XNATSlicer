@@ -39,10 +39,7 @@ class XnatMetadataEditor(qt.QFrame):
         
         self.setup()
 
-        
-
-
-
+        self.update()
         
         
     @property
@@ -103,6 +100,9 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         lineWidth = 150
 
 
+        #self.customButtonGroup = qt.QButtonGroup()
+        #self.customButtonGroup.connect('buttonClicked(QAbstractButton*)', self.customClicked)
+        
         self.lineEdit = qt.QLineEdit()
         self.lineEdit.setFixedHeight(buttonHeight)
         self.lineEdit.setFixedWidth(lineWidth)
@@ -110,16 +110,25 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         self.addButton = qt.QPushButton('Add')
         self.addButton.setFixedHeight(buttonHeight)
         self.addButton.setFixedWidth(buttonWidth)
+        self.addButton.connect('clicked()', self.onAddClicked)
 
+
+        
         self.deleteButton = qt.QPushButton('Remove')
         self.deleteButton.setFixedHeight(buttonHeight)
         self.deleteButton.setFixedWidth(buttonWidth)
+        self.deleteButton.connect('clicked()', self.onDeleteClicked)
 
+
+        #self.customButtonGroup.addButton(self.addButton)
+        #self.customButtonGroup.addButton(self.deleteButton)
 
         self.lineLayout = qt.QHBoxLayout()
 
         
         super(XnatCustomMetadataEditor, self).__init__(MODULE, xnatLevel)
+
+        
 
 
     def setup(self):
@@ -131,6 +140,81 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         self._layout.addLayout(self.lineLayout)
 
 
+
+
+    def customButtonClicked(self, button):
+        """
+        """
+        print "BUTTON: ", self.xnatLevel
+        
+        
+        
+
+    def onDeleteClicked(self):
+        """
+        """
+
+        print "DELETE"
+        xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
+        customMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
+
+
+        updatedMetadataItems = []
+        for item in customMetadataItems:
+            currItem = self.listWidget.currentItem()
+
+            if item.lower().strip() == currItem.text().lower().strip():
+                self.listWidget.removeItemWidget(self.listWidget.currentItem())
+            else:
+                updatedMetadataItems.append(item)
+
+        
+        
+        tagDict = {self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel) : updatedMetadataItems}
+        self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)
+
+
+        self.update()
+
+
+        
+    def update(self):
+        """
+        """
+
+        try:
+            xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
+            customMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
+            print "UPDATE", customMetadataItems
+            self.listWidget.clear()
+            self.listWidget.addItems(customMetadataItems)
+        except Exception, e:
+            print self.MODULE.utils.lf(), str(e)
+            
+
+            
+
+            
+    def onAddClicked(self):
+        """
+        """
+
+        
+        lineText = self.lineEdit.text
+        if len(lineText.strip()) == 0:
+            return
+
+        xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
+
+        customMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
+
+        tagDict = {self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel) : [lineText] + customMetadataItems}
+        self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)
+
+        self.lineEdit.clear()
+        self.update()
+
+        
 
     def setEditLineVisible(self, visible):
         """

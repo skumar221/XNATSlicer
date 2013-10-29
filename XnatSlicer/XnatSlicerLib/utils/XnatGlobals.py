@@ -150,10 +150,27 @@ class XnatGlobals(object):
         return 12
 
 
+    
+
     @property
     def XNAT_SLICER_FOLDERS(self):
         return ['projects', 'subjects', 'experiments', 'scans', 'slicer', 'files']
 
+    
+
+
+    @property
+    def CUSTOM_METADATA_SETTINGS_PREFIX(self):
+        return 'customMetadataTags_'
+
+
+    
+
+    def makeCustomMetadataTag(self, xnatLevel):
+        """
+        """
+        return self.CUSTOM_METADATA_SETTINGS_PREFIX + xnatLevel.lower()
+    
 
 
     @property
