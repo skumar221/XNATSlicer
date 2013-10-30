@@ -99,9 +99,6 @@ class XnatMetadataEditor(qt.QFrame):
 
 
         
-
-
-
         #--------------------
         # Set the flags based on the 'self.currItemType' argument.
         #--------------------
@@ -135,30 +132,22 @@ class XnatMetadataEditor(qt.QFrame):
         """
         """
 
-        print '*******************SUPERTUPDATE'
         self.setItemType(self.currItemType)
         self.listWidget.connect('itemClicked(QListWidgetItem *)', self.onItemClicked)
 
 
-
-        #
+        #--------------------
         # Load and check items from settings file
-        #
-        #if self.currItemType == 'checkbox':
-
-
-
+        #--------------------
         if self.currItemType == 'checkbox':
             try:
                 xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
                 savedMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.onMetadataCheckedTag + self.xnatLevel)
-                print "AVEASSSSSSSSSSSSSS", savedMetadataItems
                 for i in range(0, self.listWidget.count):
                     item = self.listWidget.item(i)
                     if item.flags() == 48 and item.text() in savedMetadataItems:
                         item.setCheckState(2)                
             except Exception, e:
-                print "sUPER METADATA EDITOR UPDATE:", str(e)
                 return
 
             
@@ -178,6 +167,9 @@ class XnatMetadataEditor(qt.QFrame):
         #print "item clicked", item.text(), item.flags()
 
         xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
+
+
+        
         #--------------------
         # If the item is a checkbox
         #--------------------
@@ -200,11 +192,13 @@ class XnatMetadataEditor(qt.QFrame):
                 #
                 # Union the two list
                 #
+                #print "checkedMetadataItems", checkedMetadataItems
+                #print savedMetadataItems
                 mergedItems = list(set(savedMetadataItems) | set(checkedMetadataItems))
-
+                #print "MERGED", mergedItems
                 
                 tagDict = {self.onMetadataCheckedTag + self.xnatLevel : mergedItems}
-                self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)
+                self.MODULE.settingsFile.setTagValues(xnatHost, tagDict)
 
 
 
@@ -213,15 +207,22 @@ class XnatMetadataEditor(qt.QFrame):
                 #
                 # Union the two list
                 #
-                differenceItems = list(set(savedMetadataItems) - set([item.text()]))
-                #print differenceItems
-                
+                differenceItems = list(set(savedMetadataItems) - set([item.text()]))                
                 tagDict = {self.onMetadataCheckedTag + self.xnatLevel : differenceItems}
-                self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)  
-
+                self.MODULE.settingsFile.setTagValues(xnatHost, tagDict)  
 
                 
 
+        #--------------------
+        # Refresh the selected item in the Xnatview
+        #--------------------
+        self.MODULE.XnatView.refreshColumns()
+
+
+
+
+
+        
         
 class XnatDefaultMetadataEditor(XnatMetadataEditor):
 
@@ -246,7 +247,7 @@ class XnatDefaultMetadataEditor(XnatMetadataEditor):
         """
         """
 
-        print '*******************DEFAULTUPDATE'
+        #print '*******************DEFAULTUPDATE'
         super(XnatDefaultMetadataEditor, self).update()
 
             
@@ -349,7 +350,7 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         
         
         tagDict = {self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel) : updatedMetadataItems}
-        self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)
+        self.MODULE.settingsFile.setTagValues(xnatHost, tagDict)
 
 
         self.update()
@@ -400,7 +401,7 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         customMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
 
         tagDict = {self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel) : [lineText] + customMetadataItems}
-        self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)
+        self.MODULE.settingsFile.setTagValues(xnatHost, tagDict)
 
         self.lineEdit.clear()
 

@@ -120,10 +120,12 @@ class XnatSettingsFile:
 
 
   
-  def saveCustomPropertiesToHost(self, hostName, tagValueDict):
+  def setTagValues(self, hostName, tagValueDict):
       """ Saves the custom metadata tags to the given host.
       """
       self.database.beginGroup(hostName)
+
+      print "SET TAG VALUES", hostName, tagValueDict
       itemsStr = ''
       for tag, items in tagValueDict.iteritems(): 
           if len(items) > 0:
@@ -132,6 +134,15 @@ class XnatSettingsFile:
                   itemsStr += item + ','
               
               self.database.setValue(tag, itemsStr[:-1])
+
+          #
+          # If the lengh of the tag items is zero, it means
+          # we clear the field.
+          #
+          else:
+              self.database.setValue(tag, '')
+
+          
       self.database.endGroup()
 
 

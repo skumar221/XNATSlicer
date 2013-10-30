@@ -63,7 +63,6 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # Tree-related globals
         #----------------------
         self.dirText = None     
-        self.currItem = None
         self.currLoadable = None        
 
 
@@ -159,6 +158,14 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         ]
 
 
+
+        #----------------------
+        # Set the preliminary 'visibleColumnKeys' for 
+        # just the ones in self.columnKeyOrder['ALL']
+        #----------------------       
+        self.visibleColumnKeys = self.columnKeyOrder['ALL']
+
+
         
         #---------------------- 
         # Merge 'self.columnKeyOrder' with
@@ -235,119 +242,130 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
 
 
         
-    def setValuesToTreeNode(self, treeNode = None, metadata = None):
+    def populateColumns(self, widgetItem = None, xnatMetadata = None):
         """ Fills the row values for a given set of columns for
             a tree node.  The columns correspond to the keys of
-            the 'metadata' argument.
+            the 'xnatMetadata' argument.
         """
 
-        level = metadata['XNAT_LEVEL']
+        #------------------
+        # POPULATE ALL COLUMNS EXCEPT MERGED_INFO
+        #
+        # Populate all of the columns if the 'xnatMetadata'
+        # argument is provided.
+        #
+        # If it isn't, we assume that the colummns
+        # have already been populated.
+        #------------------
+        if xnatMetadata != None:
+            print "\n\n", widgetItem.text(0), xnatMetadata
+            for key in xnatMetadata:
 
-        #print "\nSET VALUES", treeNode, metadata
+                
+                #
+                # Leave out metadata without a 
+                # corresponding column.
+                #
+                if not key in self.columns:
+                    continue
+
+                
+                #
+                # Filtered projects return a lowercase 'id'
+                # need to convert this back to uppercase.
+                #
+                columnKey = key
+                if key == 'id':
+                    columnKey = 'ID'
+
+
+                #
+                # Set the column text, if the coulumn
+                # has a location.
+                #
+                value = xnatMetadata[key]
+                self.columns[columnKey]['value'] = value
+                if 'location' in self.columns[columnKey]:
+                    widgetItem.setText(self.columns[columnKey]['location'], value)
+        
+
+            #
+            # Nodes below the 'project' level will not have
+            # the 'MERGED_LABEL' key in xnatMetadata.  We need to construct it.
+            #
+            if not 'MERGED_LABEL' in xnatMetadata:
+                xnatLevel = self.columns['XNAT_LEVEL']['value']
+                labelTag = self.getMergedLabelTagByLevel(xnatLevel)
+                widgetItem.setText(self.columns['MERGED_LABEL']['location'], xnatMetadata[labelTag])
 
 
 
+                
         
         #------------------
-        # Get the metadata for viewing
+        # Construct MERGED_INFO
         #------------------
+        mergedInfoColumnNumber = self.columns['MERGED_INFO']['location']
+
+        #
+        # Acquire the metadata from the MODULE.settingsFile
+        #
         xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
-        visibleTags = []
-        for folder in self.MODULE.GLOBALS.XNAT_SLICER_FOLDERS:
-            folderTags = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.treeViewSettings.ON_METADATA_CHECKED_TAG + folder)
-            visibleTags = list(set(visibleTags) | set(folderTags))
+        infoMetadata = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.treeViewSettings.ON_METADATA_CHECKED_TAGS['info'] + self.columns['XNAT_LEVEL']['value'])
+        
+        #
+        # Clear the text
+        #
+        widgetItem.setText(mergedInfoColumnNumber, '')
 
-
-
-            
-        #------------------
-        # Cycle through all metadata keys to set their
-        # equivalents in self.columns.
-        #------------------
-        for key in metadata:
-            #
-            # For keys that aren't traditionally
-            # part of the columns (subject_id, subject_label).
-            # Those keys are usually the result of a search where
-            # you search for an experiment, but you also ask for the 'subject'
-            # columns.
-            #    
-            if not key in self.columns:
-                continue
-                
-            value = metadata[key]
+        #
+        # Aggregate the text as we cycle through
+        # the infoMetadata
+        #
+        for key in infoMetadata:
+            try:
+                value = self.columns[key]['value']
+            except Exception, e:
+                value = '(Empty)'
 
             #
-            # Filtered projects return a lowercase 'id'
-            # need to convert this back to uppercase.
+            # Only allow metadata with a corresponding column.
             #
-            if key == 'id':
-                key = 'ID'
-
-
-
-            self.columns[key]['value'] = value
+            if key in self.columns:
+                widgetItem.setText(mergedInfoColumnNumber, widgetItem.text(mergedInfoColumnNumber) + self.columns[key]['displayname'] + ': ' + value + ' ')
+                widgetItem.setFont(mergedInfoColumnNumber, self.itemFont_folder)  
 
 
                 
-            if 'location' in self.columns[key]:
-                treeNode.setText(self.columns[key]['location'], value)
-                treeNode.setFont(self.columns[key]['location'], self.itemFont_folder)
-
-                
-                if key != 'MERGED_LABEL' and key != 'XNAT_LEVEL':
-                    #
-                    # Combine non-essential columns into MERGED_INFO column
-                    #
-                    #self.hideColumn(self.columns[key]['location'])
-                    self.setColumnHidden(self.columns[key]['location'], True)
-                    col = self.columns['MERGED_INFO']['location']
-
-                    
-
-
-            
-                    if value and len(value) > 1 and key in visibleTags:
-                        #for tag in visibleTags:
-                        treeNode.setText(col, treeNode.text(col) + self.columns[key]['displayname'] + ': ' + value + ' ')
-                    treeNode.setFont(col, self.itemFont_folder)                  
-                
-
-                    
-        #-------------------
-        # Set the value for MERGED_LABEL.
-        #-------------------   
-        #print self.MODULE.utils.lf(), level,  self.getMergedLabelTagByLevel(level), metadata    
-        value = metadata[self.getMergedLabelTagByLevel(level)]
-
         
-        
-        #-------------------
-        # Return out if value is not defined.
-        #-------------------
-        if not value or value == None or len(value) == 0:
-            return
-
-        
-
-        #-------------------
-        # Set 'value' key in self.columns and text on qTreeWidgetItem.
-        #-------------------
-        self.columns['MERGED_LABEL']['value'] = value
-        treeNode.setText(self.columns['MERGED_LABEL']['location'], value)
-
-
         
         #-------------------
         # Set aesthetics.
         #-------------------
-        treeNode.setFont(self.columns['MERGED_LABEL']['location'], self.itemFont_folder) 
-        treeNode.setFont(self.columns['XNAT_LEVEL']['location'], self.itemFont_category) 
-        self.changeFontColor(treeNode, False, "grey", self.columns['XNAT_LEVEL']['location'])
-        if 'Slicer' in metadata['XNAT_LEVEL'] or 'files' in metadata['XNAT_LEVEL']:
-            self.changeFontColor(treeNode, False, "green", self.columns['MERGED_LABEL']['location'])
+        widgetItem.setFont(self.columns['MERGED_LABEL']['location'], self.itemFont_folder) 
+        widgetItem.setFont(self.columns['XNAT_LEVEL']['location'], self.itemFont_category) 
+        self.changeFontColor(widgetItem, False, "grey", self.columns['XNAT_LEVEL']['location'])
+        if 'Slicer' in self.columns['XNAT_LEVEL']['value'] or 'files' in self.columns['XNAT_LEVEL']['value']:
+            self.changeFontColor(widgetItem, False, "green", self.columns['MERGED_LABEL']['location'])
 
-        return treeNode
+
+
+            
+            
+        #-------------------
+        # Hide columns that aren't part of the 'visibleColumnKeys' 
+        # group.
+        #-------------------
+        visibleHeaders = [self.columns[key]['displayname'] for key in self.visibleColumnKeys] 
+        headerItem = self.headerItem()
+        for i in range(0, self.columnCount):
+            setHidden = not headerItem.text(i) in visibleHeaders
+            self.setColumnHidden(i, setHidden)
+
+                
+
+                
+        return widgetItem
 
 
     
@@ -709,7 +727,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         """ 
         self.manageTreeNode(item, 0)
         self.setCurrentItem(item)
-        self.currItem = item
+
         if not 'files' in item.text(self.columns['XNAT_LEVEL']['location']):
             self.getChildren(item, expanded = True) 
         self.resizeColumns()
@@ -724,27 +742,34 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         """ 
         self.manageTreeNode(item, 0)
         self.setCurrentItem(item)
-        self.currItem = item
+
         if not 'files' in item.text(self.columns['XNAT_LEVEL']['location']):
             self.getChildren(item, expanded = False)
 
 
 
             
-    def manageTreeNode(self, item, col):
+    def manageTreeNode(self, item, col = 0):
         """ Broad-scoped function. Conducts the necessary filtering, 
             column visibility, buttonEnabling, nodeMasking and 'loadable' 
             analysis. 
             
             NOTE: Consider refactoring into specific methods.
         """
-        if item==None:
-            item = self.currItem
-        else:
-            self.currItem = item
+
+        #print "MANAGE TREE NODE"
+        #print item, self.currentItem()
+
+        
+        if item == None and self.currentItem() != None:
+            item = self.currentItem()
+        elif item == None and self.currItem() == None:
+            return
+
+
 
             
-        self.setCurrentItem(item)
+        #self.setCurrentItem(item)
         self.currLoadable = None
 
         
@@ -752,30 +777,15 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #------------------------
         # Check if at saveable/loadable level 
         #------------------------
-        isProject = 'project' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isSubject = 'subjects' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isResource = 'resources' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isExperiment = 'experiments' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isScan = 'scans' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isFile = 'files' in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
-        isSlicerFile = self.MODULE.utils.slicerFolderName.replace("/","") in item.text(self.columns['XNAT_LEVEL']['location']).strip(" ")
+        xnatLevelColumnNumber = self.columns['XNAT_LEVEL']['location']
+        isProject = 'project' in item.text(xnatLevelColumnNumber).strip(" ")
+        isSubject = 'subjects' in item.text(xnatLevelColumnNumber).strip(" ")
+        isResource = 'resources' in item.text(xnatLevelColumnNumber).strip(" ")
+        isExperiment = 'experiments' in item.text(xnatLevelColumnNumber).strip(" ")
+        isScan = 'scans' in item.text(xnatLevelColumnNumber).strip(" ")
+        isFile = 'files' in item.text(xnatLevelColumnNumber).strip(" ")
+        isSlicerFile = self.MODULE.utils.slicerFolderName.replace("/","") in item.text(xnatLevelColumnNumber).strip(" ")
 
-        
-
-        #-------------------------
-        # Show columns
-        #-------------------------
-        if isProject:
-            self.showColumnsByNodeLevel(['projects', 'subjects'])
-                
-        elif isSubject:
-            self.showColumnsByNodeLevel(['subjects', 'experiments'])
-                
-        elif isExperiment:
-            self.showColumnsByNodeLevel(['experiments', 'scans', 'files'])
-
-        elif isScan or isFile or isSlicerFile:
-            self.showColumnsByNodeLevel(['scans', 'files'])
 
 
             
@@ -800,7 +810,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # If mask is enabled, determine if item is a slicer file
         #------------------------
         if self.applySlicerFolderMask:
-            if item.text(self.columns['XNAT_LEVEL']['location']) == self.MODULE.utils.slicerFolderName:
+            if item.text(xnatLevelColumnNumber) == self.MODULE.utils.slicerFolderName:
                 isFile = True    
 
 
@@ -841,7 +851,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # If the user is at the default load/save level, 
         # set default loader to DICOM.     
         #------------------------
-        if self.MODULE.utils.defaultXnatSaveLevel in item.text(self.columns['XNAT_LEVEL']['location']).strip(" "):
+        if self.MODULE.utils.defaultXnatSaveLevel in item.text(xnatLevelColumnNumber).strip(" "):
             self.currLoadable = "mass_dicom" 
 
 
@@ -851,21 +861,23 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #------------------------
         self.resizeColumns()
 
+
         
         #------------------------
         # Selectively pull the relevant columns, based on
         # the node level to construct the dictionary that
         # feeds the 'Details' GroupBox.
         #------------------------
-        columnTags = self.MODULE.utils.getMetadataTagsByXnatLevel(item.text(self.columns['XNAT_LEVEL']['location']).strip(" "))
-        detailsDict = {}
-        for tag in columnTags:
-            if 'location' in self.columns[tag]:
-                detailsDict[tag] = item.text(self.columns[tag]['location']).strip(' ')
-        #
+        columnTags = self.MODULE.utils.getMetadataTagsByXnatLevel(item.text(xnatLevelColumnNumber).strip(" "))
+        detailsDict = self.getRowValues(item)
+
+
+                
+        #------------------------
         # Run the callbacks that feeds the dictionary
         # into the Details GroupBox.
-        #    
+        #------------------------    
+        detailsDict['XNAT_LEVEL'] = item.text(xnatLevelColumnNumber).strip(" ")
         self.runNodeChangedCallbacks(detailsDict)
 
         
@@ -959,14 +971,14 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             is not found.
         """
         #----------------------
-        # Set self.currItem to the item provided in the 
+        # Set self.currentItem() to the item provided in the 
         # argument.
         #----------------------
         if not item:
-            item = self.currItem    
+            item = self.currentItem()    
 
         #----------------------
-        # Expand self.currItem
+        # Expand self.currentItem()
         #----------------------
         self.onTreeItemExpanded(item)
 
@@ -979,7 +991,6 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 child = item.child(x)
                 if child.text(self.columns['MERGED_LABEL']['location']) == childFileName:
                     self.setCurrentItem(child)
-                    self.currItem = child;
                     return   
 
 
@@ -1000,10 +1011,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         """ Starts a new session based on XNAT interaction.  
         """
         if method=="currItem":            
-            
-            # Sometimes we have to reset the curr item
-            if not self.currentItem(): 
-                self.setCurrentItem(self.currItem)
+
                 
             # Derive parameters based on currItem
             self.sessionManager.startNewSession(sessionArgs)
@@ -1082,8 +1090,8 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #--------------------
         # Selected Item management
         #--------------------  
-        if not item: return
-        if setCurrItem: self.currItem = item
+        if not item: 
+            return
         self.setCurrentItem(item)              
 
 
@@ -1232,15 +1240,49 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         return [returnName[0:stopIndex] + "..."]
 
 
+
+
+    def getRowValues(self, item = None):
+        """
+        """
+        if not item:
+            item = self.currentItem()
+
+        if item:
+            rowValues = {}
+            for tag in self.columns:
+                if 'location' in self.columns[tag]:
+                    rowValues[tag] = item.text(self.columns[tag]['location']).strip(' ')
+
+
+        return rowValues
+
+                    
+    
+    def refreshColumns(self):
+        """
+        """
+        print "REFERESH COLUMNS"
+        root = self.invisibleRootItem()
+        childCount = root.childCount()
+        for i in range(childCount):
+            item = root.child(i)
+            #print '\n\n\n', item.text()
+            self.populateColumns(item)
+            self.runNodeChangedCallbacks(self.getRowValues())
+
+
+
     
     
-    def makeTreeItems(self, parentItem, children = [],  metadata = {}, expandible = None):
+    def makeTreeItems(self, parentItem = None, children = [],  metadata = {}, expandible = None):
         """Creates a set of items to be put into the 
            QTreeWidget based upon its parents, its children 
            and the metadata provide.
         """
-        #print self.MODULE.utils.lf(), "MAKE TREE ITEMS", metadata, 
-        #print self.MODULE.utils.lf(), children
+
+        
+        
         #----------------
         # Do nothing if no children.
         #----------------
@@ -1301,9 +1343,9 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 #print '\n\n', key, i, len(metadata[key]), metadata, len(children), children
                 if i < len(metadata[key]):
                     treeNodeMetadata[key] = metadata[key][i]
-                    #print "TREE NODE METADATA", treeNodeMetadata
+                    #print "\n\nTREE NODE METADATA", treeNodeMetadata
 
-            treeNode = self.setValuesToTreeNode(treeNode, treeNodeMetadata)
+            treeNode = self.populateColumns(treeNode, treeNodeMetadata)
             #
             # Add the items array
             #

@@ -52,7 +52,7 @@ class XnatMetadataManager(qt.QFrame):
         #--------------------
 
         
-        for key in self.MODULE.GLOBALS.XNAT_SLICER_FOLDERS:
+        for key in self.MODULE.GLOBALS.XNAT_LEVELS:
 
             #
             #
@@ -70,7 +70,7 @@ class XnatMetadataManager(qt.QFrame):
 
 
 
-            #
+            #--------------------
             # Gather checkboxes as scrollArea list.
             #
             self.defaultMetadataEditors[key] = XnatDefaultMetadataEditor(self.MODULE, key)
@@ -199,9 +199,9 @@ class XnatMetadataManager(qt.QFrame):
         if visible != None:
             self.editButtonsVisible = visible
 
-        #
+        #--------------------
         # Hide the 'editCustom' buttons
-        #
+        #--------------------
         for key, button in self.editCustomButtons.iteritems():
             button.setVisible(self.editButtonsVisible)
 
@@ -217,9 +217,9 @@ class XnatMetadataManager(qt.QFrame):
         for key, _button in self.editCustomButtons.iteritems():
             if button == _button:
                 self.MODULE.xnatSettingsWindow.setCurrentIndex(1) 
-                self.MODULE.metadataSettings.XnatMetadataManager.collapsibles[key].setChecked(True)
+                self.MODULE.metadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(True)
             else:
-                self.MODULE.metadataSettings.XnatMetadataManager.collapsibles[key].setChecked(False)
+                self.MODULE.metadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(False)
 
         
 
@@ -239,7 +239,7 @@ class XnatMetadataManager(qt.QFrame):
     def update(self):
         """
         """
-        self.setEditButtonsVisible()
+        #self.setEditButtonsVisible()
         #self.hostDropdown.setCurrentIndex(self.MODULE.XnatLoginMenu.hostDropdown.currentIndex)
         for key in self.customMetadataEditors:
             self.customMetadataEditors[key].clear() 
@@ -248,7 +248,6 @@ class XnatMetadataManager(qt.QFrame):
                 #customMetadataItems = self.MODULE.settingsFile.getTagValues(self.MODULE.metadataSettings.hostDropdown.currentText, self.customMetadataTags[key])
                 self.defaultMetadataEditors[key].update()
                 self.customMetadataEditors[key].update()
-                print "CURR", self.currItemType
                 self.setItemType(self.currItemType)
                 
                     

@@ -94,6 +94,7 @@ class XnatView(object):
         self.nodeClickedCallbacks.append(callback)
 
 
+        
     
 
     def runNodeChangedCallbacks(self, *args):
@@ -101,3 +102,7 @@ class XnatView(object):
         """
         for callback in self.nodeClickedCallbacks:
             callback(args)
+
+
+            
+

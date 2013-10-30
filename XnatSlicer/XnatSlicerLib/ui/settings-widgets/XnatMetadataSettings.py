@@ -65,14 +65,20 @@ class XnatMetadataSettings(XnatSettings):
         #--------------------
         # Hide metadata manager buttons
         #--------------------
-        #self.XnatMetadataManager.hideButtons()
-        #self.XnatMetadataManager.setItemsEnabled(False)
-        #self.masterLayout.addWidget(self.XnatMetadataManager)
-        self.setupMetadataManager()
-        self.XnatMetadataManager.setEditButtonsVisible(False)
 
-        print "DETAILS SETTNS"
+        #self.setupMetadataManager()
+        #self.XnatMetadataManager.setEditButtonsVisible(False)
+        self.setMetadataManagers('main')
+        self.masterLayout.addWidget(self.XnatMetadataManagers['main'])
+        self.XnatMetadataManagers['main'].setEditButtonsVisible(False)
 
+        self.masterLayout.addWidget(self.XnatMetadataManagers['main'])
+
+
+        for key, manager in self.XnatMetadataManagers.iteritems():
+            manager.setItemType('label')
+
+        self.complete()
 
 
             

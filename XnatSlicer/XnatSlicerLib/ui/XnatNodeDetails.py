@@ -48,6 +48,8 @@ class XnatNodeDetails(qt.QTextEdit):
         """ Sets the text of the widget based on a key-value pair
             styling method.
         """
+
+        print "SET TEXT VALIE"
         #--------------------
         # The argument is a tuple because
         # the callback is called with multiple
@@ -60,24 +62,12 @@ class XnatNodeDetails(qt.QTextEdit):
         
         
         #--------------------
-        # Construct the priority keys first.
+        # Refer to the settings file to get the visible
+        # tags.
         #--------------------     
-        #visibleTags = ['ID', 'id', 'last_accessed_497', 'label', 'name', 'Name', 'type', 'Size', 'series_description']
-
         xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
-        visibleTags = []
-        for folder in self.MODULE.GLOBALS.XNAT_SLICER_FOLDERS:
-            folderTags = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.detailsSettings.ON_METADATA_CHECKED_TAG + folder)
-            visibleTags = list(set(visibleTags) | set(folderTags))
-
-        print "PRIORITY TAGS", visibleTags 
-        modifiedDetails = {}
-        for key in detailsDict:
-            detailsDict[key] = detailsDict[key].strip(' ')
-        
-            #if len(detailsDict[key]) > 0:
-            #    if not key in visibleTags:
-            #        visibleTags.append(key)
+        metadataTag = self.MODULE.detailsSettings.ON_METADATA_CHECKED_TAGS['main'] + detailsDict['XNAT_LEVEL']
+        visibleTags = self.MODULE.settingsFile.getTagValues(xnatHost, metadataTag)
 
 
                     

@@ -58,7 +58,7 @@ class AnimatedCollapsible(qt.QFrame):
         #
         # Animation duration
         #
-        self.animDuration = 250
+        self.animDuration = 150
         
 
         

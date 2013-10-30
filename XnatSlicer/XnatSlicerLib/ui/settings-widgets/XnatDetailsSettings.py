@@ -52,9 +52,13 @@ class XnatDetailsSettings(XnatSettings):
         self.masterLayout.addSpacing(15)
 
         
-        self.setupMetadataManager()
-        self.XnatMetadataManager.setItemType('checkbox')
-        self.XnatMetadataManager.setCustomEditVisible(False)
-    
-        self.ON_METADATA_CHECKED_TAG = "DetailsInfo_" 
-        self.XnatMetadataManager.setOnMetadataCheckedTag(self.ON_METADATA_CHECKED_TAG)
+        self.setMetadataManagers('main')
+        self.masterLayout.addWidget(self.XnatMetadataManagers['main'])
+        self.setDefaultSelectedMetadata('main',  self.MODULE.GLOBALS.DEFAULT_XNAT_METADATA)
+        
+
+        for key, manager in self.XnatMetadataManagers.iteritems():
+            manager.setCustomEditVisible(False)
+            manager.setItemType('checkbox')
+
+        self.complete()

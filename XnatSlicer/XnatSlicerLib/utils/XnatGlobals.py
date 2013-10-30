@@ -153,7 +153,7 @@ class XnatGlobals(object):
     
 
     @property
-    def XNAT_SLICER_FOLDERS(self):
+    def XNAT_LEVELS(self):
         return ['projects', 'subjects', 'experiments', 'scans', 'slicer', 'files']
 
     
@@ -227,7 +227,6 @@ class XnatGlobals(object):
                 'date',
                 'project',
                 'xsiType',
-                'ID',
                 'xnat:subjectassessordata/id',
                 'URI',
                 ],

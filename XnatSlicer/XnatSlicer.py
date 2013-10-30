@@ -209,19 +209,19 @@ class XnatSlicerWidget:
         # Add XnatMetadataSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.metadataSettings = XnatMetadataSettings('XNAT Metadata',self)
+        self.metadataSettings = XnatMetadataSettings('XNAT Metadata', self)
         self.xnatSettingsWindow.addSetting(self.metadataSettings.title, widget = self.metadataSettings)
         #
         # Add XnatTreeViewSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.treeViewSettings = XnatTreeViewSettings('Tree View Settings',self)
+        self.treeViewSettings = XnatTreeViewSettings('Tree View Settings', self)
         self.xnatSettingsWindow.addSetting(self.treeViewSettings.title, widget = self.treeViewSettings)
         #
         # Add XnatDetailsSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.detailsSettings = XnatDetailsSettings('Details Settings',self)
+        self.detailsSettings = XnatDetailsSettings('Details Settings', self)
         self.xnatSettingsWindow.addSetting(self.detailsSettings.title, widget = self.detailsSettings)
 
 
@@ -537,14 +537,14 @@ class XnatSlicerWidget:
         # the login.  We set the animLength of each
         # collapsible to 0 to avoid awkard load animations
         #--------------------------------
-        for key, value in self.collapsibles.iteritems():
-            value.supsendAnimationDuration(True)
-            value.setChecked(False)
-            value.supsendAnimationDuration(False)
+        for key, collapsible in self.collapsibles.iteritems():
+            collapsible.supsendAnimationDuration(True)
+            collapsible.setChecked(False)
+            collapsible.supsendAnimationDuration(False)
             if key != 'login':
-                value.setEnabled(False)
+                collapsible.setEnabled(False)
             else:
-                value.setChecked(True)
+                collapsible.setChecked(True)
             
 
             

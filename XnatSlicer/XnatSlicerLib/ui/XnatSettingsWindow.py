@@ -43,7 +43,7 @@ class XnatSettingsWindow(qt.QTabWidget):
         #--------------------
         self.setFixedWidth(550)
         self.setFixedHeight(600)
-        self.setWindowModality(2)
+        self.setWindowModality(0)
         self.hide()
 
         
@@ -75,7 +75,8 @@ class XnatSettingsWindow(qt.QTabWidget):
         #--------------------       
         try:
             for i in range(0, self.count):
-                self.settingsWidgets[i]['widget'].XnatMetadataManager.update()
+                for key, manager in self.settingsWidgets[i]['widget'].XnatMetadataManagers.iteritems(): 
+                    manager.update()
         except Exception, e:
             print self.MODULE.utils.lf(), self.tabText(tabIndex), " doesn't have an XnatMetadataManagerObject"
             print e
@@ -139,9 +140,7 @@ class XnatSettingsWindow(qt.QTabWidget):
     def addSetting(self, settingName, widget = None):
         """ Inserts a setting into the settings window.
         """
-        #self.settingsLister.addSettingToList(settingsName)
-        #self.settingsAreaLayout.addWidget(widget)
-        #self.settingsWidgets[settingsName] = self.settingsAreaLayout.count() - 1
+
         self.settingsWidgets.append({'widget': widget, 'name': settingName})
         self.addTab(widget, settingName)
         widget.update()

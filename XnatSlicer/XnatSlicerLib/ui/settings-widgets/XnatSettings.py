@@ -65,28 +65,89 @@ class XnatSettings(qt.QScrollArea):
         self.masterLayout = qt.QVBoxLayout()
 
 
-        self.XnatMetadataManager = XnatMetadataManager(self.MODULE)
+
+        #--------------------
+        # Set the Metadata managers object
+        #--------------------
+        self.XnatMetadataManagers = {}
+
+
+
+        self.ON_METADATA_CHECKED_TAGS = {}
+        self.defaultSelectedMetadata = {}
+
+    
+
 
         
-
-    def setupMetadataManager(self):
+    def setMetadataManagers(self, *args):
         """
         """
-        
-        self.masterLayout.addWidget(self.XnatMetadataManager)
+        for arg in args:
+            self.XnatMetadataManagers[arg] = XnatMetadataManager(self.MODULE)
+            self.ON_METADATA_CHECKED_TAGS[arg] = self.__class__.__name__ + "_%s_"%(arg) 
+            self.XnatMetadataManagers[arg].setOnMetadataCheckedTag(self.ON_METADATA_CHECKED_TAGS[arg])
+            self.defaultSelectedMetadata[arg] = None
 
+
+
+
+            
+    def setDefaultSelectedMetadata(self, label, *args):
+        """
+        """
+
+        #--------------------
+        # If the argument is a dictionary, then apply it.
+        #--------------------
+        if type(args[0]) == dict:
+            self.defaultSelectedMetadata[label] = args[0]
+
+
+        #--------------------
+        # If there are no saved selecte metadata, 
+        # apply the defaults.
+        #--------------------
+
+        xnatHosts = [self.MODULE.metadataSettings.hostDropdown.itemText(ind) for ind in range(0, self.MODULE.metadataSettings.hostDropdown.count)]
+        for xnatHost in xnatHosts:
+            for xnatLevel in self.MODULE.GLOBALS.XNAT_LEVELS:
+                
+                for key in self.ON_METADATA_CHECKED_TAGS:
+                    
+                    levelTag = self.ON_METADATA_CHECKED_TAGS[key] + xnatLevel
+                    savedMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, levelTag)
+                    
+                    #
+                    # If there are no 'savedMetadataItems', we add them.
+                    #
+                    if len(savedMetadataItems) == 0:
+                        if self.defaultSelectedMetadata[key]:
+                            defaultSelectedMetadata = self.defaultSelectedMetadata[key][xnatLevel] 
+                            tagDict = {levelTag : defaultSelectedMetadata}
+                            self.MODULE.settingsFile.setTagValues(xnatHost, tagDict)
+
+
+                        
         
+        
+
+    def complete(self):
+        """
+        """
+                
 
         #--------------------
         # Add to frame.
         #--------------------
         self.masterLayout.addStretch()
         self.frame.setLayout(self.masterLayout)
-        if self.XnatMetadataManager.collapsibles:
-            for key in self.XnatMetadataManager.collapsibles:
-                self.XnatMetadataManager.collapsibles[key].show() 
-                self.XnatMetadataManager.collapsibles[key].setChecked(False) 
-        self.setWidget(self.frame)
+        for key, manager in self.XnatMetadataManagers.iteritems():
+            if manager.collapsibles:
+                for key in manager.collapsibles:
+                    manager.collapsibles[key].show() 
+                    manager.collapsibles[key].setChecked(False) 
+            self.setWidget(self.frame)
 
         
 

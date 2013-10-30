@@ -77,35 +77,126 @@ class XnatTreeViewSettings(XnatSettings):
 
 
         
-        
         self.addSpacing()
         self.addSpacing()
 
                    
         
+
+
+
+
+        self.setMetadataManagers('info', 'visibleColumns')
+
+
+        
+
+        #--------------------
+        # For saving in the settings file a metadata checkbox is tracked
+        #--------------------
         #--------------------
         # Add Metadata Label and Manager.
         #--------------------
-        mLabel = qt.QLabel('<b>Info. Column Metadata</b>')
+        mLabel = qt.QLabel('<b>Visible Columns</b>')
         self.masterLayout.addWidget(mLabel)
         self.masterLayout.addSpacing(15)
 
-
-        self.setupMetadataManager()
-        self.XnatMetadataManager.setItemType('checkbox')
-
+        
+        self.masterLayout.addWidget(self.XnatMetadataManagers['visibleColumns'])
+        self.setDefaultSelectedMetadata('visibleColumns',  {
+            'projects' : [
+                'last_accessed_497',
+                ],
+                
+            'subjects' : [
+                'label',
+                ],
+                    
+            'experiments' : [
+                'date',
+                ],
+                        
+            'scans' : [
+                'series_description',
+                ],
+                                                                          
+            'resources' : [
+                'element_name',
+                ],
+                                                                                              
+            'files' : [
+                'Size',
+                ],
+                                                                                                    
+            'slicer' : [
+                'Size',
+                ]
+                
+        })
 
 
 
         
-        #
+        #--------------------
         # For saving in the settings file a metadata checkbox is tracked
-        #
-        self.ON_METADATA_CHECKED_TAG = "TreeViewInfo_" 
-        print "TREE SETTNS"
-        self.XnatMetadataManager.setOnMetadataCheckedTag(self.ON_METADATA_CHECKED_TAG)
-        #self.masterLayout.addWidget(self.XnatMetadataManager)
+        #--------------------
+        #--------------------
+        # Add Metadata Label and Manager.
+        #--------------------
+        mLabel2 = qt.QLabel('<b>Info. Column Metadata</b>')
+        self.masterLayout.addWidget(mLabel2)
+        self.masterLayout.addSpacing(15)
 
+
+        
+        self.masterLayout.addWidget(self.XnatMetadataManagers['info'])
+        self.setDefaultSelectedMetadata('info',  {
+            'projects' : [
+                'last_accessed_497',
+                ],
+                
+            'subjects' : [
+                'label',
+                ],
+                    
+            'experiments' : [
+                'date',
+                ],
+                        
+            'scans' : [
+                'series_description',
+                'type',
+                'quality',
+                ],
+                                                                          
+            'resources' : [
+                'element_name',
+                ],
+                                                                                              
+            'files' : [
+                'Size',
+                ],
+                                                                                                    
+            'slicer' : [
+                'Size',
+                ]
+                
+        })
+
+
+    
+
+        
+
+
+
+        
+        for key, manager in self.XnatMetadataManagers.iteritems():
+            manager.setCustomEditVisible(False)
+            manager.setItemType('checkbox')
+
+            
+        self.complete()
 
 
         
@@ -126,15 +217,6 @@ class XnatTreeViewSettings(XnatSettings):
               self.currentlyToggledFilterButton = self.buttons['sort'][name]
 
 
-
-              
-    def saveInfoMetadata(self):
-        """ Saves the info metadata tags to the given host.
-        """
-        #--------------------
-        # Remove existing.
-        #--------------------
-        self.MODULE.settingsFile.saveCustomPropertiesToHost('CNDA', {infoMetadataTags['projects'] : ['asdf','ab','cas','eer']})
 
 
             
