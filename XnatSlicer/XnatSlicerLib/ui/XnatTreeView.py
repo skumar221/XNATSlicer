@@ -244,7 +244,22 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         level = metadata['XNAT_LEVEL']
 
         #print "\nSET VALUES", treeNode, metadata
+
+
+
         
+        #------------------
+        # Get the metadata for viewing
+        #------------------
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
+        visibleTags = []
+        for folder in self.MODULE.GLOBALS.XNAT_SLICER_FOLDERS:
+            folderTags = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.treeViewSettings.ON_METADATA_CHECKED_TAG + folder)
+            visibleTags = list(set(visibleTags) | set(folderTags))
+
+
+
+            
         #------------------
         # Cycle through all metadata keys to set their
         # equivalents in self.columns.
@@ -278,13 +293,22 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             if 'location' in self.columns[key]:
                 treeNode.setText(self.columns[key]['location'], value)
                 treeNode.setFont(self.columns[key]['location'], self.itemFont_folder)
+
+                
                 if key != 'MERGED_LABEL' and key != 'XNAT_LEVEL':
                     #
                     # Combine non-essential columns into MERGED_INFO column
                     #
                     #self.hideColumn(self.columns[key]['location'])
+                    self.setColumnHidden(self.columns[key]['location'], True)
                     col = self.columns['MERGED_INFO']['location']
-                    if value and len(value) > 1:
+
+                    
+
+
+            
+                    if value and len(value) > 1 and key in visibleTags:
+                        #for tag in visibleTags:
                         treeNode.setText(col, treeNode.text(col) + self.columns[key]['displayname'] + ': ' + value + ' ')
                     treeNode.setFont(col, self.itemFont_folder)                  
                 

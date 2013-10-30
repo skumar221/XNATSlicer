@@ -91,9 +91,19 @@ class XnatTreeViewSettings(XnatSettings):
         self.masterLayout.addSpacing(15)
 
 
-        self.addMetadataManager()
+        self.setupMetadataManager()
         self.XnatMetadataManager.setItemType('checkbox')
-        self.XnatMetadataManager.setCustomEditVisible(False)
+
+
+
+
+        
+        #
+        # For saving in the settings file a metadata checkbox is tracked
+        #
+        self.ON_METADATA_CHECKED_TAG = "TreeViewInfo_" 
+        print "TREE SETTNS"
+        self.XnatMetadataManager.setOnMetadataCheckedTag(self.ON_METADATA_CHECKED_TAG)
         #self.masterLayout.addWidget(self.XnatMetadataManager)
 
 

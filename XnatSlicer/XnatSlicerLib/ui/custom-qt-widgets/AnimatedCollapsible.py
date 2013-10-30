@@ -139,7 +139,7 @@ class AnimatedCollapsible(qt.QFrame):
         self.onAnimate = None
         self.onCollapse = None
         self.onExpand = None
-        self.ContentsWidgets = None
+        self.ContentsWidgets = []
 
        
 
@@ -221,18 +221,76 @@ class AnimatedCollapsible(qt.QFrame):
         """ As stated.
         """
         self.onAnimate = callback
-        
 
 
+
         
-    def setContentsWidgets(self, ContentsWidgets):
-        """ As stated.
+    def addContentsWidgets(self, *args):
+        """ Adds contents widgets for tracking, so that
+            they can disappear when the collapsible closes.  If any of the 
+            arguments are not an array, convert them then add them to 
+            self.ContentsWidgets.
         """
-        self.ContentsWidgets = ContentsWidgets
+
+        #--------------------
+        # Loop through all of the arguments
+        #--------------------
+        for arg in args:
+
+            
+            #
+            # Check if the argument is an list, if it isn't
+            # then make it one.
+            #
+            if not isinstance(arg, list):
+                arg = [arg]
+
+                
+            #
+            # Append to self.ContentsWidgets.
+            #
+            self.ContentsWidgets = self.ContentsWidgets + arg
+
+            
 
 
+    def removeContentsWidgets(self, *args):
+        """ 
+        """
 
 
+        newContentsWidgets = []
+
+        removeWidgets = []
+
+        
+        #--------------------
+        # Collect all the widgets to be removed
+        #--------------------
+        for arg in args:
+
+            
+            #
+            # Check if the argument is an list, if it isn't
+            # then make it one.
+            #
+            if not isinstance(arg, list):
+                arg = [arg]
+
+                
+            #
+            # Append to self.ContentsWidgets.
+            #
+
+            removeWidgets = removeWidgets + arg
+
+
+        
+        
+        self.ContentsWidgets = list(set(self.ContentsWidgets) - set(removeWidgets))
+
+                
+            
 
     def hideContentsWidgets(self):
         """ As stated.

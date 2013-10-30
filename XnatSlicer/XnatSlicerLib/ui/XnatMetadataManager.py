@@ -32,8 +32,8 @@ class XnatMetadataManager(qt.QFrame):
         self._layout = qt.QVBoxLayout()
         self.collapsibles = {}
         self.metadataWidgets = {}
-        self.defaultScrollWidgets = {}
-        self.customScrollWidgets = {}
+        self.defaultMetadataEditors = {}
+        self.customMetadataEditors = {}
         self.customMetadataTags = {}
         self.buttons = {}
         self.labels = {}
@@ -43,6 +43,10 @@ class XnatMetadataManager(qt.QFrame):
         self.editCustomButtonGroup = qt.QButtonGroup()
         self.editCustomButtonGroup.connect('buttonClicked(QAbstractButton*)', self.editCustomClicked)
 
+
+
+        self.editButtonsVisible = True
+        
         #--------------------
         # Construct grid layout.
         #--------------------
@@ -69,8 +73,8 @@ class XnatMetadataManager(qt.QFrame):
             #
             # Gather checkboxes as scrollArea list.
             #
-            self.defaultScrollWidgets[key] = XnatDefaultMetadataEditor(self.MODULE, key)
-            self.buttonGrids[key].addWidget(self.defaultScrollWidgets[key], 1, 0)
+            self.defaultMetadataEditors[key] = XnatDefaultMetadataEditor(self.MODULE, key)
+            self.buttonGrids[key].addWidget(self.defaultMetadataEditors[key], 1, 0)
 
 
 
@@ -86,8 +90,8 @@ class XnatMetadataManager(qt.QFrame):
             #--------------------
             # Make the metadata managers
             #--------------------   
-            self.customScrollWidgets[key] = XnatCustomMetadataEditor(self.MODULE, key)
-            self.buttonGrids[key].addWidget(self.customScrollWidgets[key], 1, 1, 1, 2)
+            self.customMetadataEditors[key] = XnatCustomMetadataEditor(self.MODULE, key)
+            self.buttonGrids[key].addWidget(self.customMetadataEditors[key], 1, 1, 1, 2)
             
 
             
@@ -120,7 +124,7 @@ class XnatMetadataManager(qt.QFrame):
             #
             self.collapsibles[key] = AnimatedCollapsible( key.title())
             self.collapsibles[key].setFrameLayout(self.buttonGrids[key])
-            #self.collapsibles[key].setContentsWidgets(widgetList)
+            self.collapsibles[key].addContentsWidgets(self.labels[key], self.editCustomButtons[key], self.defaultMetadataEditors[key], self.customMetadataEditors[key])
             self.collapsibles[key].setFixedWidth(500)
 
 
@@ -137,6 +141,7 @@ class XnatMetadataManager(qt.QFrame):
         #
         def onAnimatedCollapsibleAnimate():
             self._layout.update()
+            #self.update()
         for key, collapsible in self.collapsibles.iteritems():
             collapsible.setOnAnimate(onAnimatedCollapsibleAnimate)
 
@@ -149,28 +154,12 @@ class XnatMetadataManager(qt.QFrame):
         self.setLayout(self._layout)
 
 
+        #self.currItemType = 'label'
+        self.setItemType('label')
 
-
-            
-        
-        
-
-    def saveCustomMetadata(self):
-        """ Saves the custom metadata tags to the given host.
-        """
-        #--------------------
-        # Remove existing.
-        #--------------------
-        #
 
 
         
-
-    def hideButtons(self):
-        """
-        """
-        for key, button in self.editCustomButtons.iteritems():
-            button.hide()
 
 
 
@@ -179,7 +168,7 @@ class XnatMetadataManager(qt.QFrame):
         """
         """
         if not enabled:
-            for key, widget in self.defaultScrollWidgets.iteritems():
+            for key, widget in self.defaultMetadataEditors.iteritems():
                 for i in range(0, widget.count):
                     widget.item(i).setFlags(0)
                 
@@ -188,29 +177,38 @@ class XnatMetadataManager(qt.QFrame):
 
                         
     def setItemType(self, itemType):
+        """ 
+        """
+
+        for key, metadataEditor in self.defaultMetadataEditors.iteritems():
+            metadataEditor.setItemType(itemType)
+
+        for key, metadataEditor in self.customMetadataEditors.iteritems():
+            metadataEditor.setItemType(itemType)
+
+
+
+
+
+
+    def setEditButtonsVisible(self, visible = None):
         """
         """
-        if itemType == 'checkbox':
-            size = qt.QSize(20,20)
-            #
-            # Default
-            #
-            for key, widget in self.defaultScrollWidgets.iteritems():
-                for i in range(0, widget.count):
-                    widget.item(i).setSizeHint(size)
-                    widget.item(i).setFlags(4 | 8 | 16 | 32)
-                    widget.item(i).setCheckState(0)
-            #
-            # Custom
-            #
-            for key, widget in self.customScrollWidgets.iteritems():
-                for i in range(0, widget.count):
-                   widget.item(i).setSizeHint(size)
-                   widget.item(i).setFlags(4 | 8 | 16 | 32)
-                   widget.item(i).setCheckState(0)
 
+        print "                 \n\n\nSET EDIT BUTTONS VISIBLE"
+        if visible != None:
+            self.editButtonsVisible = visible
 
+        #
+        # Hide the 'editCustom' buttons
+        #
+        for key, button in self.editCustomButtons.iteritems():
+            button.setVisible(self.editButtonsVisible)
 
+            if not self.editButtonsVisible:
+                self.collapsibles[key].removeContentsWidgets(button)
+
+            
 
 
     def editCustomClicked(self, button):
@@ -225,14 +223,15 @@ class XnatMetadataManager(qt.QFrame):
 
         
 
+                
     def setCustomEditVisible(self, visible):
         """
         """
         #
         # Custom
         #
-        for key, widget in self.customScrollWidgets.iteritems():
-            widget.setEditLineVisible(visible)
+        for key, metadataEditor in self.customMetadataEditors.iteritems():
+            metadataEditor.setEditLineVisible(visible)
 
 
                 
@@ -240,15 +239,30 @@ class XnatMetadataManager(qt.QFrame):
     def update(self):
         """
         """
+        self.setEditButtonsVisible()
         #self.hostDropdown.setCurrentIndex(self.MODULE.XnatLoginMenu.hostDropdown.currentIndex)
-        for key in self.customScrollWidgets:
-            self.customScrollWidgets[key].clear() 
+        for key in self.customMetadataEditors:
+            self.customMetadataEditors[key].clear() 
 
             try:
                 #customMetadataItems = self.MODULE.settingsFile.getTagValues(self.MODULE.metadataSettings.hostDropdown.currentText, self.customMetadataTags[key])
-                self.customScrollWidgets[key].update()
+                self.defaultMetadataEditors[key].update()
+                self.customMetadataEditors[key].update()
+                print "CURR", self.currItemType
+                self.setItemType(self.currItemType)
+                
                     
             except Exception, e:
                 print self.MODULE.utils.lf()
                 print str(e)
 
+
+
+    def setOnMetadataCheckedTag(self, tag):
+        """
+        """
+
+        for key in self.defaultMetadataEditors:
+            self.defaultMetadataEditors[key].onMetadataCheckedTag = tag
+        for key in self.customMetadataEditors:
+            self.customMetadataEditors[key].onMetadataCheckedTag = tag            

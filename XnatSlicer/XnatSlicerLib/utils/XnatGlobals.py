@@ -189,8 +189,8 @@ class XnatGlobals(object):
             
         'projects' : [
             'last_accessed_497',
-            'id'
-            'ID'
+            'id',
+            'ID',
             'insert_user',
             'pi',
             'insert_date',
@@ -209,7 +209,7 @@ class XnatGlobals(object):
                 
             'subjects' : [
                 'ID',
-                'label'
+                'label',
                 'insert_date',
                 'insert_user',
                 'totalRecords'
@@ -221,7 +221,7 @@ class XnatGlobals(object):
                     
             'experiments' : [
                 'ID',
-                'label'
+                'label',
                 'insert_date',
                 'totalRecords',
                 'date',

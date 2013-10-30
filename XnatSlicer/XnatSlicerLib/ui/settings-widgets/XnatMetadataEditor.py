@@ -6,6 +6,7 @@ import sys
 
 
 from VariableItemListWidget import *
+from CustomEventFilter import *
 
 
 comment = """
@@ -15,16 +16,14 @@ TODO:
 """
 
 
-
-                
-
+        
 class XnatMetadataEditor(qt.QFrame):
 
     
     def __init__(self, MODULE, xnatLevel):
         """ Init function.
         """
-
+        self.onMetadataCheckedTag = "ON_METADATA_CHECKED"
         super(XnatMetadataEditor, self).__init__(self)
 
         self.xnatLevel = xnatLevel
@@ -36,10 +35,27 @@ class XnatMetadataEditor(qt.QFrame):
         self._layout = qt.QVBoxLayout()
         self._layout.addWidget(self.listWidget)
         self.setLayout(self._layout)
+
+        #--------------------
+        # Set the item size
+        #--------------------
+        self.itemSize = qt.QSize(20,20)
+
         
         self.setup()
 
+        self.setItemType('label')
         self.update()
+
+
+        self.customEventFilter = CustomEventFilter()
+
+
+
+
+
+        
+
         
         
     @property
@@ -65,7 +81,145 @@ class XnatMetadataEditor(qt.QFrame):
         self.listWidget.addItems(items)
 
 
-    
+
+        
+    def setItemType(self, itemType):
+        """ Allows the user to set the kind of QListWidgetItems to be displayed, 
+            either a label or a checkbox, as provided by the 'itemType' argument.
+
+            Refer to here for more information about the flags for setting the
+            item type: 
+            http://harmattan-dev.nokia.com/docs/library/html/qt4/qt.html#ItemFlag-enum
+        """
+
+        #--------------------
+        # Record the internal 'currItemType' variable
+        #--------------------
+        self.currItemType = itemType
+
+
+        
+
+
+
+        #--------------------
+        # Set the flags based on the 'self.currItemType' argument.
+        #--------------------
+        
+        #
+        # For 'checkBox'...
+        #
+        if self.currItemType == 'checkbox':
+            self.itemFlags = 16 | 32
+            
+        #
+        # For 'label'...
+        #           
+        elif self.currItemType == 'label':
+            self.itemFlags = 1
+
+
+            
+        for i in range(0, self.listWidget.count):
+            self.listWidget.item(i).setSizeHint(self.itemSize)
+            self.listWidget.item(i).setFlags(self.itemFlags)
+            #self.listWidget.item(i).setEnabled(True)
+            if self.currItemType == 'checkbox':
+                self.listWidget.item(i).setCheckState(0)
+               
+
+
+                
+
+    def update(self):
+        """
+        """
+
+        print '*******************SUPERTUPDATE'
+        self.setItemType(self.currItemType)
+        self.listWidget.connect('itemClicked(QListWidgetItem *)', self.onItemClicked)
+
+
+
+        #
+        # Load and check items from settings file
+        #
+        #if self.currItemType == 'checkbox':
+
+
+
+        if self.currItemType == 'checkbox':
+            try:
+                xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
+                savedMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.onMetadataCheckedTag + self.xnatLevel)
+                print "AVEASSSSSSSSSSSSSS", savedMetadataItems
+                for i in range(0, self.listWidget.count):
+                    item = self.listWidget.item(i)
+                    if item.flags() == 48 and item.text() in savedMetadataItems:
+                        item.setCheckState(2)                
+            except Exception, e:
+                print "sUPER METADATA EDITOR UPDATE:", str(e)
+                return
+
+            
+
+
+
+                
+                
+
+        
+
+
+        
+    def onItemClicked(self, item):
+        """
+        """
+        #print "item clicked", item.text(), item.flags()
+
+        xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
+        #--------------------
+        # If the item is a checkbox
+        #--------------------
+        if item.flags() == 48:
+
+            savedMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.onMetadataCheckedTag + self.xnatLevel)
+            
+            if item.checkState() == 2:
+                #print item.text(), "Checked!"
+
+                checkedMetadataItems = []
+                for i in range(0, self.listWidget.count):
+                    currItem = self.listWidget.item(i)
+                    if currItem.flags() == 48 and currItem.checkState() == 2:
+                        checkedMetadataItems.append(currItem.text())
+
+
+                
+                
+                #
+                # Union the two list
+                #
+                mergedItems = list(set(savedMetadataItems) | set(checkedMetadataItems))
+
+                
+                tagDict = {self.onMetadataCheckedTag + self.xnatLevel : mergedItems}
+                self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)
+
+
+
+                
+            if item.checkState() == 0:
+                #
+                # Union the two list
+                #
+                differenceItems = list(set(savedMetadataItems) - set([item.text()]))
+                #print differenceItems
+                
+                tagDict = {self.onMetadataCheckedTag + self.xnatLevel : differenceItems}
+                self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)  
+
+
                 
 
         
@@ -88,6 +242,19 @@ class XnatDefaultMetadataEditor(XnatMetadataEditor):
 
 
         
+    def update(self):
+        """
+        """
+
+        print '*******************DEFAULTUPDATE'
+        super(XnatDefaultMetadataEditor, self).update()
+
+            
+
+
+
+                
+        
         
 class XnatCustomMetadataEditor(XnatMetadataEditor):
 
@@ -107,17 +274,20 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         self.lineEdit.setFixedHeight(buttonHeight)
         self.lineEdit.setFixedWidth(lineWidth)
         
+        
+        
         self.addButton = qt.QPushButton('Add')
         self.addButton.setFixedHeight(buttonHeight)
         self.addButton.setFixedWidth(buttonWidth)
-        self.addButton.connect('clicked()', self.onAddClicked)
+        self.addButton.connect('clicked()', self.onAddButtonClicked)
 
 
         
         self.deleteButton = qt.QPushButton('Remove')
         self.deleteButton.setFixedHeight(buttonHeight)
         self.deleteButton.setFixedWidth(buttonWidth)
-        self.deleteButton.connect('clicked()', self.onDeleteClicked)
+        self.deleteButton.connect('clicked()', self.onDeleteButtonClicked)
+        self.deleteButton.setEnabled(False)
 
 
         #self.customButtonGroup.addButton(self.addButton)
@@ -125,11 +295,19 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
 
         self.lineLayout = qt.QHBoxLayout()
 
+
+       
+        
         
         super(XnatCustomMetadataEditor, self).__init__(MODULE, xnatLevel)
 
-        
 
+
+        self.lineEdit.installEventFilter(self.customEventFilter)
+        self.customEventFilter.addEventCallback(qt.QEvent.FocusIn, self.onLineEditFocused)
+
+
+        
 
     def setup(self):
         """
@@ -145,16 +323,16 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
     def customButtonClicked(self, button):
         """
         """
-        print "BUTTON: ", self.xnatLevel
+        #print "BUTTON: ", self.xnatLevel
         
         
         
 
-    def onDeleteClicked(self):
+    def onDeleteButtonClicked(self):
         """
         """
 
-        print "DELETE"
+        #print "DELETE"
         xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
         customMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
 
@@ -182,20 +360,33 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         """
         """
 
+        print '*******************CUSTOMTUPDATE'
+        
         try:
             xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
             customMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
-            print "UPDATE", customMetadataItems
+            #print "UPDATE", customMetadataItems
             self.listWidget.clear()
             self.listWidget.addItems(customMetadataItems)
+            
         except Exception, e:
             print self.MODULE.utils.lf(), str(e)
             
 
+        super(XnatCustomMetadataEditor, self).update()
+       
+        if self.currItemType == 'label':
+            self.itemFlags = 1 | 32
+
+        for i in range(0, self.listWidget.count):
+            self.listWidget.item(i).setFlags(self.itemFlags)
+            #print "FLAGS", self.listWidget.item(i).flags()
+            #self.listWidget.item(i).setCheckState(0)
             
 
             
-    def onAddClicked(self):
+            
+    def onAddButtonClicked(self):
         """
         """
 
@@ -212,7 +403,11 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         self.MODULE.settingsFile.saveCustomPropertiesToHost(xnatHost, tagDict)
 
         self.lineEdit.clear()
+
+
+        self.MODULE.metadataSettings.hostDropdown.currentText
         self.update()
+
 
         
 
@@ -235,4 +430,29 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
             self.addButton.show()
             self.deleteButton.show()
             self._layout.update()            
+
+
+            
+
+    def onItemClicked(self, listWidgetItem):
+        """
+        """
+
+
+        super(XnatCustomMetadataEditor, self).onItemClicked(listWidgetItem)
+        self.deleteButton.setEnabled(True)
+        self.addButton.setEnabled(False)
+        self.lineEdit.clear()
+
+
+
+    def onLineEditFocused(self, *args):
+        """
+        """
+        if self.listWidget.currentItem():
+            self.listWidget.currentItem().setSelected(False)
+        self.addButton.setEnabled(True)
+        self.deleteButton.setEnabled(False)
+        
+
 

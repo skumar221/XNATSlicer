@@ -95,6 +95,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         self.loadHosts()
 
+        print "HOST SETTNS"
 
 
 

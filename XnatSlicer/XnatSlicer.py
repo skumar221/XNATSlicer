@@ -465,7 +465,7 @@ class XnatSlicerWidget:
         #
         # Make the animted collapsible aware of its contents widgets.
         #
-        self.collapsibles['login'].setContentsWidgets(self.XnatLoginMenu.widgets)
+        self.collapsibles['login'].addContentsWidgets(self.XnatLoginMenu.widgets)
 
 
         
@@ -480,7 +480,7 @@ class XnatSlicerWidget:
         #
         # Make the animted collapsible aware of its contents widgets.
         #
-        self.collapsibles['viewer'].setContentsWidgets([self.XnatSearchBar.searchWidget, self.XnatView] + self.XnatButtons.getButtonList(['save', 'load']))
+        self.collapsibles['viewer'].addContentsWidgets([self.XnatSearchBar.searchWidget, self.XnatView] + self.XnatButtons.getButtonList(['save', 'load']))
 
 
 
@@ -497,7 +497,7 @@ class XnatSlicerWidget:
         #
         # Make the animted collapsible aware of its contents widgets.
         #
-        self.collapsibles['details'].setContentsWidgets([self.XnatNodeDetails])
+        self.collapsibles['details'].addContentsWidgets([self.XnatNodeDetails])
         
 
         
@@ -511,7 +511,7 @@ class XnatSlicerWidget:
         #
         # Make the animted collapsible aware of its contents widgets.
         #
-        self.collapsibles['tools'].setContentsWidgets(self.XnatButtons.getButtonList(['delete', 'addProj', 'test']))
+        self.collapsibles['tools'].addContentsWidgets(self.XnatButtons.getButtonList(['delete', 'addProj', 'test']))
 
 
         
@@ -852,6 +852,11 @@ class XnatSlicerWidget:
             buttons relative to one another. O(4n).
         """
 
+
+        try:
+            self.XnatButtons.buttons['filter']
+        except Exception, e:
+            return
         #-----------------
         # Count down buttons
         #------------------

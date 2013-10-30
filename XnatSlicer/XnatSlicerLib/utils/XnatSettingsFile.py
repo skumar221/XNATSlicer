@@ -331,9 +331,11 @@ class XnatSettingsFile:
     """
     val = self.database.value(hostName + "/" + tag)
 
-    if ',' in val:
-        return val.split(',')
-    return [val]
+    if val:
+        if ',' in val:
+            return val.split(',')
+        return [val]
+    return []
 
   
 

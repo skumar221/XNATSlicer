@@ -52,17 +52,9 @@ class XnatDetailsSettings(XnatSettings):
         self.masterLayout.addSpacing(15)
 
         
-        #self.XnatMetadataManager = XnatMetadataManager(self.MODULE)
-        self.addMetadataManager()
+        self.setupMetadataManager()
         self.XnatMetadataManager.setItemType('checkbox')
         self.XnatMetadataManager.setCustomEditVisible(False)
-        
-
-        
-    def saveVisibileMetadata(self):
-        """ Saves the custom metadata tags to the given host.
-        """
-        #--------------------
-        # Remove existing.
-        #--------------------
-        self.MODULE.settingsFile.saveCustomPropertiesToHost('CNDA', {visibleMetadataTags['projects'] : ['asdf','ab','cas','eer']})
+    
+        self.ON_METADATA_CHECKED_TAG = "DetailsInfo_" 
+        self.XnatMetadataManager.setOnMetadataCheckedTag(self.ON_METADATA_CHECKED_TAG)

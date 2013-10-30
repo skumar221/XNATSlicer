@@ -62,20 +62,29 @@ class XnatNodeDetails(qt.QTextEdit):
         #--------------------
         # Construct the priority keys first.
         #--------------------     
-        priorityTags = ['ID', 'id', 'last_accessed_497', 'label', 'name', 'Name', 'type', 'Size', 'series_description']
+        #visibleTags = ['ID', 'id', 'last_accessed_497', 'label', 'name', 'Name', 'type', 'Size', 'series_description']
+
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
+        visibleTags = []
+        for folder in self.MODULE.GLOBALS.XNAT_SLICER_FOLDERS:
+            folderTags = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.detailsSettings.ON_METADATA_CHECKED_TAG + folder)
+            visibleTags = list(set(visibleTags) | set(folderTags))
+
+        print "PRIORITY TAGS", visibleTags 
         modifiedDetails = {}
         for key in detailsDict:
             detailsDict[key] = detailsDict[key].strip(' ')
-            if len(detailsDict[key]) > 0:
-                if not key in priorityTags:
-                    priorityTags.append(key)
+        
+            #if len(detailsDict[key]) > 0:
+            #    if not key in visibleTags:
+            #        visibleTags.append(key)
 
 
                     
         #--------------------
         # Construct the priorty strings.
         #--------------------         
-        for key in priorityTags:
+        for key in visibleTags:
             if key in detailsDict:
                 detailsText += "\n<b>%s</b>:\n%s\n"%(key, detailsDict[key]) + '<br>'
 

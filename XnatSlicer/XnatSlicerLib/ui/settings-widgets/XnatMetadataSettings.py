@@ -68,9 +68,10 @@ class XnatMetadataSettings(XnatSettings):
         #self.XnatMetadataManager.hideButtons()
         #self.XnatMetadataManager.setItemsEnabled(False)
         #self.masterLayout.addWidget(self.XnatMetadataManager)
-        self.addMetadataManager()
-        self.XnatMetadataManager.setItemsEnabled(False)
-        self.XnatMetadataManager.hideButtons()
+        self.setupMetadataManager()
+        self.XnatMetadataManager.setEditButtonsVisible(False)
+
+        print "DETAILS SETTNS"
 
 
 

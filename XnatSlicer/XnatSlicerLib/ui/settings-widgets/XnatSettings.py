@@ -69,7 +69,7 @@ class XnatSettings(qt.QScrollArea):
 
         
 
-    def addMetadataManager(self):
+    def setupMetadataManager(self):
         """
         """
         
