@@ -16,7 +16,7 @@ TODO :
 
 
 
-class XnatLoginMenu(object):
+class XnatLoginMenu(qt.QObject):
     """ Handles UI for loggin into XNAT as well as settings by 
         linking to button clicks to external methods in the
         XnatIo.
@@ -25,8 +25,12 @@ class XnatLoginMenu(object):
     def __init__(self, parent = None, MODULE = None):
         """ Init function.
         """
+
+        #self.parent = parent
+        super(XnatLoginMenu, self).__init__(self)
+
         
-        self.parent = parent
+
         self.MODULE = MODULE
 
 
@@ -82,8 +86,14 @@ class XnatLoginMenu(object):
         #--------------------
         # Set event connections.
         #--------------------
-        self.usernameLine.connect('cursorPositionChanged(int, int)', self.onUsernameLineEdited)  
-        self.passwordLine.connect('cursorPositionChanged(int, int)', self.onPasswordLineEdited)
+        #self.usernameLine.connect('cursorPositionChanged(int, int)', self.onUsernameLineFocused)  
+
+        #self.passwordLine.connect('cursorPositionChanged(int, int)', self.onPasswordLineFocused)
+        self.usernameLine.installEventFilter(self)
+        self.usernameLine.setObjectName("XnatUsernameLine")
+        self.passwordLine.installEventFilter(self)
+        self.passwordLine.setObjectName("XnatPasswordLine")
+        
         self.passwordLine.connect('returnPressed()', self.simulateLoginClicked)
         self.hostDropdown.connect('currentIndexChanged(const QString&)', self.onHostDropdownClicked)
         self.manageHostsButton.connect('pressed()', self.onManageHostsButtonClicked)
@@ -95,7 +105,21 @@ class XnatLoginMenu(object):
         #--------------------
         self.widgets = [self.manageHostsButton, self.usernameLine, self.passwordLine, self.hostDropdown, self.loginButton]
 
+
         
+
+    def eventFilter(self, eventObject, event):
+        """
+        """
+        
+        if event.type() == qt.QEvent.FocusIn:
+            if str(eventObject.objectName).strip() == str(self.passwordLine.objectName).strip():
+                self.onPasswordLineFocused()
+            elif str(eventObject.objectName).strip() == str(self.usernameLine.objectName).strip():
+                self.onUsernameLineFocused()
+            
+    
+            
 
         
     def resetHostDropdown(self):
@@ -228,7 +252,7 @@ class XnatLoginMenu(object):
 
 
         
-    def onUsernameLineEdited(self):
+    def onUsernameLineFocused(self):
         """ Event function for when the username line is edited.
         """     
         if self.defaultUsernameText in str(self.usernameLine.text): 
@@ -237,9 +261,10 @@ class XnatLoginMenu(object):
 
             
             
-    def onPasswordLineEdited(self):  
+    def onPasswordLineFocused(self):  
         """ Event function for when the password line is edited.
         """     
+        print "PWD FOCUSED"
         if self.defaultPasswordText in str(self.passwordLine.text): 
             self.passwordLine.setText("")
         self.passwordLine.setEchoMode(2)
@@ -252,6 +277,7 @@ class XnatLoginMenu(object):
             Loads the stored username into the username line, 
             if it's there.
         """
+        print "USR FOCUSED"
         self.currHostName = self.hostDropdown.currentText
         if self.hostDropdown.currentText:    
             self.populateCurrUser()

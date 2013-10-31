@@ -122,7 +122,7 @@ class XnatMetadataManager(qt.QFrame):
             #
             # Put the buttonGrid, labels, etc. into an AnimatedCollapsible
             #
-            self.collapsibles[key] = AnimatedCollapsible( key.title())
+            self.collapsibles[key] = AnimatedCollapsible( key.title(), 200)
             self.collapsibles[key].setFrameLayout(self.buttonGrids[key])
             self.collapsibles[key].addContentsWidgets(self.labels[key], self.editCustomButtons[key], self.defaultMetadataEditors[key], self.customMetadataEditors[key])
             self.collapsibles[key].setFixedWidth(500)

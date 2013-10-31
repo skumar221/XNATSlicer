@@ -5,6 +5,9 @@ import sys
 import shutil
 
 
+from CustomEventFilter import *
+
+
 
 comment = """
 XnatSearchBar constructs the UI components for the search
@@ -18,7 +21,7 @@ TODO:
 
 
 
-class XnatSearchBar(object):
+class XnatSearchBar(qt.QFrame):
     """ Descriptor above.
     """
     
@@ -26,9 +29,18 @@ class XnatSearchBar(object):
         """ Init function.
         """
 
+
+
+
+        
         self.MODULE = MODULE
         self.prevText = None
         self.defaultSearchText = 'Search projects, subjects and experiments...'
+
+
+
+        
+        super(XnatSearchBar, self).__init__(self)
 
 
         
@@ -36,7 +48,10 @@ class XnatSearchBar(object):
         # The search box (qt.QLineEdit)
         #--------------------------------
         self.searchLine = qt.QLineEdit()
- 
+        
+        
+
+
 
         
         #--------------------------------
@@ -62,8 +77,7 @@ class XnatSearchBar(object):
         #--------------------------------
         # The Search Widget
         #--------------------------------       
-        self.searchWidget = qt.QFrame()
-        self.searchWidget.setLayout(self.searchLayout)
+        self.setLayout(self.searchLayout)
 
 
         
@@ -73,8 +87,8 @@ class XnatSearchBar(object):
         #
         # Widget aesthetics
         #
-        self.searchWidget.setStyleSheet('border: 1px solid rgb(160,160,160); border-radius: 3px;')
-        self.searchWidget.setFixedHeight(22)
+        self.setStyleSheet('border: 1px solid rgb(160,160,160); border-radius: 3px;')
+        self.setFixedHeight(22)
         #
         # Search box aesthetics
         #
@@ -94,10 +108,27 @@ class XnatSearchBar(object):
         #--------------------------------
         # Apply the default text and style
         #--------------------------------
+
+
+        self.searchLine.installEventFilter(self)
+
+  
         self.onClearButtonClicked()
-        self.applyTextStyle('empty')
+
 
         
+    def eventFilter(self, ob, event):
+
+        """
+        """
+        if event.type() == qt.QEvent.FocusIn:
+            self.onSearchLineFocused()
+        elif event.type() == qt.QEvent.FocusOut:
+            if len(self.searchLine.text.strip(' ')) == 0:
+                self.onClearButtonClicked()
+            
+
+                
 
     def applyTextStyle(self, mode):
         """ Applies a stylistic change to text depending on the
@@ -110,6 +141,7 @@ class XnatSearchBar(object):
             color = qt.QColor(150,150,150)
             palette.setColor(6, color);
             self.searchLine.setPalette(palette);
+            self.searchLine.update()
         
         elif mode == 'not empty':
             self.searchLine.setFont(self.MODULE.GLOBALS.LABEL_FONT) 
@@ -121,28 +153,20 @@ class XnatSearchBar(object):
 
             
         
-    def onSearchBoxCursorPositionChanged(self, oldPos, newPos):
+    def onSearchLineFocused(self):
         """ Signal method for when the user interacts with the 
             searchLine.  We reapply the default text if the user
             clears the search line or deletes all the way to the 
             0 cursor position.
         """
 
-        #--------------------------------
-        # When the user clears the searchLine (there's no text), apply
-        # the same functionality as the clear button.
-        #--------------------------------
-        if len(self.searchLine.text) == 0 and newPos == 0 and self.prevText != None:
-            self.onClearButtonClicked()
-            return
 
-
-        
+        print "SEARCH LINE FOCUSED"
         #--------------------------------
         # Clear the default string in the searchLine
         # once the user clicks on the line
         #--------------------------------
-        if self.defaultSearchText in str(self.searchLine.text) and self.prevText == None: 
+        if self.defaultSearchText in str(self.searchLine.text): 
             self.applyTextStyle('not empty')
             self.searchLine.setText('')
 
@@ -163,12 +187,11 @@ class XnatSearchBar(object):
             the 'cursorPositionChanged' signal to 'onSearchBoxCursorPositionChanged'
             function.
         """
-        self.searchLine.disconnect('cursorPositionChanged(int, int)', self.onSearchBoxCursorPositionChanged)
-        self.applyTextStyle('empty')
+
+        
         self.searchLine.setText(self.defaultSearchText)
+        self.applyTextStyle('empty')
         self.prevText = None
-        self.searchLine.setCursorPosition(1000)
-        self.searchLine.connect('cursorPositionChanged(int, int)', self.onSearchBoxCursorPositionChanged)
 
 
         

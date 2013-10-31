@@ -1,4 +1,4 @@
-from __main__ import qt
+from __main__ import qt, ctk
 
 import os
 import sys
@@ -19,19 +19,29 @@ TODO:
 
 
 
-class AnimatedCollapsible(qt.QFrame):
+#class AnimatedCollapsible(qt.QFrame):
+class AnimatedCollapsible(ctk.ctkExpandableWidget):
     """ Descriptor above.
     """
     
-    def __init__(self, title, maxHeight = 250):
+    def __init__(self, title, maxHeight = 1000, minHeight = 60, parent = None):
         """ Init function.
         """
+
+
         
         #--------------------
         # Call parent init.
         #--------------------
-        qt.QFrame.__init__(self)
+        super(AnimatedCollapsible, self).__init__(self)
 
+        if parent:
+            self.setParent(parent)
+
+
+        self.sizeGrip = self.children()[0]
+        self.sizeGrip.hide()
+        
 
         
         #--------------------
@@ -50,16 +60,23 @@ class AnimatedCollapsible(qt.QFrame):
         #
         # Size
         #
-        self.minHeight = 28
+        self.collapsedHeight = 30
+        self.minHeight = minHeight
         self.maxHeight = maxHeight
+
+        
         self.toggleHeight = 16
         self.toggleWidth = 80
+
         self.setStyleSheet('width: 100%')
         #
         # Animation duration
         #
-        self.animDuration = 150
-        
+        self.animDuration = 300
+
+
+        self.setSizePolicy(qt.QSizePolicy.Ignored, qt.QSizePolicy.MinimumExpanding)
+
 
         
         #----------------
@@ -108,6 +125,9 @@ class AnimatedCollapsible(qt.QFrame):
         self.frame.setObjectName('animFrame')
         self.frame.setStyleSheet('#animFrame {margin-top: 9px; border: 2px solid lightgray}')
 
+
+        
+
         
         
         #----------------
@@ -143,17 +163,28 @@ class AnimatedCollapsible(qt.QFrame):
 
        
 
+
+        #self.sizeGrip = qt.QSizeGrip(self.frame)
+        #self.sizeGrip.setStyleSheet('top: 90%; left: 90%')
+        #self.sizeGrip.setEnabled(True)
+
+        #sizePolicy = qt.QSizePolicy(qt.QSizePolicy.Expanding, qt.QSizePolicy.Expanding)
+        #self.setSizePolicy(sizePolicy)
+
+        
         #----------------
         # Set the default states after creation.
         #----------------
         #self.button.setChecked(True)
         self.button.connect('toggled(bool)', self.setChecked)
         self.toggled = True
+
+
+
+        self.stretchHeight = None
         
 
-        
-
-    def supsendAnimationDuration(self, suspend):
+    def suspendAnimationDuration(self, suspend):
         """ As stated.
         """
         if suspend:
@@ -289,7 +320,20 @@ class AnimatedCollapsible(qt.QFrame):
         
         self.ContentsWidgets = list(set(self.ContentsWidgets) - set(removeWidgets))
 
+
+        
                 
+
+
+    def setSizeGripVisible(self, visible):
+        """
+        """
+        if not visible:
+            self.sizeGrip.hide()
+        else:
+            self.sizeGrip.show()
+
+
             
 
     def hideContentsWidgets(self):
@@ -319,8 +363,11 @@ class AnimatedCollapsible(qt.QFrame):
         """
         if self.onAnimate:
             self.onAnimate()
-        self.setFixedHeight(variant.height())
-
+            self.setFixedHeight(variant.height())
+            #size = qt.QSize(variant.width(), variant.height())
+            #self.setBaseSize(size)
+            #geom = self.geometry
+            #self.setGeometry(geom.top(), geom.left(), geom.width(), variant.height())
 
 
         
@@ -335,16 +382,29 @@ class AnimatedCollapsible(qt.QFrame):
         #---------------- 
         self.onAnimateMain(qt.QSize(self.geometry.width(), self.geometry.height()))
 
-
+        print "onAnimationFinished", self.toggled
         
         #---------------- 
         # If the widget is toggled...
         #---------------- 
         if self.toggled:
+
+            
             #
             # Set the height
             #
-            self.setFixedHeight(self.maxHeight)
+            
+
+            if self.stretchHeight:
+                self.setMaximumHeight(self.stretchHeight)
+            else:
+                self.setMaximumHeight(self.maxHeight)
+                
+            self.setMinimumHeight(self.minHeight)
+
+            #if self.targetGeometry:
+            #    self.setGeometry(self.targetGeometry)
+                
             #
             # Show contents
             #
@@ -360,20 +420,49 @@ class AnimatedCollapsible(qt.QFrame):
         #---------------- 
         # Otherwise...
         #---------------- 
-        else:                
+        else:
+            print "ON COLLAPSE:", self.onCollapse                
             #
             # Set the height
             #
-            self.setFixedHeight(self.minHeight)
+            self.setFixedHeight(self.collapsedHeight)
             #
             # Run callbacks
             #
             if self.onCollapse:
                 self.onCollapse()
 
+    
 
-                
 
+    def setMaxHeight(self, height):
+        """
+        """
+        self.maxHeight = height
+        #self.setMaximumHeight(self.maxHeight)
+        #self.setMinimumHeight(self.minHeight)
+
+
+        
+
+    def setMinHeight(self, height):
+        """
+        """
+        self.minHeight = height
+        #self.setMaximumHeight(self.maxHeight)
+        #self.setMinimumHeight(self.minHeight)
+
+
+        
+
+    def setStretchHeight(self, height):
+        """
+        """
+        self.stretchHeight = height
+        self.setMaximumHeight(height)
+        
+
+        
         
     def setChecked(self, toggled, animDuration = None):
         """ Constructs an executes an animation for the widget
@@ -430,12 +519,6 @@ class AnimatedCollapsible(qt.QFrame):
         #----------------	
         
         #
-        # Establish the animation sizes
-        #	
-        minSize = qt.QSize(self.geometry.width(), self.minHeight)
-        maxSize = qt.QSize(self.geometry.width(), self.maxHeight)  
-
-        #
         # Make the animation object
         #
         anim = qt.QPropertyAnimation(self, 'size')
@@ -455,15 +538,33 @@ class AnimatedCollapsible(qt.QFrame):
         # the toggle state.
         #
         if self.toggled:
-            self.setMaximumHeight(self.maxHeight)
-            anim.setStartValue(minSize)
-            anim.setEndValue(maxSize)
-        else:
-            anim.setStartValue(maxSize)
-            anim.setEndValue(minSize)
-            self.hideContentsWidgets()
-
             
+
+            #
+            # Establish the animation sizes
+            #	
+            startSize = qt.QSize(self.geometry.width(), self.collapsedHeight)
+            endSize = qt.QSize(self.geometry.width(), self.maxHeight)  
+
+            self.setMaximumHeight(self.collapsedHeight)
+            self.setMinimumHeight(self.collapsedHeight)
+
+
+        else:
+
+            startHeight = self.geometry.height()
+            startSize = qt.QSize(self.geometry.width(), startHeight)
+            endSize = qt.QSize(self.geometry.width(), self.collapsedHeight)  
+            
+            self.setMaximumHeight(startHeight)
+            self.setMinimumHeight(startHeight)
+
+   
+            self.hideContentsWidgets()
+            
+            
+        anim.setStartValue(startSize)
+        anim.setEndValue(endSize)            
        
         #---------------- 
         # Set callback during animation.
@@ -487,4 +588,7 @@ class AnimatedCollapsible(qt.QFrame):
         self.animations.addAnimation(anim)
         self.animations.start()
 
+
+        
+        
 
