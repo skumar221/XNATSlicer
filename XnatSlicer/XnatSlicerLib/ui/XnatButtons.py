@@ -66,6 +66,8 @@ class XnatButtons(object):
 
 
 
+
+
         #--------------------
         # Make Load / Save Button Layout.
         #--------------------
@@ -85,7 +87,20 @@ class XnatButtons(object):
         self.toolsLayout.addSpacing(15)
         self.toolsLayout.addWidget(self.buttons['io']['test'])
         self.toolsLayout.addStretch()
-    
+
+
+        self.buttons['settings'] = {}
+        self.buttons['settings']['settings'] = self.MODULE.utils.generateButton(iconOrLabel = 'gear.png', 
+                                                                                toolTip = "Open settings window.", 
+                                                                                font = self.MODULE.GLOBALS.LABEL_FONT,
+                                                                                size = self.MODULE.GLOBALS.BUTTON_SIZE_SMALL, 
+                                                                                enabled = True)
+        self.toolsLayout.addWidget(self.buttons['settings']['settings'])
+
+
+        self.toolsWidget = qt.QWidget()
+        self.toolsWidget.setLayout(self.toolsLayout)
+           
 
 
 

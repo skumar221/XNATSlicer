@@ -5,6 +5,10 @@ import glob
 import sys
 
 
+from FingerTabWidget import *
+
+
+
 
 comment = """
 XnatSettingsWindow is the window for user-inputted XNAT settings, 
@@ -14,8 +18,9 @@ TODO:
 """
 
 
+        
 
-class XnatSettingsWindow(qt.QTabWidget):
+class XnatSettingsWindow(FingerTabWidget):
     """ Popup window for managing user-inputted XnatSettings, 
         such as host names and default users.
     """
@@ -23,37 +28,38 @@ class XnatSettingsWindow(qt.QTabWidget):
     def __init__(self, MODULE):  
         """ Descriptor
         """      
+
+
         
         #--------------------
         # Call parent init.
         #--------------------
-        qt.QTabWidget.__init__(self)
+        super(XnatSettingsWindow, self).__init__(self)
 
+        self.setWindowTitle("XNATSlicer Settings")
  
         self.MODULE = MODULE
         self.settingsDict = {}
 
 
-        self.setTabPosition(0)
+        #self.setTabPosition(2)
+
+        #self.tabBar().setStyle(newStyle);
 
 
         
         #--------------------
         # Set sizes.
         #--------------------
-        self.setFixedWidth(550)
-        self.setFixedHeight(600)
+        self.setFixedWidth(750)
+        self.setFixedHeight(400)
         self.setWindowModality(0)
         self.hide()
 
         
         
-        #--------------------
-        # Add buttons.
-        #--------------------
-        self.doneButton = qt.QPushButton("Done")
-        self.doneButton.connect('clicked()', self.doneClicked)
-        #self.masterLayout.addWidget(self.doneButton, 1, 1)
+
+        #self.masterLayout.addWidget(self.closeButton, 1, 1)
 
 
 
@@ -64,7 +70,26 @@ class XnatSettingsWindow(qt.QTabWidget):
         self.connect('currentChanged(int)', self.updateSettingWidgets)
 
 
+        self.addCloseButton()
 
+
+        
+        
+    def addCloseButton(self):
+        """
+        """
+        self.closeButton = qt.QPushButton("Close")
+        self.closeButton.connect('clicked()', self.hide)
+        closeButtonRow = qt.QHBoxLayout()
+        closeButtonRow.addStretch()
+        closeButtonRow.addWidget(self.closeButton)
+        #closeButtonRow.addSpacing(5)
+        closeButtonRow.setContentsMargins(5,5,5,5)
+        self.mainLayout.addLayout(closeButtonRow)
+
+
+
+        
 
     def updateSettingWidgets(self, tabIndex):
         """
@@ -82,12 +107,16 @@ class XnatSettingsWindow(qt.QTabWidget):
             print e
 
             
-        
+
+            
         
     def showWindow(self, settingName = None, position = True):
         """ Creates a new window, adjusts aesthetics, then shows.
         """ 
 
+        self.showSettingWidget(settingName)
+
+        
         #--------------------
         # Reposition window if argument is true.
         #--------------------
@@ -117,12 +146,19 @@ class XnatSettingsWindow(qt.QTabWidget):
 
         
 
+        
+
     def showSettingWidget(self, settingName):
         """ Changes the settingsAreaLayout index (a QStackedLayout)
             to the relevant settings widget based on the 'settingsName'
             argument.
         """
-        #self.settingsAreaLayout.setCurrentIndex(self.settingsWidgets[settingName])
+        for i in range(0, len(self.settingsWidgets)):
+            sDict = self.settingsWidgets[i]
+            print "***********", sDict, settingName
+            if sDict['name'] == settingName:
+                self.setCurrentIndex(i)
+                return
         
 
             
@@ -131,10 +167,11 @@ class XnatSettingsWindow(qt.QTabWidget):
     def doneClicked(self):
         """ Hide window if done was clicked.
         """
-        self.MODULE.XnatLoginMenu.loadDefaultHost()
+        #self.MODULE.XnatLoginMenu.loadDefaultHost()
         self.hide()
 
 
+        
 
 
     def addSetting(self, settingName, widget = None):
@@ -302,4 +339,48 @@ class SettingsLister(qt.QTextEdit):
         """ 
         return self.currText
 
+
+
+
+
+class CustomTabStyle(qt.QProxyStyle):
+    """
+       Reinterpreted from C++ here:
+       http://www.qtcentre.org/threads/13293-QTabWidget-customization?highlight=QTabWidget
+    """
+
+
+    def __init__(self):
+        super(CustomTabStyle, self).__init__(self)
+
+    
+    def sizeFromContents(self, sizeType, option, size, widget):
+        """
+        """
+        s = qt.QProxyStyle.sizeFromContents(sizeType, option, size, widget)
+        if type == qt.QStyle.CT_TabBarTab:
+            s.transpose()
+        return s
+    
+
+
+    
+    def drawControl(self, element, option, painter, widget):
+        """
+        """
+
+        
+        if element == qt.QStyle.CE_TabBarTabLabel:
+            #if (const QStyleOptionTab *tab = qstyleoption_cast<const QStyleOptionTab *>(option))
+            tab = qt.QStyleOptionTab
+            opt.shape = qt.QTabBar.RoundedNorth
+            qt.QProxyStyle.drawControl(element, opt, painter, widget)
+            return       
+        
+            
+
+            
+        
+        qt.QProxyStyle.drawControl(element, option, painter, widget)
+    
 

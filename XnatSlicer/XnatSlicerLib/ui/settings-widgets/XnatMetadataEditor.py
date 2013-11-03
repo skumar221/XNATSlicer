@@ -54,6 +54,7 @@ class XnatMetadataEditor(qt.QFrame):
 
 
 
+
         
 
         
@@ -116,13 +117,13 @@ class XnatMetadataEditor(qt.QFrame):
             self.itemFlags = 1
 
 
-            
-        for i in range(0, self.listWidget.count):
-            self.listWidget.item(i).setSizeHint(self.itemSize)
-            self.listWidget.item(i).setFlags(self.itemFlags)
-            #self.listWidget.item(i).setEnabled(True)
-            if self.currItemType == 'checkbox':
-                self.listWidget.item(i).setCheckState(0)
+        if self.listWidget:    
+            for i in range(0, self.listWidget.count):
+                self.listWidget.item(i).setSizeHint(self.itemSize)
+                self.listWidget.item(i).setFlags(self.itemFlags)
+                #self.listWidget.item(i).setEnabled(True)
+                if self.currItemType == 'checkbox':
+                    self.listWidget.item(i).setCheckState(0)
                
 
 
@@ -361,7 +362,7 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         """
         """
 
-        print '*******************CUSTOMTUPDATE'
+        #print '*******************CUSTOMTUPDATE'
         
         try:
             xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText

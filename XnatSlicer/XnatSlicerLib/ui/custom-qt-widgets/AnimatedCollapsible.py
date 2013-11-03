@@ -5,43 +5,41 @@ import sys
 import shutil
 
 
+from HoverButton import *
+
+
+
 
 comment = """
 AnimatedCollapsible is a collapsible widget that animates
 itself when the user toggles it.  Much like other QT widgets, 
-the user can set a layout (where the contents) reside to allow
+the user can set a layout where the contents reside to allow
 for the animation.  It should be noted that the user should 
-provide the specific widgets also, so they can be hidden/shown
-on the various toggle states (setContentsWidgets).
+provide the further...
 
 TODO:        
 """
 
 
 
-#class AnimatedCollapsible(qt.QFrame):
+
 class AnimatedCollapsible(ctk.ctkExpandableWidget):
     """ Descriptor above.
     """
     
-    def __init__(self, title, maxHeight = 1000, minHeight = 60, parent = None):
+    def __init__(self, parent, title, maxHeight = 1000, minHeight = 60):
         """ Init function.
         """
 
-
-        
-        #--------------------
-        # Call parent init.
-        #--------------------
-        super(AnimatedCollapsible, self).__init__(self)
-
         if parent:
-            self.setParent(parent)
+            super(AnimatedCollapsible, self).__init__(parent)
+        else:
+            super(AnimatedCollapsible, self).__init__(self)
+
 
 
         self.sizeGrip = self.children()[0]
         self.sizeGrip.hide()
-        
 
         
         #--------------------
@@ -105,11 +103,15 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         #----------------
         # Make button
         #----------------
-        self.button = qt.QPushButton(self)
+        self.button = HoverButton(self)
+        self.button.hide()
+        self.button.setParent(self)
         self.button.setFixedHeight(self.toggleHeight)
-        self.button.setFixedWidth(self.toggleWidth)
         self.button.setCheckable(True)
-        self.button.setStyleSheet('border: none; background-color: white; margin-left: 5px;')
+        self.button.setObjectName('acButton')
+        self.button.setDefaultStyleSheet('#acButton {border: 1px solid transparent; background-color: white; margin-left: 5px; text-align: left; padding-left: 5px;}')
+        self.button.setHoverStyleSheet('#acButton {border: 1px solid rgb(200,200,200); background-color: white; border-radius: 2px; margin-left: 5px; text-align: left; padding-left: 5px;}')
+        #self.button.setStyleSheet('#acButton:pressed {background-color: gray;}')
         self.setButtonText(True)
      
 
@@ -123,11 +125,9 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         # To prevent style sheet inheritance
         #
         self.frame.setObjectName('animFrame')
-        self.frame.setStyleSheet('#animFrame {margin-top: 9px; border: 2px solid lightgray}')
-
+        self.frame.setStyleSheet('#animFrame {margin-top: 9px; border: 2px solid lightgray; padding-top: 5px; padding-left: 2px; padding-right: 2px; padding-bottom: 2px}')
 
         
-
         
         
         #----------------
@@ -135,12 +135,18 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         # QStackedLayout
         #----------------
         self.stackedLayout = qt.QStackedLayout()
-        self.stackedLayout.addWidget(self.frame)
+
         self.stackedLayout.addWidget(self.button)
+        self.stackedLayout.addWidget(self.frame)
+        
+        
+        #self.stackedLayout.addWidget(self.button)
+        #self.stackedLayout.addWidget(self.settingsButton)
+        
         #
         # To make sure the button is on top.
         #
-        self.stackedLayout.setCurrentIndex(1)
+        self.stackedLayout.setCurrentIndex(0)
         self.stackedLayout.setStackingMode(1)
 
 
@@ -151,7 +157,7 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         self.setLayout(self.stackedLayout)
 
 
-
+        
         #----------------
         # Init the animation group and callbacks.
         #----------------  
@@ -161,15 +167,6 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         self.onExpand = None
         self.ContentsWidgets = []
 
-       
-
-
-        #self.sizeGrip = qt.QSizeGrip(self.frame)
-        #self.sizeGrip.setStyleSheet('top: 90%; left: 90%')
-        #self.sizeGrip.setEnabled(True)
-
-        #sizePolicy = qt.QSizePolicy(qt.QSizePolicy.Expanding, qt.QSizePolicy.Expanding)
-        #self.setSizePolicy(sizePolicy)
 
         
         #----------------
@@ -182,6 +179,13 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
 
 
         self.stretchHeight = None
+
+
+
+
+
+
+            
         
 
     def suspendAnimationDuration(self, suspend):
@@ -228,9 +232,30 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         """
         arrowChr = self.downArrowChar if toggled else self.rightArrowChar
         self.button.setText(arrowChr + '  ' + self.title)
+        self.button.setFixedHeight(17)
+        self.button.setMinimumWidth(10)
+        self.button.setMaximumWidth(110)
+        #----------------
+        # Temporarily turn off the animation
+        # when adding contents.
+        #----------------  
+        #self.button.setFixedWidth(self.button.sizeHint.width())      
+        #self.button.setSizePolicy(qt.QSizePolicy.Minimum, qt.QSizePolicy.Minimum) 
+  
 
+        
 
+    def setWidget(self, widget):
+        """
+        """
+        self.ContentsWidgets = [widget]
+        layout = qt.QHBoxLayout()
+        layout.addWidget(widget)
+        layout.setContentsMargins(0,0,0,0)
+        self.frame.setLayout(layout)
 
+        
+            
         
     def setOnCollapse(self, callback):
         """ As stated.

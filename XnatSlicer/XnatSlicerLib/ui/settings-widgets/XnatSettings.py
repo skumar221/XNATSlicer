@@ -34,8 +34,8 @@ class XnatSettings(qt.QScrollArea):
         qt.QScrollArea.__init__(self)
 
 
-        
-        self.setStyleSheet('height: 98%; width: 100%')
+        self.setObjectName('xnatSetting')
+        self.setStyleSheet('#xnatSetting {height: 100%; width: 100%; border: 1px solid gray;}')
         #--------------------
         # NOTE: fixes a scaling error that occurs with the scroll 
         # bar.  Have yet to pinpoint why this happens.
@@ -55,7 +55,8 @@ class XnatSettings(qt.QScrollArea):
         # Layout for entire frame
         #--------------------
         self.frame = qt.QFrame()
-        self.frame.setStyleSheet("background: rgb(255,255,255)")
+        self.frame.setObjectName('settingFrame')
+        self.frame.setStyleSheet("#settingFrame {background: white;}")
 
 
 
@@ -63,6 +64,7 @@ class XnatSettings(qt.QScrollArea):
         # Layout for entire frame
         #--------------------
         self.masterLayout = qt.QVBoxLayout()
+        self.masterLayout.setContentsMargins(10,10,10,10)
 
 
 
@@ -73,11 +75,24 @@ class XnatSettings(qt.QScrollArea):
 
 
 
+        #--------------------
+        # Add buttons.
+        #--------------------
+
+
+        
+        
+
         self.ON_METADATA_CHECKED_TAGS = {}
         self.defaultSelectedMetadata = {}
 
+        self.tabTitle = title
+
     
 
+
+        
+        
 
         
     def setMetadataManagers(self, *args):

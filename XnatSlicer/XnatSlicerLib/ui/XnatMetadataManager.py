@@ -9,16 +9,28 @@ from XnatMetadataEditor import *
 
 
 
+
 comment = """
-XnatMetadataManager
+XnatMetadataManager is a class that combines several 
+XnatMetadtaEditors and AnimatedCollapsibles to 
+allow for editing of metadata for the XNAT Folder levels outlined
+in 'XnatGlobals.XNAT_LEVELS' (usually 'projects', 
+'subjects', 'experiments','scans', etc.).
+
+Usually, there are two XnatMetadataEditors for every
+AnimatedCollapsible: XnatDefaultMetadataEditor and an
+XnatCustomMetadataEditor.  Each editor can be tailored
+even further depending on the class that utilizes the
+XnatMetadataEditor.
 
 TODO:
 """
 
 
+
         
 class XnatMetadataManager(qt.QFrame):
-    """ 
+    """ Class described above.
     """
 
     def __init__(self, MODULE):
@@ -27,134 +39,178 @@ class XnatMetadataManager(qt.QFrame):
 
         super(XnatMetadataManager, self).__init__(self)
 
+
+        
+        #--------------------
+        # Track the MODULE.
+        #--------------------
         self.MODULE = MODULE
 
-        self._layout = qt.QVBoxLayout()
+
+
+        #--------------------
+        # Track all widgets.
+        #--------------------
         self.collapsibles = {}
         self.metadataWidgets = {}
         self.defaultMetadataEditors = {}
         self.customMetadataEditors = {}
-        self.customMetadataTags = {}
         self.buttons = {}
         self.labels = {}
-        self.buttonGrids = {}
+        self.collapsibleLayouts = {}
         self.editCustomButtons = {}
+        self.currItemType = ''
 
+
+        
+        #--------------------
+        # The _layout that eventually becomes 
+        # the layout of the XnatMetadataManager via
+        # the '.setLayout' function
+        #--------------------       
+        self._layout = qt.QVBoxLayout()
+
+
+
+        #--------------------
+        # The Edit Button group.
+        #
+        # NOTE: A button group is created because
+        # normal qt.QPushButton.connect events do not
+        # send the button 'name' to the even method.  A
+        # button group allows you to send the actual 
+        # button to the vent method.
+        #--------------------
         self.editCustomButtonGroup = qt.QButtonGroup()
         self.editCustomButtonGroup.connect('buttonClicked(QAbstractButton*)', self.editCustomClicked)
-
-
-
         self.editButtonsVisible = True
-        
+
+
+
         #--------------------
-        # Construct grid layout.
+        # We set this to true so the layout can anticipate
+        # the size of the scroll area.
         #--------------------
 
+        self.constructManager()
+        for key, collapsible in self.collapsibles.iteritems():
+            collapsible.suspendAnimationDuration(True)
+            collapsible.show()
+            collapsible.setChecked(True)
+            collapsible.suspendAnimationDuration(False)
+
+
         
-        for key in self.MODULE.GLOBALS.XNAT_LEVELS:
+    def constructManager(self):
+        """ Constructs the XnatMetadataManager widget.
+        """
+
+        #--------------------
+        # Loop through all folders as per 
+        # XnatGlobals.XNAT_LEVELS.  We create an AnimatedCollapsible
+        # for every folder, one XnatCustomMetadataEditor and one 
+        # XnatDefaultMetadataEditor, along with the relevant buttons for
+        # very folder in XNAT_LEVELS.
+        #--------------------
+        for xnatLevel in self.MODULE.GLOBALS.XNAT_LEVELS:
 
             #
+            # Set DEFAULT label per xnat level.
             #
-            #
-            self.labels[key] = []
-            self.labels[key].append(qt.QLabel('<b>DEFAULT<b>'))
-            self.labels[key][0].setFont(self.MODULE.GLOBALS.LABEL_FONT_BOLD)
+            self.labels[xnatLevel] = []
+            self.labels[xnatLevel].append(qt.QLabel('<b>DEFAULT<b>'))
+            self.labels[xnatLevel][0].setFont(self.MODULE.GLOBALS.LABEL_FONT_BOLD)
 
             
             #
-            # Make Button grid layout, add first label.
+            # Set the collapsible's internal layout 
+            # (a qt.QGridLayout) per folder.
             #
-            self.buttonGrids[key] = qt.QGridLayout()
-            self.buttonGrids[key].addWidget(self.labels[key][0], 0, 0)
+            self.collapsibleLayouts[xnatLevel] = qt.QGridLayout()
+            self.collapsibleLayouts[xnatLevel].addWidget(self.labels[xnatLevel][0], 0, 0)
 
 
-
-            #--------------------
-            # Gather checkboxes as scrollArea list.
             #
-            self.defaultMetadataEditors[key] = XnatDefaultMetadataEditor(self.MODULE, key)
-            self.buttonGrids[key].addWidget(self.defaultMetadataEditors[key], 1, 0)
+            # Set the XnatDefaultMetadataEditor, 
+            # add to layout.
+            #
+            self.defaultMetadataEditors[xnatLevel] = XnatDefaultMetadataEditor(self.MODULE, xnatLevel)
+            self.collapsibleLayouts[xnatLevel].addWidget(self.defaultMetadataEditors[xnatLevel], 1, 0)
 
 
-
-            
-            #--------------------
-            # Define the custom metadata tags for storing into 
-            # the settings file
-            #--------------------
-            self.customMetadataTags[key] = self.MODULE.GLOBALS.makeCustomMetadataTag(key)
-
-
-
-            #--------------------
-            # Make the metadata managers
-            #--------------------   
-            self.customMetadataEditors[key] = XnatCustomMetadataEditor(self.MODULE, key)
-            self.buttonGrids[key].addWidget(self.customMetadataEditors[key], 1, 1, 1, 2)
-            
-
+            #
+            # Set the XnatCustomMetadataEditor, 
+            # add to layout.
+            # 
+            self.customMetadataEditors[xnatLevel] = XnatCustomMetadataEditor(self.MODULE, xnatLevel)
+            self.collapsibleLayouts[xnatLevel].addWidget(self.customMetadataEditors[xnatLevel], 1, 1, 1, 2)
             
 
             #
-            # Add 'CUSTOM' label to grid.
+            # Set DEFAULT label per xnat level.
             #
-            self.labels[key].append(qt.QLabel('<b>CUSTOM<b>'))
-            self.labels[key][1].setFont(self.MODULE.GLOBALS.LABEL_FONT_BOLD)
-            self.buttonGrids[key].addWidget(self.labels[key][1], 0, 1)
+            self.labels[xnatLevel].append(qt.QLabel('<b>CUSTOM<b>'))
+            self.labels[xnatLevel][1].setFont(self.MODULE.GLOBALS.LABEL_FONT_BOLD)
+            self.collapsibleLayouts[xnatLevel].addWidget(self.labels[xnatLevel][1], 0, 1)
+
             
             #
-            # Add the 'editCustom' button.
+            # Add the 'editCustom' button. 
             #
-
-            self.editCustomButtons[key] = self.MODULE.utils.generateButton(iconOrLabel = "Edit custom tags for '%s'"%(key), 
+            # NOTE: The user can choose to hide/show these buttons,
+            # based on what's needed.  For isntance, the XnatMetadataSettings
+            # class hides these buttons as they are not necessary for
+            # its workflow.
+            #
+            self.editCustomButtons[xnatLevel] = self.MODULE.utils.generateButton(iconOrLabel = "Edit custom tags for '%s'"%(xnatLevel), 
                                                                                toolTip = "Adds a custom metadata tag to display in the 'Info' column.", 
                                                                                font = self.MODULE.GLOBALS.LABEL_FONT,
                                                                                size = qt.QSize(180, 20), 
                                                                                enabled = True)
-
-            self.buttonGrids[key].addWidget(self.editCustomButtons[key], 0, 2)
-            self.editCustomButtonGroup.addButton(self.editCustomButtons[key])
+            self.collapsibleLayouts[xnatLevel].addWidget(self.editCustomButtons[xnatLevel], 0, 2)
+            self.editCustomButtonGroup.addButton(self.editCustomButtons[xnatLevel])
             
 
-
-
             #
-            # Put the buttonGrid, labels, etc. into an AnimatedCollapsible
+            # Put all of the widgets into an
+            # AnimatedCollapsible.
             #
-            self.collapsibles[key] = AnimatedCollapsible( key.title(), 200)
-            self.collapsibles[key].setFrameLayout(self.buttonGrids[key])
-            self.collapsibles[key].addContentsWidgets(self.labels[key], self.editCustomButtons[key], self.defaultMetadataEditors[key], self.customMetadataEditors[key])
-            self.collapsibles[key].setFixedWidth(500)
+            self.collapsibles[xnatLevel] = AnimatedCollapsible(self, xnatLevel.title(), 250, 250)
+
+            contentsWidget = qt.QWidget()
+            contentsWidget.setLayout(self.collapsibleLayouts[xnatLevel])
+            self.collapsibles[xnatLevel].setWidget(contentsWidget)
+            self.collapsibles[xnatLevel].setFixedWidth(550)
 
 
             #
             # Add collapsible to self._layout.
             #
-            self._layout.addWidget(self.collapsibles[key])
+            self._layout.addWidget(self.collapsibles[xnatLevel])
             self._layout.addSpacing(10)
 
 
 
-        #
-        # Set callback to Update XNATSlicer's layout when animating.
-        #
-        def onAnimatedCollapsibleAnimate():
-            self._layout.update()
-            #self.update()
+        #--------------------
+        # Set callback to Update XNATSlicer's 
+        # layout when animating.
+        #--------------------
         for key, collapsible in self.collapsibles.iteritems():
-            collapsible.setOnAnimate(onAnimatedCollapsibleAnimate)
+            collapsible.setOnAnimate(self.updateLayout)
 
 
             
-        #
-        # Return metadata object
-        #
+        #--------------------
+        # Set _layout to the master layout.
+        #--------------------
         self._layout.addStretch()
         self.setLayout(self._layout)
 
 
+
+        #--------------------
         #self.currItemType = 'label'
+        #--------------------
         self.setItemType('label')
 
 
@@ -163,6 +219,19 @@ class XnatMetadataManager(qt.QFrame):
 
 
 
+
+            
+
+
+    def updateLayout(self):
+        """
+        """
+
+        self.layout().update()
+
+
+
+            
 
     def setItemsEnabled(self, enabled):
         """
@@ -174,12 +243,13 @@ class XnatMetadataManager(qt.QFrame):
                 
 
 
-
                         
     def setItemType(self, itemType):
         """ 
         """
 
+        self.currItemType = itemType
+        
         for key, metadataEditor in self.defaultMetadataEditors.iteritems():
             metadataEditor.setItemType(itemType)
 
@@ -203,10 +273,10 @@ class XnatMetadataManager(qt.QFrame):
         # Hide the 'editCustom' buttons
         #--------------------
         for key, button in self.editCustomButtons.iteritems():
-            button.setVisible(self.editButtonsVisible)
-
-            if not self.editButtonsVisible:
-                self.collapsibles[key].removeContentsWidgets(button)
+            if button:
+                button.setVisible(self.editButtonsVisible)
+                if not self.editButtonsVisible:
+                    self.collapsibles[key].removeContentsWidgets(button)
 
             
 
@@ -241,14 +311,16 @@ class XnatMetadataManager(qt.QFrame):
         """
         #self.setEditButtonsVisible()
         #self.hostDropdown.setCurrentIndex(self.MODULE.XnatLoginMenu.hostDropdown.currentIndex)
+        self.updateLayout()
         for key in self.customMetadataEditors:
             self.customMetadataEditors[key].clear() 
 
             try:
-                #customMetadataItems = self.MODULE.settingsFile.getTagValues(self.MODULE.metadataSettings.hostDropdown.currentText, self.customMetadataTags[key])
                 self.defaultMetadataEditors[key].update()
                 self.customMetadataEditors[key].update()
                 self.setItemType(self.currItemType)
+
+
                 
                     
             except Exception, e:

@@ -195,7 +195,9 @@ class XnatTreeViewSettings(XnatSettings):
             manager.setCustomEditVisible(False)
             manager.setItemType('checkbox')
 
-            
+
+
+
         self.complete()
 
 

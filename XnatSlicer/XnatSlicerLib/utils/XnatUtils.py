@@ -17,6 +17,10 @@ from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
 
 
+from HoverButton import *
+
+
+
 
 comment = """
 XnatUtils is the class that owns many of the default 
@@ -27,6 +31,7 @@ see
 
 TODO : 
 """
+
 
 
 
@@ -1028,3 +1033,18 @@ class XnatUtils(object):
         return button
 
 
+
+
+    def makeSettingsButton(self, XnatSetting):
+        """
+        """
+        button = HoverButton()
+        button.setIcon(qt.QIcon(os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['icons'], 'wrench.png')) )
+        button.setFixedWidth(23)
+        button.setFixedHeight(17)
+        button.setDefaultStyleSheet('border: 1px solid transparent; border-radius: 2px; background-color: transparent; margin-left: 5px; text-align: left; padding-left: 0px; ')
+        button.setHoverStyleSheet('border: 1px solid rgb(150,150,150); border-radius: 2px; background-color: transparent; margin-left: 5px; text-align: left; padding-left: 0px;')
+        def openSettings():
+            self.MODULE.xnatSettingsWindow.showWindow(XnatSetting.tabTitle)
+        button.connect('clicked()', openSettings)
+        return button

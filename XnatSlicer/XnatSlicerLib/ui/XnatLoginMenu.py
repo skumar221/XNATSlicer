@@ -16,7 +16,7 @@ TODO :
 
 
 
-class XnatLoginMenu(qt.QObject):
+class XnatLoginMenu(qt.QWidget):
     """ Handles UI for loggin into XNAT as well as settings by 
         linking to button clicks to external methods in the
         XnatIo.
@@ -26,7 +26,6 @@ class XnatLoginMenu(qt.QObject):
         """ Init function.
         """
 
-        #self.parent = parent
         super(XnatLoginMenu, self).__init__(self)
 
         
@@ -103,9 +102,10 @@ class XnatLoginMenu(qt.QObject):
         #--------------------
         # Define the widgets list.
         #--------------------
-        self.widgets = [self.manageHostsButton, self.usernameLine, self.passwordLine, self.hostDropdown, self.loginButton]
+        #self.widgets = [self.manageHostsButton, self.usernameLine, self.passwordLine, self.hostDropdown, self.loginButton]
 
 
+        self.setLayout(self.loginLayout)
         
 
     def eventFilter(self, eventObject, event):

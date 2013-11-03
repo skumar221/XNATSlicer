@@ -37,7 +37,7 @@ class XnatHostSettings(XnatSettings):
         #
         # Add section Label
         #
-        bLabel = qt.QLabel('<b>Manage Hosts</b>')
+        bLabel = qt.QLabel('Manage Hosts')
         self.masterLayout.addWidget(bLabel)
         self.masterLayout.addSpacing(8)
 
@@ -84,11 +84,14 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         # Layout for entire frame
         #--------------------
-        self.masterLayout.addStretch()
+        #self.masterLayout.addStretch()
+        #self.frame.setSizePolicy(qt.QSizePolicy.Maximum, qt.QSizePolicy.Maximum)
         self.frame.setLayout(self.masterLayout)
         self.setWidget(self.frame)
-        self.frame.setFixedWidth(520)
-
+        #self.frame.setFixedWidth(520)
+        self.frame.setMinimumWidth(600)
+        self.frame.setMaximumWidth(10000)
+        
         
         #--------------------
         # Load hosts into host list

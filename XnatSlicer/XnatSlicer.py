@@ -53,6 +53,7 @@ from XnatSearchBar import *
 from XnatIo import *
 from XnatLoginMenu import *
 from XnatButtons import *
+from XnatViewer import *
 from XnatView import *
 from XnatPopup import *
 from XnatDicomLoadWorkflow import *
@@ -240,7 +241,9 @@ class XnatSlicerWidget:
         #--------------------------------
         self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, MODULE = self)
         self.XnatLoginMenu.loadDefaultHost()   
-        self.XnatLoginMenu.setOnManageHostsButtonClicked(self.xnatSettingsWindow.showWindow)
+        def showHost(*arg):
+            self.xnatSettingsWindow.showWindow(self.hostSettings.tabTitle)
+        self.XnatLoginMenu.setOnManageHostsButtonClicked(showHost)
 
 
 
@@ -437,17 +440,17 @@ class XnatSlicerWidget:
         # Make Collapsible boxes
         #--------------------------------
         self.collapsibles = {}
-        self.collapsibles['login'] = AnimatedCollapsible( 'Login', 60, 60, parent = self.parent)
+        self.collapsibles['login'] = AnimatedCollapsible(self.parent, 'Login', 60, 60)
 
         
-        self.collapsibles['tools'] = AnimatedCollapsible( 'Tools', 60, 60, parent = self.parent)
+        self.collapsibles['tools'] = AnimatedCollapsible(self.parent, 'Tools', 60, 60)
 
         
-        self.collapsibles['viewer'] = AnimatedCollapsible( 'Viewer')
+        self.collapsibles['viewer'] = AnimatedCollapsible(self.parent, 'Viewer')
         self.collapsibles['viewer'].setSizeGripVisible(True)
 
         
-        self.collapsibles['details'] = AnimatedCollapsible( 'Details')
+        self.collapsibles['details'] = AnimatedCollapsible(self.parent, 'Details')
 
         
         #
@@ -469,29 +472,18 @@ class XnatSlicerWidget:
         
         #--------------------------------
         # Set LOGIN Group Box.
-        #--------------------------------        
-        self.collapsibles['login'].setFrameLayout(self.XnatLoginMenu.loginLayout)         
-        #
-        # Make the animted collapsible aware of its contents widgets.
-        #
-        self.collapsibles['login'].addContentsWidgets(self.XnatLoginMenu.widgets)
+        #--------------------------------    
+        self.collapsibles['login'].setWidget(self.XnatLoginMenu)
+
 
 
         
         #--------------------------------
         # Set VIEWER Group Box.
-        #--------------------------------   
-        self.viewerLayout = qt.QGridLayout()  
-        self.viewerLayout.addWidget(self.XnatSearchBar, 0, 0, 1, 1)
-        self.viewerLayout.addWidget(self.XnatView, 2, 0)
-        self.viewerLayout.addLayout(self.XnatButtons.loadSaveButtonLayout, 2, 1)
-        #sizeGrip = qt.QSizeGrip(self.XnatView)
-        #self.viewerLayout.addWidget(sizeGrip, 2, 2)
-        self.collapsibles['viewer'].setFrameLayout(self.viewerLayout)
-        #
-        # Make the animted collapsible aware of its contents widgets.
-        #
-        self.collapsibles['viewer'].addContentsWidgets([self.XnatSearchBar, self.XnatView] + self.XnatButtons.getButtonList(['save', 'load']))
+        #--------------------------------
+
+        self.collapsibles['viewer'].setWidget(XnatViewer(self))
+
 
 
 
@@ -501,14 +493,8 @@ class XnatSlicerWidget:
         #
         # Add detauls layout to group box.
         #
-        detailsLayout = qt.QVBoxLayout()
-        
-        detailsLayout.addWidget(self.XnatNodeDetails)
-        self.collapsibles['details'].setFrameLayout(detailsLayout)
-        #
-        # Make the animted collapsible aware of its contents widgets.
-        #
-        self.collapsibles['details'].addContentsWidgets([self.XnatNodeDetails])
+        self.collapsibles['details'].setWidget(self.XnatNodeDetails)
+
         
 
         
@@ -518,12 +504,9 @@ class XnatSlicerWidget:
         #
         # Add tools layout to group box.
         #
-        self.collapsibles['tools'].setFrameLayout(self.XnatButtons.toolsLayout) 
-        #
-        # Make the animted collapsible aware of its contents widgets.
-        #
-        self.collapsibles['tools'].addContentsWidgets(self.XnatButtons.getButtonList(['delete', 'addProj', 'test']))
+        self.collapsibles['tools'].setWidget(self.XnatButtons.toolsWidget) 
 
+ 
 
         
         #--------------------------------
@@ -557,12 +540,16 @@ class XnatSlicerWidget:
             # what size to animate to.
             #
             #collapsible.setCurrentGeometryToTargetSize()
-            collapsible.setChecked(False)
-            collapsible.suspendAnimationDuration(False)
+            #collapsible.setChecked(False)
+            
             if key == 'login':
+                for child in collapsible.ContentsWidgets:
+                    child.hide()
                 collapsible.setChecked(True)
             else:
+                collapsible.setChecked(False)
                 collapsible.setEnabled(False)
+            collapsible.suspendAnimationDuration(False)
             
 
             
@@ -594,6 +581,7 @@ class XnatSlicerWidget:
         self.XnatButtons.buttons['io']['save'].connect('clicked()', self.onSaveClicked)
         self.XnatButtons.buttons['io']['delete'].connect('clicked()', self.onDeleteClicked)
         self.XnatButtons.buttons['io']['addProj'].connect('clicked()', self.onAddProjectClicked)
+        self.XnatButtons.buttons['settings']['settings'].connect('clicked()', self.xnatSettingsWindow.showWindow)
         #
         # Sort Button event.
         #

@@ -18,7 +18,7 @@ TODO :
 
 
 
-class XnatNodeDetails(qt.QTextEdit):
+class XnatNodeDetails(qt.QWidget):
     """ Descriptor above.
     """
 
@@ -29,18 +29,61 @@ class XnatNodeDetails(qt.QTextEdit):
         #--------------------
         # Call parent init.
         #--------------------
-        qt.QFrame.__init__(self)
-        self.MODULE = MODULE
-        self.setFont(self.MODULE.GLOBALS.LABEL_FONT)
+        super(XnatNodeDetails, self).__init__()
 
+        
+        self.MODULE = MODULE
+
+
+        self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.detailsSettings)
+
+
+
+        self.textEdit = qt.QTextEdit(self)
+        self.textEdit.setFont(self.MODULE.GLOBALS.LABEL_FONT)
+        self.textEdit.setReadOnly(True)
+
+
+
+        self._layout = qt.QGridLayout()
+
+        
+        #--------------------
+        # Call parent init.
+        #--------------------
+        self.numColumns = 2
+
+
+        self.textEdit.setStyleSheet('border: none; padding: 0px; margin-left: 0px; margin-right: 0px')
 
         
         #--------------------
         # NOTE: fixes a scaling error that occurs with the scroll 
         # bar.  Have yet to pinpoint why this happens.
         #--------------------
-        self.verticalScrollBar().setStyleSheet('width: 15px')
+        self.textEdit.verticalScrollBar().setStyleSheet('width: 15px;')
 
+
+        self._layout.addWidget(self.textEdit, 0, 0)
+        self._layout.addWidget(self.settingsButton, 0, 1, 1, 1, 2 | 32)
+
+
+        #
+        # To make sure the button is on top.
+        #
+        #self._layout.setCurrentIndex(1)
+        #self._layout.setStackingMode(1)
+
+
+        self.setLayout(self._layout)
+
+        
+
+        
+    def setColumnCount(self, num):
+        """
+        """
+        
 
 
         
@@ -49,7 +92,6 @@ class XnatNodeDetails(qt.QTextEdit):
             styling method.
         """
 
-        print "SET TEXT VALIE"
         #--------------------
         # The argument is a tuple because
         # the callback is called with multiple
@@ -72,16 +114,45 @@ class XnatNodeDetails(qt.QTextEdit):
 
                     
         #--------------------
-        # Construct the priorty strings.
-        #--------------------         
-        for key in visibleTags:
-            if key in detailsDict:
-                detailsText += "\n<b>%s</b>:\n%s\n"%(key, detailsDict[key]) + '<br>'
+        # Construct the priorty strings as an HTML table.
+        # HTML table example below.
+            
+        """
+        <table border="1">
+        <tr>
+        <td>row 1, cell 1</td>
+        <td>row 1, cell 2</td>
+        </tr>
+        <tr>
+        <td>row 2, cell 1</td>
+        <td>row 2, cell 2</td>
+        </tr>
+        </table>
+        """  
+        #--------------------   
+
+        colCount = 0
+        detailsText = '<table cellpadding=2 >\n<tr>'
+        for key, value in detailsDict.iteritems():
+            if len(value.strip()) > 0 and key in visibleTags:
+                
+                detailsStr = "<b>%s</b>:  %s"%(key, value)
+                detailsText += "\n\t<td>%s</td>\n"%(detailsStr)
+                colCount += 1
+                if colCount == self.numColumns:
+                    detailsText +='</tr>\n<tr>'
+                    colCount = 0
+
+        if detailsText.endswith('<tr>'):
+            detailsText = detailsText[:-4]
+        else:
+            detailsText += '</tr>'
+        detailsText += '\n</table>'
 
 
 
         #--------------------
         # Call parent 'setText'
         #-------------------- 
-        self.setText(detailsText)
+        self.textEdit.setText(detailsText)
 
