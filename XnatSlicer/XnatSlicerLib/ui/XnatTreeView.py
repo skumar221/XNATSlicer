@@ -215,7 +215,6 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 #print e, "column init stuff"
                 continue
         self.setHeaderLabels(headerLabels)
-        self.showColumnsByNodeLevel()
 
 
 
@@ -406,74 +405,53 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
 
 
 
+
+
                 
-    def showColumnsByNodeLevel(self, levels = None):
-        """ Displays the relevant treeView columns based on
-            the level of the selected treeItem node.
-        """
+                
+    def sort_accessed(self):
+        self.sortItems(self.columns['last_accessed_497']['location'], 1)
+        #self.MODULE.treeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
         
-        #----------------------
-        # Hide all
-        #----------------------
-        #for i in range(0, len(self.columns)):
-        #    self.hideColumn(i)
 
+
+        
+            
+    def filter_accessed(self):
+        print "FILTER ACCESSED"
+        self.sortItems(self.columns['last_accessed_497']['location'], 1)
+        #self.MODULE.treeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
 
             
-        #----------------------
-        # Keep everything hidden if no level enetered.
-        #----------------------
-        if levels == None or len(levels) == 0:
-            return
+        def hideEmpty(child):
+            accessedText = child.text(self.columns['last_accessed_497']['location'])
+            if accessedText == '': 
+                child.setHidden(True)  
+
+                
+        self.loopProjectNodes(hideEmpty)
 
 
         
-        #----------------------
-        # Internal function: shows column based 
-        # on the 'location' key.
-        #----------------------
-        def showByKeys(keys):
-            for key in keys:
-                if key in self.columns and 'location' in self.columns[key]:
-                    location = self.columns[key]['location']
-                    self.showColumn(location)
 
-                    
-
-        #----------------------
-        # Show the required row values for 
-        # the required columns (MERGED_LABEL, XNAT_LEVEL)
-        #----------------------
-        showByKeys(self.columnKeyOrder['ALL'])
-
-
-        # TEMP
-        print self.MODULE.utils.lf(), " keeping other columns hidden."
-        return
+    def filter_all(self):
+        self.sortItems(self.columns['MERGED_LABEL']['location'], 0)
         
-        #----------------------
-        # Show the row values pertaining specifically
-        # to the level of the tree node.
-        #----------------------
-        for level in levels:
-            showByKeys(self.columnKeyOrder[level])
-
-        
-
-        #----------------------
-        # Resize columns
-        #----------------------
-        self.resizeColumns()
+        def showChild(child):
+            child.setHidden(False)
             
+        self.loopProjectNodes(showChild)   
 
 
-            
+
+        
     def loadProjects(self, filters = None, projectContents = None):
         """ Specific method for loading projects.  'Project'-level
             nodes necessiate for special handling in terms of assigning
             parents and filtering.
         """
 
+        print "LOAD PROJECTS", filters
         #----------------------
         # Add projects only if they are specified 
         # in the arguments.
@@ -488,38 +466,17 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                                children = projectContents['MERGED_LABEL'], 
                                metadata = projectContents, 
                                expandible = [0] * len(projectContents['MERGED_LABEL']))
-            self.showColumnsByNodeLevel(['projects', 'subjects'])
+
             self.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
-            #self.connect("itemClicked(QTreeWidgetItem *, int)", self.manageTreeNode)
             self.connect("currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)", self.manageTreeNode)
-
-
-        #----------------------
-        # Define filter functions
-        #----------------------            
-        def filter_accessed():
-            self.sortItems(self.columns['last_accessed_497']['location'], 1)
-            self.MODULE.treeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
-            def hideEmpty(child):
-                accessedText = child.text(self.columns['last_accessed_497']['location'])
-                if accessedText == '': 
-                    child.setHidden(True)  
-            self.loopProjectNodes(hideEmpty)
-
-
-        def filter_all():
-            self.sortItems(self.columns['MERGED_LABEL']['location'], 0)
-            def showChild(child):
-                child.setHidden(False)
-            self.loopProjectNodes(showChild)           
 
         
             
         #----------------------
         # If no 'filters'...
         #----------------------
-        defaultFilterButton = self.MODULE.treeViewSettings.buttons['sort']['accessed']
-        defaultFilterFunction = filter_accessed
+        defaultFilterButton = None #self.MODULE.treeViewSettings.buttons['sort']['accessed']
+        defaultFilterFunction = self.sort_accessed
         if not filters or len(filters) == 0:
             #
             # Run the default filter function
@@ -539,7 +496,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             # If there are no visible nodes, uncheck the default filter button,
             # so the filter reverts to 'all'.
             #
-            if self.nodeCount > 0 and self.nodeCount == self.hiddenNodeCount:
+            if self.nodeCount > 0 and self.nodeCount == self.hiddenNodeCount and defaultFilterButton:
                 defaultFilterButton.click()
             return True
 

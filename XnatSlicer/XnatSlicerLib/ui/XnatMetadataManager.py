@@ -230,16 +230,6 @@ class XnatMetadataManager(qt.QFrame):
         self.layout().update()
 
 
-
-            
-
-    def setItemsEnabled(self, enabled):
-        """
-        """
-        if not enabled:
-            for key, widget in self.defaultMetadataEditors.iteritems():
-                for i in range(0, widget.count):
-                    widget.item(i).setFlags(0)
                 
 
 
@@ -247,7 +237,7 @@ class XnatMetadataManager(qt.QFrame):
     def setItemType(self, itemType):
         """ 
         """
-
+        #print "\t (Metadata Manager) METADATA SET ITEM TYPE", itemType
         self.currItemType = itemType
         
         for key, metadataEditor in self.defaultMetadataEditors.iteritems():
@@ -265,7 +255,7 @@ class XnatMetadataManager(qt.QFrame):
         """
         """
 
-        print "                 \n\n\nSET EDIT BUTTONS VISIBLE"
+        #print "                 \n\n\nSET EDIT BUTTONS VISIBLE"
         if visible != None:
             self.editButtonsVisible = visible
 
@@ -309,8 +299,6 @@ class XnatMetadataManager(qt.QFrame):
     def update(self):
         """
         """
-        #self.setEditButtonsVisible()
-        #self.hostDropdown.setCurrentIndex(self.MODULE.XnatLoginMenu.hostDropdown.currentIndex)
         self.updateLayout()
         for key in self.customMetadataEditors:
             self.customMetadataEditors[key].clear() 
@@ -318,10 +306,7 @@ class XnatMetadataManager(qt.QFrame):
             try:
                 self.defaultMetadataEditors[key].update()
                 self.customMetadataEditors[key].update()
-                self.setItemType(self.currItemType)
 
-
-                
                     
             except Exception, e:
                 print self.MODULE.utils.lf()

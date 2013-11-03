@@ -93,6 +93,8 @@ class XnatMetadataEditor(qt.QFrame):
             http://harmattan-dev.nokia.com/docs/library/html/qt4/qt.html#ItemFlag-enum
         """
 
+
+        print "\t\t(Meadata Editor) EDITOR SET ITEM TYPE", self.__class__.__name__
         #--------------------
         # Record the internal 'currItemType' variable
         #--------------------
@@ -133,6 +135,7 @@ class XnatMetadataEditor(qt.QFrame):
         """
         """
 
+        print "EDITOR SUPER UPDATE"
         self.setItemType(self.currItemType)
         self.listWidget.connect('itemClicked(QListWidgetItem *)', self.onItemClicked)
 
@@ -353,21 +356,25 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         tagDict = {self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel) : updatedMetadataItems}
         self.MODULE.settingsFile.setTagValues(xnatHost, tagDict)
 
+        #
+        # Trickle down update (the metadata editor will be updated)
+        #
+        self.MODULE.xnatSettingsWindow.updateSettingWidgets()
 
-        self.update()
 
 
+        
         
     def update(self):
         """
         """
 
-        #print '*******************CUSTOMTUPDATE'
+        print '\t\t\t(Metadata Editor|*******************CUSTOMTUPDATE'
         
         try:
             xnatHost = self.MODULE.metadataSettings.hostDropdown.currentText
             customMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
-            #print "UPDATE", customMetadataItems
+            print "\t\t\tUPDATE", customMetadataItems
             self.listWidget.clear()
             self.listWidget.addItems(customMetadataItems)
             
@@ -376,12 +383,15 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
             
 
         super(XnatCustomMetadataEditor, self).update()
-       
+
+        print "\t\t\tSELF CURR ITEM", self.currItemType
         if self.currItemType == 'label':
+            print "\t\t\tLABEL"
             self.itemFlags = 1 | 32
 
         for i in range(0, self.listWidget.count):
             self.listWidget.item(i).setFlags(self.itemFlags)
+            print '\t\t\t', self.listWidget.item(i).text(), self.listWidget.item(i).flags()
             #print "FLAGS", self.listWidget.item(i).flags()
             #self.listWidget.item(i).setCheckState(0)
             
@@ -407,8 +417,7 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         self.lineEdit.clear()
 
 
-        self.MODULE.metadataSettings.hostDropdown.currentText
-        self.update()
+        self.MODULE.xnatSettingsWindow.updateSettingWidgets()
 
 
         

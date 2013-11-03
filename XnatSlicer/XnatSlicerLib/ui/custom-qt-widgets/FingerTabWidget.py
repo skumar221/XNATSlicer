@@ -31,6 +31,7 @@ class FingerTabWidget(qt.QWidget):
 
         
         self.marginVal = 5
+        self.currentIndex = 0
 
 
         
@@ -144,7 +145,8 @@ class FingerTabWidget(qt.QWidget):
             if self.tabButtons[i] == tab:
                 ind = i
                 break
-                
+
+        self.currentIndex = ind
         self._widgetLayout.setCurrentIndex(ind)
         
 

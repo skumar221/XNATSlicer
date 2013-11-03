@@ -70,17 +70,50 @@ class XnatSettingsFile:
     #--------------------
     # OS specific database settings
     #--------------------
-    dbFormat = qt.QSettings.IniFormat 
+    self.dbFormat = qt.QSettings.IniFormat 
 
         
-    self.database = qt.QSettings(self.filepath, dbFormat)
+    self.resetDatabase()
+
+    
     self.defaultHosts = {'Central': 'https://central.xnat.org', 
                          'CNDA': 'https://cnda.wustl.edu'}  
     self.setup()
     self.currErrorMessage = ""
 
 
+    
 
+
+  def resetDatabase(self):
+      """
+      """
+      self.database = qt.QSettings(self.filepath, self.dbFormat)
+
+      
+
+      
+
+  def backupCurrentSettings(self):
+      """
+      """
+ 
+      shutil.copy(self.filepath, self.filepath.replace("File.ini", "BACKUP.txt"))
+
+        
+
+
+  def restorePreviousSettings(self):
+      """
+      """
+      shutil.move(self.filepath, self.filepath.replace("File.ini", "OLD.txt"))
+      shutil.move(self.filepath.replace("File.ini", "BACKUP.txt"), self.filepath)
+      self.resetDatabase()
+
+
+
+
+        
     
   def setup(self):
     """ Determine if there is an XnatSettingsFile.ini file.

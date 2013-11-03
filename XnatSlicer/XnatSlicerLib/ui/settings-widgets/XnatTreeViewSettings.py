@@ -66,6 +66,20 @@ class XnatTreeViewSettings(XnatSettings):
                                                                                size = qt.QSize(90, 20), 
                                                                                enabled = True)}
 
+        
+        #
+        # Connect the filter button
+        #
+        self.buttons['sort']['accessed'].setCheckable(True)
+        self.buttons['sort']['accessed'].setChecked(False)
+        def accessedToggled(toggled):
+            if toggled:
+                self.MODULE.XnatView.filter_accessed()
+            else:
+                self.MODULE.XnatView.filter_all()
+        
+        self.buttons['sort']['accessed'].connect('toggled(bool)', accessedToggled)
+
         #
         # Add buttons to master layout.
         #

@@ -146,6 +146,7 @@ class XnatDownloadPopup(XnatPopup):
         cancelRow = qt.QHBoxLayout()
         cancelRow.addStretch()
         cancelRow.addWidget(self.cancelButton)
+        cancelRow.addSpacing(37)
         self.layout.addRow(cancelRow)
 
 

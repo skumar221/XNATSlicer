@@ -3,6 +3,7 @@ from __main__ import vtk, qt, ctk, slicer
 import os
 import glob
 import sys
+import shutil
 
 
 from FingerTabWidget import *
@@ -70,41 +71,71 @@ class XnatSettingsWindow(FingerTabWidget):
         self.connect('currentChanged(int)', self.updateSettingWidgets)
 
 
-        self.addCloseButton()
+        self.addCancelAndDoneButton()
+
+
+
+
+
+
 
 
         
         
-    def addCloseButton(self):
+        
+    
+        
+    def addCancelAndDoneButton(self):
         """
         """
-        self.closeButton = qt.QPushButton("Close")
-        self.closeButton.connect('clicked()', self.hide)
-        closeButtonRow = qt.QHBoxLayout()
-        closeButtonRow.addStretch()
-        closeButtonRow.addWidget(self.closeButton)
-        #closeButtonRow.addSpacing(5)
-        closeButtonRow.setContentsMargins(5,5,5,5)
-        self.mainLayout.addLayout(closeButtonRow)
+        self.doneButton = qt.QPushButton("Done")
+        self.doneButton.connect('clicked()', self.hide)
+
+
+        self.cancelButton = qt.QPushButton("Cancel")
+
+        def restoreSettings():
+            self.hide()
+            self.MODULE.settingsFile.restorePreviousSettings()
+            
+        self.cancelButton.connect('clicked()', restoreSettings)
+
+        
+        
+        doneButtonRow = qt.QHBoxLayout()
+        doneButtonRow.addStretch()
+        doneButtonRow.addWidget(self.cancelButton)
+        doneButtonRow.addWidget(self.doneButton)
+        #doneButtonRow.addSpacing(5)
+
+
+
+        
+        doneButtonRow.setContentsMargins(5,5,5,5)
+        self.mainLayout.addLayout(doneButtonRow)
 
 
 
         
 
-    def updateSettingWidgets(self, tabIndex):
+    def updateSettingWidgets(self, tabIndex = None):
         """
         """
-        print "\n UpdateSEttingWidgets", tabIndex, self.tabText(tabIndex)
+
+
+        
+        print "(Settings Window) SETTINGS WINDOW UPDATE:"
         #--------------------
         # Remove the metadata editor from the previous settings.
         #--------------------       
         try:
-            for i in range(0, self.count):
+            for i in range(0, len(self.tabButtons)):
                 for key, manager in self.settingsWidgets[i]['widget'].XnatMetadataManagers.iteritems(): 
+                    print "\n\tUpdating Manager for: ", key
                     manager.update()
         except Exception, e:
-            print self.MODULE.utils.lf(), self.tabText(tabIndex), " doesn't have an XnatMetadataManagerObject"
-            print e
+            print self.MODULE.utils.lf(), "XnatMetadataManagerObject error."
+            print str(e)
 
             
 
@@ -116,6 +147,7 @@ class XnatSettingsWindow(FingerTabWidget):
 
         self.showSettingWidget(settingName)
 
+        self.MODULE.settingsFile.backupCurrentSettings()
         
         #--------------------
         # Reposition window if argument is true.
@@ -141,6 +173,7 @@ class XnatSettingsWindow(FingerTabWidget):
         # Sync the Metadata settings dropdown with the login menu
         #--------------------
         self.MODULE.metadataSettings.update()
+        self.updateSettingWidgets()
         
 
 
@@ -153,6 +186,10 @@ class XnatSettingsWindow(FingerTabWidget):
             to the relevant settings widget based on the 'settingsName'
             argument.
         """
+
+        if not settingName or len(settingName.strip()) == 0:
+            self.setCurrentIndex(self.currentIndex)
+            
         for i in range(0, len(self.settingsWidgets)):
             sDict = self.settingsWidgets[i]
             print "***********", sDict, settingName
