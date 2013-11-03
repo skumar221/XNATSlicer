@@ -106,8 +106,10 @@ class XnatLoginMenu(qt.QWidget):
 
 
         self.setLayout(self.loginLayout)
-        
 
+
+
+        
     def eventFilter(self, eventObject, event):
         """
         """
@@ -267,6 +269,7 @@ class XnatLoginMenu(qt.QWidget):
         print "PWD FOCUSED"
         if self.defaultPasswordText in str(self.passwordLine.text): 
             self.passwordLine.setText("")
+        self.passwordLine.setStyleSheet("color: black")
         self.passwordLine.setEchoMode(2)
 
 
@@ -314,6 +317,8 @@ def makeCredentialsWidgets(XnatLoginMenu):
     usernameLine.setText(XnatLoginMenu.defaultUsernameText)
     usernameLine.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT_ITALIC)
     passwordLine.setFont(XnatLoginMenu.MODULE.GLOBALS.LABEL_FONT_ITALIC) 
+
+    passwordLine.setStyleSheet("color: lightgray")
     passwordLine.setText(XnatLoginMenu.defaultPasswordText)
     passwordLine.setCursorPosition(0)
 

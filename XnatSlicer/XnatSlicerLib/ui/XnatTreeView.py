@@ -1609,14 +1609,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             for a match.  Highlights and selects treeItems that
             match.
         """
-        
-        #--------------------
-        # Allow for multi-node selection
-        #--------------------
-        self.setSelectionMode(2)
 
-
-        
         #--------------------
         # Get the items that match the string
         # by looking through every column and
@@ -1640,10 +1633,6 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #--------------------
         if len(items) > 0:
             for item in items:
-                #
-                # Select the item.
-                #
-                item.setSelected(True)
                 #
                 # Make the tree node bold.
                 #                     

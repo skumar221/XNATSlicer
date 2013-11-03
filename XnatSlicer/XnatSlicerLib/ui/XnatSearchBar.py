@@ -142,8 +142,12 @@ class XnatSearchBar(qt.QFrame):
             palette.setColor(6, color);
             self.searchLine.setPalette(palette);
             self.searchLine.update()
+            self.searchLine.setFont(self.MODULE.GLOBALS.LABEL_FONT_ITALIC) 
+            self.searchLine.setObjectName("searchLine")
+            self.searchLine.setStyleSheet("#searchLine {color: lightgray; border: none}")
         
         elif mode == 'not empty':
+            self.searchLine.setStyleSheet("#searchLine {color: rgb(20,40, 200); border: none}")
             self.searchLine.setFont(self.MODULE.GLOBALS.LABEL_FONT) 
             palette = qt.QPalette();
             color = qt.QColor(0,0,0)
@@ -192,6 +196,7 @@ class XnatSearchBar(qt.QFrame):
         self.searchLine.setText(self.defaultSearchText)
         self.applyTextStyle('empty')
         self.prevText = None
+        self.MODULE.XnatView.filter_all()
 
 
         
