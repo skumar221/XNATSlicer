@@ -217,6 +217,27 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         self.setHeaderLabels(headerLabels)
 
 
+        
+        #---------------------- 
+        # Allow columns to be clicked and sorted.
+        #----------------------  
+        self.columnSorts = [None for i in range(0, len(self.columns))]
+        def onHeaderClicked(index):
+            if self.columnSorts[index] == None:
+                self.columnSorts[index] = 0
+            elif self.columnSorts[index] == 0:
+                self.columnSorts[index] = 1
+            else:
+                self.columnSorts[index] = 0
+                
+            self.sortItems(index, self.columnSorts[index])
+            
+        header = self.header()
+        header.setClickable(True)
+        header.connect('sectionClicked(int)', onHeaderClicked)
+                
+
+
 
         
     def getMergedLabelTagByLevel(self, level):
@@ -305,13 +326,16 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # Construct MERGED_INFO
         #------------------
         mergedInfoColumnNumber = self.columns['MERGED_INFO']['location']
+        xnatLevelColumnNumber = self.columns['XNAT_LEVEL']['location']
 
         #
         # Acquire the metadata from the MODULE.XnatSettingsFile
         #
         xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
-        infoMetadata = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.XnatTreeViewSettings.ON_METADATA_CHECKED_TAGS['info'] + self.columns['XNAT_LEVEL']['value'])
-        
+        infoMetadata = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.XnatTreeViewSettings.ON_METADATA_CHECKED_TAGS['info'] + widgetItem.text(xnatLevelColumnNumber))
+
+
+        print "MERGED INFO TEXT:", widgetItem.text(mergedInfoColumnNumber)
         #
         # Clear the text
         #
@@ -323,7 +347,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 printStr += '\n\t' + self.headerItem().text(i) + ": " +  widgetItem.text(i)
                 print printStr
 
-                #debugPrint()
+        #debugPrint()
 
         
         #
@@ -337,6 +361,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 #print "COLUMN: ", self.columns
                 #print "KEY: ", self.columns[key]
                 value = widgetItem.text(self.columns[key]['location'])
+                print "VALUE: ", value
             except Exception, e:
                 value = '(Empty)'
                 #print self.MODULE.utils.lf(), str(e)
@@ -772,7 +797,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         
         if item == None and self.currentItem() != None:
             item = self.currentItem()
-        elif item == None and self.currItem() == None:
+        elif item == None and self.currentItem() == None:
             return
 
 
