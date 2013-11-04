@@ -100,53 +100,7 @@ class XnatTreeViewSettings(XnatSettings):
 
 
 
-        self.setMetadataManagers('info', 'visibleColumns')
-
-
-        
-
-        #--------------------
-        # For saving in the settings file a metadata checkbox is tracked
-        #--------------------
-        #--------------------
-        # Add Metadata Label and Manager.
-        #--------------------
-        mLabel = qt.QLabel('<b>Visible Columns</b>')
-        self.masterLayout.addWidget(mLabel)
-        self.masterLayout.addSpacing(15)
-
-        
-        self.masterLayout.addWidget(self.XnatMetadataManagers['visibleColumns'])
-        self.setDefaultSelectedMetadata('visibleColumns',  {
-            'projects' : [
-                'last_accessed_497',
-                ],
-                
-            'subjects' : [
-                'label',
-                ],
-                    
-            'experiments' : [
-                'date',
-                ],
-                        
-            'scans' : [
-                'series_description',
-                ],
-                                                                          
-            'resources' : [
-                'element_name',
-                ],
-                                                                                              
-            'files' : [
-                'Size',
-                ],
-                                                                                                    
-            'slicer' : [
-                'Size',
-                ]
-                
-        })
+        self.setMetadataManagers('info')
 
 
 

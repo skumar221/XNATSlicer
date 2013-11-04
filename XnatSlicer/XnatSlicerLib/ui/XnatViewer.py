@@ -26,12 +26,12 @@ class XnatViewer(qt.QWidget):
         
 
 
-        self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.treeViewSettings)
+        #self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.treeViewSettings)
         
         
         self.viewerLayout = qt.QGridLayout()  
         self.viewerLayout.addWidget(self.MODULE.XnatSearchBar, 0, 0, 1, 1)
-        self.viewerLayout.addWidget(self.settingsButton, 0, 1, 1, 1, 2 | 32)
+        #self.viewerLayout.addWidget(self.settingsButton, 0, 1, 1, 1, 2 | 32)
         self.viewerLayout.addWidget(self.MODULE.XnatView, 2, 0)
         self.viewerLayout.addLayout(self.MODULE.XnatButtons.loadSaveButtonLayout, 2, 1)
         #self.viewerLayout.setContentsMargins(10,0,0,0)

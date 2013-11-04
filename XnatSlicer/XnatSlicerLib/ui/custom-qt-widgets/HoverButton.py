@@ -77,7 +77,7 @@ class HoverButton (qt.QPushButton):
     def onHoverEnter(self):
         """
         """
-        print "\t\ton hover enter"
+        #print "\t\ton hover enter"
         self.setStyleSheet(self.hoverStyleSheet)
         
 
@@ -85,7 +85,7 @@ class HoverButton (qt.QPushButton):
     def onHoverLeave(self):
         """
         """
-        print "\t\ton hover out"
+        #print "\t\ton hover out"
         self.setStyleSheet(self.defaultStyleSheet)
 
 

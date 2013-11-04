@@ -35,7 +35,7 @@ class XnatNodeDetails(qt.QWidget):
         self.MODULE = MODULE
 
 
-        self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.detailsSettings)
+        #self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.detailsSettings)
 
 
 
@@ -65,15 +65,6 @@ class XnatNodeDetails(qt.QWidget):
 
 
         self._layout.addWidget(self.textEdit, 0, 0)
-        self._layout.addWidget(self.settingsButton, 0, 1, 1, 1, 2 | 32)
-
-
-        #
-        # To make sure the button is on top.
-        #
-        #self._layout.setCurrentIndex(1)
-        #self._layout.setStackingMode(1)
-
 
         self.setLayout(self._layout)
 
@@ -87,7 +78,7 @@ class XnatNodeDetails(qt.QWidget):
 
 
         
-    def setTextValue(self, detailsDict):
+    def setText(self, detailsDict):
         """ Sets the text of the widget based on a key-value pair
             styling method.
         """
@@ -101,6 +92,7 @@ class XnatNodeDetails(qt.QWidget):
         detailsDict = detailsDict[0]
         detailsText = ''
 
+        print "\n\n\t\tDETAILS DICT", detailsDict, '\n\n\n'
         
         
         #--------------------
@@ -134,9 +126,14 @@ class XnatNodeDetails(qt.QWidget):
         colCount = 0
         detailsText = '<table cellpadding=2 >\n<tr>'
         for key, value in detailsDict.iteritems():
-            if len(value.strip()) > 0 and key in visibleTags:
-                
+            if key in visibleTags:
+
+                if key in self.MODULE.GLOBALS.DATE_TAGS:
+                    value = self.MODULE.utils.makeDateReadable(value)
+                    
                 detailsStr = "<b>%s</b>:  %s"%(key, value)
+
+                
                 detailsText += "\n\t<td>%s</td>\n"%(detailsStr)
                 colCount += 1
                 if colCount == self.numColumns:

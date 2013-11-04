@@ -158,7 +158,7 @@ class XnatSettingsFile:
       """
       self.database.beginGroup(hostName)
 
-      print "SET TAG VALUES", hostName, tagValueDict
+      #print "SET TAG VALUES", hostName, tagValueDict
       itemsStr = ''
       for tag, items in tagValueDict.iteritems(): 
           if len(items) > 0:

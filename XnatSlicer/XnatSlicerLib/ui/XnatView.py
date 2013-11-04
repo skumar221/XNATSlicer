@@ -36,7 +36,7 @@ class XnatView(object):
         #--------------------
         # For for populating details window.
         #--------------------
-        self.nodeClickedCallbacks = []
+        self.nodeChangedCallbacks = []
 
         
         
@@ -88,10 +88,10 @@ class XnatView(object):
 
         
 
-    def addNodeClickedCallback(self, callback):
+    def addNodeChangedCallback(self, callback):
         """ 
         """
-        self.nodeClickedCallbacks.append(callback)
+        self.nodeChangedCallbacks.append(callback)
 
 
         
@@ -100,7 +100,7 @@ class XnatView(object):
     def runNodeChangedCallbacks(self, *args):
         """
         """
-        for callback in self.nodeClickedCallbacks:
+        for callback in self.nodeChangedCallbacks:
             callback(args)
 
 

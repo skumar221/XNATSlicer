@@ -196,7 +196,12 @@ class XnatSearchBar(qt.QFrame):
         self.searchLine.setText(self.defaultSearchText)
         self.applyTextStyle('empty')
         self.prevText = None
-        self.MODULE.XnatView.filter_all()
+        try:
+            self.MODULE.XnatView.filter_all()
+            self.MODULE.XnatView.defaultFilterFunction()
+            self.MODULE.XnatView.refreshColumns()
+        except Exception, e:
+            print str(e)
 
 
         

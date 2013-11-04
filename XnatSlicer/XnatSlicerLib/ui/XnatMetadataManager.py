@@ -313,9 +313,15 @@ class XnatMetadataManager(qt.QFrame):
                 print str(e)
 
 
+                
 
     def setOnMetadataCheckedTag(self, tag):
-        """
+        """ Sets the 'onMetadataCheckedTag' for the contained
+            MetadataEditors.  The 'onMetadataCheckedTag' is referred
+            to when an item (checkbox) in the MetadataEditor is checked, 
+            referring to the XnatSetting class name so the module knows
+            what widgets to adjust when the 'check' or 'uncheck' event 
+            occurs.
         """
 
         for key in self.defaultMetadataEditors:

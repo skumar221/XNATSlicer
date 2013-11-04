@@ -31,6 +31,28 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             determines if the user is downloading a single folder or multiple dicom
             folders.
         """
+
+        
+        #--------------------
+        # Make sure Slicer's DICOMdatabase is set up.
+        # Show a popup informing the user if it's not.
+        # The user has to restart the process if it's not.
+        #--------------------
+        m = slicer.util.mainWindow()
+        if not slicer.dicomDatabase:
+            msg =  """It doesn\'t look like your DICOM database directory is setup. Please set it up in the DICOM module and try your download again."""
+            self.terminateLoad(['DICOM load', msg ])
+            m.moduleSelector().selectModule('DICOM')    
+
+
+            
+        #--------------------
+        # Open the download (popup for better UX)
+        #--------------------
+        self.MODULE.downloadPopup.setText("Gathering download information...", '')
+        self.MODULE.downloadPopup.show()
+
+
         
         #--------------------
         # Call parent class -- sets relevant public
@@ -255,13 +277,77 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             os.mkdir(self.localDst)  
 
 
+
+        
+        #--------------------
+        # Construct a dictionary that maps remote
+        # src files to local dst files.
+        #--------------------           
+        downloadDictionary = dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables]))
+
+        
+
+        #--------------------
+        # CACHING: Check the slicer.dicomDatabase to see if 
+        # the files already exist.
+        #--------------------
+        dicomFilenames = [(os.path.basename(dcm)) for dcm in self.downloadables]
+        foundDicoms = {}
+        for dbFile in slicer.dicomDatabase.allFiles():
+            dbBasename = os.path.basename(dbFile)
+            if dbBasename in dicomFilenames:
+                foundDicoms[dbBasename] = dbFile
+        if len(foundDicoms) > 0:
+            print self.MODULE.utils.lf(), "Several of the DICOMs to download are already in the cache!"
+
+
             
         #--------------------
-        # Download all DICOMS as part of a zipped file.
-        #--------------------           
-        _dict = dict(zip(self.downloadables, [(self.localDst + "/" + os.path.basename(dcm)) for dcm in self.downloadables]))        
-        zipFolders = self.MODULE.XnatIo.getFiles(_dict)
+        # Establish the downloadedDicoms array.
+        #--------------------
+        downloadedDicoms = []
 
+
+        
+        #--------------------
+        # Cull any of the existing dicoms from the downloadDictionary,
+        # adding them to the 'downloadedDicoms' array.
+        #--------------------
+        newDownloadDictionary = {}
+        for key, value in downloadDictionary.iteritems():
+            keyBasename = os.path.basename(key) 
+            if not keyBasename in foundDicoms:
+                newDownloadDictionary[key] = value
+            else:
+                
+                #
+                # Add cached files to the 'downloadedDicoms'
+                # array.
+                #
+                downloadedDicoms.append(foundDicoms[keyBasename])
+        downloadDictionary =  newDownloadDictionary
+
+
+        
+        
+        #--------------------
+        # DOWNLOAD: Download all uncached DICOMS as part of a zipped file.
+        #--------------------  
+        zipFolders = self.MODULE.XnatIo.getFiles(downloadDictionary)
+        #
+        # Close the download popup, in case it's visible.
+        #
+        self.MODULE.downloadPopup.window.hide()
+
+        #
+        # Create and show a 'Processing DICOMs' QMessageBox.
+        #
+        self.processingDicomsMessageBox = qt.QLabel("<b>Processing DICOMs...</b>")
+        self.processingDicomsMessageBox.setStyleSheet('margin: 40px')
+        self.processingDicomsMessageBox.setFixedSize(qt.QSize(200, 100))
+        self.processingDicomsMessageBox.show()
+        self.MODULE.utils.repositionToMainSlicerWindow(self.processingDicomsMessageBox)
+        
 
         
         #--------------------
@@ -276,7 +362,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         # Inventory downloaded zipfile
         #--------------------
-        downloadedDICOMS = []
+        
         for zipFile in zipFolders:
             extractPath = zipFile.split(".")[0]
 
@@ -306,25 +392,12 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
 
             #
             # Add to files in the decompressed destination 
-            # to downloadedDICOMS list.
+            # to downloadedDicoms list.
             #
             print "%s Inventorying downloaded files..."%(self.MODULE.utils.lf())  
             for root, dirs, files in os.walk(extractPath):
                 for relFileName in files:          
-                    downloadedDICOMS.append(self.MODULE.utils.adjustPathSlashes(os.path.join(root, relFileName)))
-           
-
-            
-        #--------------------
-        # Make sure Slicer's DICOMdatabase is set up.
-        # Show a popup informing the user if it's not.
-        # The user has to restart the process if it's not.
-        #--------------------
-        m = slicer.util.mainWindow()
-        if not slicer.dicomDatabase:
-            msg =  """It doesn\'t look like your DICOM database directory is setup. Please set it up in the DICOM module and try your download again."""
-            self.terminateLoad(['DICOM load', msg ])
-            m.moduleSelector().selectModule('DICOM')     
+                    downloadedDicoms.append(self.MODULE.utils.adjustPathSlashes(os.path.join(root, relFileName)))
                
 
 
@@ -333,7 +406,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         i = ctk.ctkDICOMIndexer()
         try:
-            i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
+            i.addListOfFiles(slicer.dicomDatabase, downloadedDicoms)
         except Exception, e:
             #
             # If the database is uninitialized, then initialize it.
@@ -342,10 +415,22 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             if 'uninitialized ctkDICOMItem' in errorString:
                 print (self.MODULE.utils.lf(), "The slicer.dicomDabase is unitialized (%s).  Initializing it."%(errorString))
                 slicer.dicomDatabase.initialize()
-                i.addListOfFiles(slicer.dicomDatabase, downloadedDICOMS)
+                i.addListOfFiles(slicer.dicomDatabase, downloadedDicoms)
 
 
-        
+        return self.loadDicomsFromDatabase(downloadedDicoms)
+
+
+
+
+    
+    def loadDicomsFromDatabase(self, dicomFiles):
+        """  Loads a set of dicom database files from the slicer.dicomDatabase
+             into Slicer without prompting the user to input anything.  
+             The 'loadable' with the hightest priority has the highest 
+             file count.
+        """
+    
         #--------------------
         # Create dictionary of downloaded DICOMS
         # for quick retrieval when comparing with files
@@ -353,7 +438,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # memory consumption here.
         #--------------------      
         dlDicomObj = {}
-        for dlFile in downloadedDICOMS:
+        for dlFile in dicomFiles:
             dlDicomObj[os.path.basename(dlFile)] = dlFile
 
 
@@ -408,7 +493,9 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         dicomScalarVolumePlugin.load(loadables[highestFileCountIndex])
                     
 
-      
+
+        self.processingDicomsMessageBox.hide()
+        
         return True
 
 

@@ -174,6 +174,14 @@ class XnatDownloadPopup(XnatPopup):
 
 
 
+    def setText(self, line1, line2):
+        """ As stated.
+        """
+        self.lines[0].setText(line1)
+        self.lines[1].setText(line2)
+        
+
+    
         
     def setDownloadFilename(self, filename):
         """ As stated.

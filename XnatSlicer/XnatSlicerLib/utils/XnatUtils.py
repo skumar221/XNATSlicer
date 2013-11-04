@@ -1036,7 +1036,8 @@ class XnatUtils(object):
 
 
     def makeSettingsButton(self, XnatSetting):
-        """
+        """ Constructs a setting button with a wrench icon that
+            opens the appropriate settings tab.
         """
         button = HoverButton()
         button.setIcon(qt.QIcon(os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['icons'], 'wrench.png')) )
@@ -1048,3 +1049,24 @@ class XnatUtils(object):
             self.MODULE.xnatSettingsWindow.showWindow(XnatSetting.tabTitle)
         button.connect('clicked()', openSettings)
         return button
+
+
+
+    
+    def makeDateReadable(self, dateString):
+        """ Xnat Date metadata is generally long and not
+            very human readable.  This converts it.
+        """
+      
+        newDateString = dateString
+        tempStr = str(dateString).strip().replace('\n', '')
+        
+        if len(tempStr) == 0:
+            return ''
+            
+        d = datetime.datetime.strptime(tempStr, '%Y-%m-%d %H:%M:%S.%f')
+        #day_string = d.strftime('%Y-%m-%d')
+        day_string = d.strftime('%A %d, %B %Y')
+        day_string = d.strftime('%c')
+        return day_string
+        

@@ -55,7 +55,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         self.itemFont_folder = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 25, False)
         self.itemFont_file = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 75, False)
         self.itemFont_category = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 25, True)
-        self.itemFont_searchHighlighted = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 75, False)
+        self.itemFont_searchHighlighted = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 25, False)
 
         
         
@@ -257,7 +257,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # have already been populated.
         #------------------
         if xnatMetadata != None:
-            print "\n\n", widgetItem.text(0), xnatMetadata
+            #print "\n\n@@@@@@@@@@@@@@@@@@@@@@@@", widgetItem.text(0), xnatMetadata
             for key in xnatMetadata:
 
                 
@@ -317,32 +317,57 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #
         widgetItem.setText(mergedInfoColumnNumber, '')
 
+        def debugPrint():
+            printStr = ''
+            for i in range(0, 40):
+                printStr += '\n\t' + self.headerItem().text(i) + ": " +  widgetItem.text(i)
+                print printStr
+
+                #debugPrint()
+
+        
         #
         # Aggregate the text as we cycle through
         # the infoMetadata
         #
+        #print "INFO METADATA", infoMetadata
         for key in infoMetadata:
+            
             try:
-                value = self.columns[key]['value']
+                #print "COLUMN: ", self.columns
+                #print "KEY: ", self.columns[key]
+                value = widgetItem.text(self.columns[key]['location'])
             except Exception, e:
                 value = '(Empty)'
+                #print self.MODULE.utils.lf(), str(e)
 
             #
             # Only allow metadata with a corresponding column.
             #
             if key in self.columns:
+                #print "WIDGET", widgetItem.text(0), key, self.columns[key]
+
+                #
+                # Convert date tags to human readable
+                #
+                if key in self.MODULE.GLOBALS.DATE_TAGS:
+                    value = self.MODULE.utils.makeDateReadable(value)
                 widgetItem.setText(mergedInfoColumnNumber, widgetItem.text(mergedInfoColumnNumber) + self.columns[key]['displayname'] + ': ' + value + ' ')
                 widgetItem.setFont(mergedInfoColumnNumber, self.itemFont_folder)  
 
-
-                
         
         
         #-------------------
         # Set aesthetics.
         #-------------------
+        #
+        # De-bold font.
+        #
+
         widgetItem.setFont(self.columns['MERGED_LABEL']['location'], self.itemFont_folder) 
         widgetItem.setFont(self.columns['XNAT_LEVEL']['location'], self.itemFont_category) 
+
+        self.changeFontColor(widgetItem, False, "black", self.columns['MERGED_LABEL']['location'])
         self.changeFontColor(widgetItem, False, "grey", self.columns['XNAT_LEVEL']['location'])
         if 'Slicer' in self.columns['XNAT_LEVEL']['value'] or 'files' in self.columns['XNAT_LEVEL']['value']:
             self.changeFontColor(widgetItem, False, "green", self.columns['MERGED_LABEL']['location'])
@@ -398,7 +423,10 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
     def resizeColumns(self):
         """ As stated.  Resizes the columns according to the content
             by calling on the qt.QTreeWidget 'resizeColumnToContents' function.
+
+            NOTE: Suspending for now as it creates awkward UX.
         """
+        return
         for key in self.columns:
             if 'location' in self.columns[key]:
                 self.resizeColumnToContents(self.columns[key]['location'])
@@ -418,7 +446,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         
             
     def filter_accessed(self):
-        print "FILTER ACCESSED"
+        #print "FILTER ACCESSED"
         self.sortItems(self.columns['last_accessed_497']['location'], 1)
         #self.MODULE.treeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
 
@@ -451,7 +479,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             parents and filtering.
         """
 
-        print "LOAD PROJECTS", filters
+        #print "LOAD PROJECTS", filters
         #----------------------
         # Add projects only if they are specified 
         # in the arguments.
@@ -476,12 +504,12 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # If no 'filters'...
         #----------------------
         defaultFilterButton = None #self.MODULE.treeViewSettings.buttons['sort']['accessed']
-        defaultFilterFunction = self.sort_accessed
+        self.defaultFilterFunction = self.sort_accessed
         if not filters or len(filters) == 0:
             #
             # Run the default filter function
             #
-            defaultFilterFunction()
+            self.defaultFilterFunction()
             #
             # Count and compare hidden nodes with all nodes
             #
@@ -535,6 +563,30 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             currChild = self.topLevelItem(ind)
 
 
+
+
+    def loopChildNodes(self, currNode, callback):
+        """
+        """
+        currChild = currNode
+        callback(currChild)
+        for i in range(0, currChild.childCount()):
+            self.loopChildNodes(currChild.child(i), callback)
+
+                
+
+                
+                
+    def loopVisibleNodes(self, callback):
+        """ Loops through all of the top level
+            treeItems (i.e. 'projects') and allows the user
+            to run a callback.
+        """
+        def loopChildren(node):
+            self.loopChildNodes(node, callback)
+        self.loopProjectNodes(loopChildren)
+
+            
             
 
     def makeRequiredSlicerFolders(self, path = None):  
@@ -1093,7 +1145,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #--------------------        
         xnatLabel = self.getMergedLabelTagByLevel(currXnatLevel)
         if not xnatLabel in metadata:
-            print "NO XNAT LABEL"
+            #print "NO XNAT LABEL"
             return
 
 
@@ -1214,12 +1266,44 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
 
         return rowValues
 
-                    
+
+
     
     def refreshColumns(self):
         """
         """
-        print "REFERESH COLUMNS"
+
+        print self.MODULE.utils.lf(), "REFRESH COLUMNS"
+        #--------------------
+        # Reset the the 'currentItem' so that
+        # the appropriate events can get called.
+        #--------------------
+        currItem = self.currentItem()
+        self.clearSelection()
+        self.setCurrentItem(None)
+        self.setCurrentItem(currItem)
+        self.runNodeChangedCallbacks(self.getRowValues())
+
+        
+
+        #--------------------
+        # Refresh all of the column values in the 
+        # visible nodes.
+        #--------------------
+        self.loopVisibleNodes(self.populateColumns)
+
+
+
+
+    def setDefaultFonts(self):
+        """ Restores the default fonts described
+            in the 'populateColumns' method by calling
+            on 'populateColumns.'  This method is called on 
+            after the user clears the search field and the highlighted
+            tree nodes that meet the serach criteria need to be
+            unhighlighted.
+        """
+        #print self.browser.utils.lf(), "Begin"
         root = self.invisibleRootItem()
         childCount = root.childCount()
         for i in range(childCount):
@@ -1228,8 +1312,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             self.populateColumns(item)
             self.runNodeChangedCallbacks(self.getRowValues())
 
-
-
+            
     
     
     def makeTreeItems(self, parentItem = None, children = [],  metadata = {}, expandible = None):
@@ -1347,7 +1430,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             Qt::MatchRecursive	64	Searches the entire hierarchy.
         """
 
-        print self.MODULE.utils.lf(), "Disconnecting item expanded."
+        #print self.MODULE.utils.lf(), "Disconnecting item expanded."
         self.disconnect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
         #SEARCH_TIMER = XnatTimer(self.MODULE)
 
@@ -1597,7 +1680,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # Reconnect the event listeners for expandning
         # the QTreeWidgetItems.
         #
-        print self.MODULE.utils.lf(), "Re-connecting item expanded."
+        #print self.MODULE.utils.lf(), "Re-connecting item expanded."
         self.connect("itemExpanded(QTreeWidgetItem *)", self.onTreeItemExpanded)
         self.resizeColumns()
 
@@ -1637,6 +1720,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 # Make the tree node bold.
                 #                     
                 item.setFont(0, self.itemFont_searchHighlighted)
+                self.changeFontColor(item, False, 'blue', 0)
                 #
                 # If the node his hidden...
                 #
@@ -1659,3 +1743,6 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         self.resizeColumns()
         return items
         
+
+    
+

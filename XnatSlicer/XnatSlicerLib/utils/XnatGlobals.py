@@ -278,3 +278,7 @@ class XnatGlobals(object):
                 ]
                 
                 }
+
+    @property
+    def DATE_TAGS(self):
+        return [ 'last_accessed_497', 'insert_date']

@@ -268,7 +268,7 @@ class XnatSlicerWidget:
         #
         # Link a node click to populate XnatNodeDetails.
         #
-        self.XnatView.addNodeClickedCallback(self.XnatNodeDetails.setTextValue)
+        self.XnatView.addNodeChangedCallback(self.XnatNodeDetails.setText)
 
 
         
