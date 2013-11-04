@@ -164,7 +164,7 @@ class XnatLoadWorkflow(object):
         #
         currItem = self.MODULE.XnatView.currentItem()
         pathObj = self.MODULE.XnatView.getXnatUriObject(currItem)
-        remoteURI = self.MODULE.settingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
+        remoteURI = self.MODULE.XnatSettingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
         #    
         # Check path string if at the scan level -- adjust accordingly.
         #

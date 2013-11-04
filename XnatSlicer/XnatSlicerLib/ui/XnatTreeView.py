@@ -307,10 +307,10 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         mergedInfoColumnNumber = self.columns['MERGED_INFO']['location']
 
         #
-        # Acquire the metadata from the MODULE.settingsFile
+        # Acquire the metadata from the MODULE.XnatSettingsFile
         #
         xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
-        infoMetadata = self.MODULE.settingsFile.getTagValues(xnatHost, self.MODULE.treeViewSettings.ON_METADATA_CHECKED_TAGS['info'] + self.columns['XNAT_LEVEL']['value'])
+        infoMetadata = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.XnatTreeViewSettings.ON_METADATA_CHECKED_TAGS['info'] + self.columns['XNAT_LEVEL']['value'])
         
         #
         # Clear the text
@@ -439,7 +439,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 
     def sort_accessed(self):
         self.sortItems(self.columns['last_accessed_497']['location'], 1)
-        #self.MODULE.treeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
+        #self.MODULE.XnatTreeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
         
 
 
@@ -448,7 +448,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
     def filter_accessed(self):
         #print "FILTER ACCESSED"
         self.sortItems(self.columns['last_accessed_497']['location'], 1)
-        #self.MODULE.treeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
+        #self.MODULE.XnatTreeViewSettings.setButtonDown(category = 'sort' , name = 'accessed', isDown = True, callSignals = False)
 
             
         def hideEmpty(child):
@@ -503,7 +503,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #----------------------
         # If no 'filters'...
         #----------------------
-        defaultFilterButton = None #self.MODULE.treeViewSettings.buttons['sort']['accessed']
+        defaultFilterButton = None #self.MODULE.XnatTreeViewSettings.buttons['sort']['accessed']
         self.defaultFilterFunction = self.sort_accessed
         if not filters or len(filters) == 0:
             #

@@ -96,7 +96,7 @@ class XnatSettingsWindow(FingerTabWidget):
 
         def restoreSettings():
             self.hide()
-            self.MODULE.settingsFile.restorePreviousSettings()
+            self.MODULE.XnatSettingsFile.restorePreviousSettings()
             
         self.cancelButton.connect('clicked()', restoreSettings)
 
@@ -147,7 +147,7 @@ class XnatSettingsWindow(FingerTabWidget):
 
         self.showSettingWidget(settingName)
 
-        self.MODULE.settingsFile.backupCurrentSettings()
+        self.MODULE.XnatSettingsFile.backupCurrentSettings()
         
         #--------------------
         # Reposition window if argument is true.
@@ -172,7 +172,7 @@ class XnatSettingsWindow(FingerTabWidget):
         #--------------------
         # Sync the Metadata settings dropdown with the login menu
         #--------------------
-        self.MODULE.metadataSettings.update()
+        self.MODULE.XnatMetadataSettings.update()
         self.updateSettingWidgets()
         
 

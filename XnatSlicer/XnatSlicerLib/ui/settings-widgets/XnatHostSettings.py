@@ -119,8 +119,8 @@ class XnatHostSettings(XnatSettings):
         """ Enables / Disables button based upon the editable
         quality of the host.  Some hosts cannot be modified.
         """
-        print nameString, self.MODULE.settingsFile.isModifiable(nameString) 
-        if self.MODULE.settingsFile.isModifiable(nameString):
+        print nameString, self.MODULE.XnatSettingsFile.isModifiable(nameString) 
+        if self.MODULE.XnatSettingsFile.isModifiable(nameString):
             self.deleteButton.setEnabled(True)
             self.editButton.setEnabled(True)
         else:
@@ -137,7 +137,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         # Get host dictionary from XnatSettings
         #--------------------
-        hostDictionary = self.MODULE.settingsFile.getHostNameAddressDictionary()  
+        hostDictionary = self.MODULE.XnatSettingsFile.getHostNameAddressDictionary()  
         print "HOST DICT", hostDictionary
         
         
@@ -156,7 +156,7 @@ class XnatHostSettings(XnatSettings):
             # Apply style if default
             #
             setModfiable = [True, True]
-            if not self.MODULE.settingsFile.isModifiable(name):
+            if not self.MODULE.XnatSettingsFile.isModifiable(name):
                 setModfiable = [False, False]
             #
             # Add name and URL to host list
@@ -166,7 +166,7 @@ class XnatHostSettings(XnatSettings):
             #
             # Get curr username
             #
-            currName = self.MODULE.settingsFile.getCurrUsername(name)
+            currName = self.MODULE.XnatSettingsFile.getCurrUsername(name)
             #
             # If there's a username, add it....
             #
@@ -180,7 +180,7 @@ class XnatHostSettings(XnatSettings):
     def rewriteHost(self):
         """ As stated.  Calls on the internal "writeHost" function.
         """
-        self.MODULE.settingsFile.deleteHost(self.prevName)
+        self.MODULE.XnatSettingsFile.deleteHost(self.prevName)
         self.prevName = None
         self.writeHost()
 
@@ -196,7 +196,7 @@ class XnatHostSettings(XnatSettings):
         # applying the text to the settings, and removing from there.
         #--------------------
         hostStr = self.hostTable.currentRowItems
-        deleted = self.MODULE.settingsFile.deleteHost(hostStr['name'])
+        deleted = self.MODULE.XnatSettingsFile.deleteHost(hostStr['name'])
         
 
         print "DELETED?", deleted
@@ -225,7 +225,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         # Check if the nameLine is part of the defaut set
         #--------------------
-        modifiable = self.MODULE.settingsFile.isModifiable(self.nameLine.text.strip(""))
+        modifiable = self.MODULE.XnatSettingsFile.isModifiable(self.nameLine.text.strip(""))
 
 
 
@@ -240,7 +240,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         # Save Host
         #--------------------
-        self.MODULE.settingsFile.saveHost(self.nameLine.text, self.urlLine.text, isModifiable = modifiable, isDefault = self.setDefault.isChecked())
+        self.MODULE.XnatSettingsFile.saveHost(self.nameLine.text, self.urlLine.text, isModifiable = modifiable, isDefault = self.setDefault.isChecked())
 
         
 
@@ -248,7 +248,7 @@ class XnatHostSettings(XnatSettings):
         # Set default if checkbox is check
         #--------------------
         if self.setDefault.isChecked():
-            self.MODULE.settingsFile.setDefault(self.nameLine.text)   
+            self.MODULE.XnatSettingsFile.setDefault(self.nameLine.text)   
 
 
 
@@ -256,7 +256,7 @@ class XnatHostSettings(XnatSettings):
         # Set default username
         #--------------------
         if self.usernameLine.text != "":
-            self.MODULE.settingsFile.setCurrUsername(self.nameLine.text, self.usernameLine.text)
+            self.MODULE.XnatSettingsFile.setCurrUsername(self.nameLine.text, self.usernameLine.text)
 
 
 
@@ -630,7 +630,7 @@ def makeEditHostModal(hostEditor):
     #--------------------
     # Prevent editing of default host. 
     #--------------------
-    if not hostEditor.MODULE.settingsFile.isModifiable(selHost['name']):
+    if not hostEditor.MODULE.XnatSettingsFile.isModifiable(selHost['name']):
         hostEditor.nameLine.setReadOnly(True)
         hostEditor.nameLine.setFont(hostEditor.MODULE.GLOBALS.LABEL_FONT_ITALIC)
         hostEditor.nameLine.setEnabled(False)
@@ -670,7 +670,7 @@ def makeEditHostModal(hostEditor):
     #--------------------
     # Default checkbox if default.
     #--------------------
-    if hostEditor.MODULE.settingsFile.isDefault(hostEditor.nameLine.text):
+    if hostEditor.MODULE.XnatSettingsFile.isDefault(hostEditor.nameLine.text):
         hostEditor.setDefault.setCheckState(2)
 
 
@@ -687,7 +687,7 @@ def makeEditHostModal(hostEditor):
     # Layouts.
     #--------------------
     currLayout.addRow(hostEditor.setDefault)
-    hostEditor.usernameLine.setText(hostEditor.MODULE.settingsFile.getCurrUsername(hostEditor.nameLine.text))
+    hostEditor.usernameLine.setText(hostEditor.MODULE.XnatSettingsFile.getCurrUsername(hostEditor.nameLine.text))
     currLayout.addRow(spaceLabel)
     currLayout.addRow(unmLabel)
     currLayout.addRow(hostEditor.usernameLine)

@@ -47,7 +47,7 @@ class XnatMetadataSettings(XnatSettings):
         # Get the dictionary from settings and the key to 
         # the dropdown widget.
         #--------------------
-        hostDict = self.MODULE.settingsFile.getHostNameAddressDictionary()
+        hostDict = self.MODULE.XnatSettingsFile.getHostNameAddressDictionary()
         for name in hostDict:     
             self.hostDropdown.addItem(name)  
         labelLayout = qt.QHBoxLayout()

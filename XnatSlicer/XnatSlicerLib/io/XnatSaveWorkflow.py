@@ -72,7 +72,7 @@ class XnatSaveWorkflow(object):
             # Construct new sessionArgs
             #
             fullPath = self.MODULE.XnatView.constructXnatUri(self.MODULE.XnatView.getParents(self.MODULE.XnatView.currentItem()))
-            remoteURI = self.MODULE.settingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + fullPath
+            remoteURI = self.MODULE.XnatSettingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + fullPath
             sessionArgs = XnatSessionArgs(MODULE = self.MODULE, srcPath = fullPath)
             sessionArgs['sessionType'] = "scene upload - unlinked"
             self.MODULE.XnatView.sessionManager.startNewSession(sessionArgs)

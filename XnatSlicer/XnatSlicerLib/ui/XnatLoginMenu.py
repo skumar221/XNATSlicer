@@ -140,7 +140,7 @@ class XnatLoginMenu(qt.QWidget):
         # Get the dictionary from settings and the key to 
         # the dropdown widget.
         #--------------------
-        hostDict = self.MODULE.settingsFile.getHostNameAddressDictionary()
+        hostDict = self.MODULE.XnatSettingsFile.getHostNameAddressDictionary()
         for name in hostDict:     
             self.MODULE.XnatLoginMenu.hostDropdown.addItem(name)       
 
@@ -162,7 +162,7 @@ class XnatLoginMenu(qt.QWidget):
         #--------------------
         # Set host dropdown to default stored hostName.
         #--------------------
-        defaultName = self.MODULE.settingsFile.getDefault()
+        defaultName = self.MODULE.XnatSettingsFile.getDefault()
         self.setHostDropdownByName(defaultName)
 
 
@@ -202,7 +202,7 @@ class XnatLoginMenu(qt.QWidget):
         # Does the username exist in the settings file?
         #--------------------
         if self.currHostName: 
-            currUser = self.MODULE.settingsFile.getCurrUsername(self.currHostName).strip()
+            currUser = self.MODULE.XnatSettingsFile.getCurrUsername(self.currHostName).strip()
             #
             # If it does, and it's not a '' string, then apply it to the
             # usernameLine....

@@ -26,7 +26,7 @@ class XnatViewer(qt.QWidget):
         
 
 
-        #self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.treeViewSettings)
+        #self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.XnatTreeViewSettings)
         
         
         self.viewerLayout = qt.QGridLayout()  

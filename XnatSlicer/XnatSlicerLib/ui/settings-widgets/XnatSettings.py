@@ -124,14 +124,14 @@ class XnatSettings(qt.QScrollArea):
         # apply the defaults.
         #--------------------
 
-        xnatHosts = [self.MODULE.metadataSettings.hostDropdown.itemText(ind) for ind in range(0, self.MODULE.metadataSettings.hostDropdown.count)]
+        xnatHosts = [self.MODULE.XnatMetadataSettings.hostDropdown.itemText(ind) for ind in range(0, self.MODULE.XnatMetadataSettings.hostDropdown.count)]
         for xnatHost in xnatHosts:
             for xnatLevel in self.MODULE.GLOBALS.XNAT_LEVELS:
                 
                 for key in self.ON_METADATA_CHECKED_TAGS:
                     
                     levelTag = self.ON_METADATA_CHECKED_TAGS[key] + xnatLevel
-                    savedMetadataItems = self.MODULE.settingsFile.getTagValues(xnatHost, levelTag)
+                    savedMetadataItems = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, levelTag)
                     
                     #
                     # If there are no 'savedMetadataItems', we add them.
@@ -140,7 +140,7 @@ class XnatSettings(qt.QScrollArea):
                         if self.defaultSelectedMetadata[key]:
                             defaultSelectedMetadata = self.defaultSelectedMetadata[key][xnatLevel] 
                             tagDict = {levelTag : defaultSelectedMetadata}
-                            self.MODULE.settingsFile.setTagValues(xnatHost, tagDict)
+                            self.MODULE.XnatSettingsFile.setTagValues(xnatHost, tagDict)
 
 
                         

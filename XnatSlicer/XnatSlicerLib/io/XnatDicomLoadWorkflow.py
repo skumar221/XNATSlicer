@@ -49,8 +49,8 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         # Open the download (popup for better UX)
         #--------------------
-        self.MODULE.downloadPopup.setText("Gathering download information...", '')
-        self.MODULE.downloadPopup.show()
+        self.MODULE.XnatDownloadPopup.setText("Gathering download information...", '')
+        self.MODULE.XnatDownloadPopup.show()
 
 
         
@@ -337,7 +337,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #
         # Close the download popup, in case it's visible.
         #
-        self.MODULE.downloadPopup.window.hide()
+        self.MODULE.XnatDownloadPopup.window.hide()
 
         #
         # Create and show a 'Processing DICOMs' QMessageBox.

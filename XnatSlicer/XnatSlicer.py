@@ -193,37 +193,37 @@ class XnatSlicerWidget:
         #--------------------------------
         # Xnat settingsFile
         #--------------------------------
-        self.settingsFile = XnatSettingsFile(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
+        self.XnatSettingsFile = XnatSettingsFile(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
 
         
         #--------------------------------
         # Xnat xnatSettingsWindow
         #--------------------------------        
-        self.xnatSettingsWindow = XnatSettingsWindow(self)
+        self.XnatSettingsWindow = XnatSettingsWindow(self)
         #
         # Add XnatHostSettings (communicates to XnatSettings)
         # to xnatSettingsWindow
         #
-        self.hostSettings = XnatHostSettings('XNAT Hosts', self)
-        self.xnatSettingsWindow.addSetting(self.hostSettings.title, widget = self.hostSettings)
+        self.XnatHostSettings = XnatHostSettings('XNAT Hosts', self)
+        self.XnatSettingsWindow.addSetting(self.XnatHostSettings.title, widget = self.XnatHostSettings)
         #
         # Add XnatMetadataSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.metadataSettings = XnatMetadataSettings('XNAT Metadata', self)
-        self.xnatSettingsWindow.addSetting(self.metadataSettings.title, widget = self.metadataSettings)
+        self.XnatMetadataSettings = XnatMetadataSettings('XNAT Metadata', self)
+        self.XnatSettingsWindow.addSetting(self.XnatMetadataSettings.title, widget = self.XnatMetadataSettings)
         #
         # Add XnatTreeViewSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.treeViewSettings = XnatTreeViewSettings('Tree View Settings', self)
-        self.xnatSettingsWindow.addSetting(self.treeViewSettings.title, widget = self.treeViewSettings)
+        self.XnatTreeViewSettings = XnatTreeViewSettings('Tree View Settings', self)
+        self.XnatSettingsWindow.addSetting(self.XnatTreeViewSettings.title, widget = self.XnatTreeViewSettings)
         #
         # Add XnatDetailsSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
-        self.detailsSettings = XnatDetailsSettings('Details Settings', self)
-        self.xnatSettingsWindow.addSetting(self.detailsSettings.title, widget = self.detailsSettings)
+        self.XnatDetailsSettings = XnatDetailsSettings('Details Settings', self)
+        self.XnatSettingsWindow.addSetting(self.XnatDetailsSettings.title, widget = self.XnatDetailsSettings)
 
 
         
@@ -242,7 +242,7 @@ class XnatSlicerWidget:
         self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, MODULE = self)
         self.XnatLoginMenu.loadDefaultHost()   
         def showHost(*arg):
-            self.xnatSettingsWindow.showWindow(self.hostSettings.tabTitle)
+            self.XnatSettingsWindow.showWindow(self.XnatHostSettings.tabTitle)
         self.XnatLoginMenu.setOnManageHostsButtonClicked(showHost)
 
 
@@ -282,7 +282,7 @@ class XnatSlicerWidget:
         #--------------------------------
         # Popups
         #--------------------------------
-        self.downloadPopup = XnatDownloadPopup(MODULE = self)
+        self.XnatDownloadPopup = XnatDownloadPopup(MODULE = self)
         #self.uploadPopup = XnatDownloadPopup(MODULE = self)
 
                 
@@ -581,11 +581,11 @@ class XnatSlicerWidget:
         self.XnatButtons.buttons['io']['save'].connect('clicked()', self.onSaveClicked)
         self.XnatButtons.buttons['io']['delete'].connect('clicked()', self.onDeleteClicked)
         self.XnatButtons.buttons['io']['addProj'].connect('clicked()', self.onAddProjectClicked)
-        self.XnatButtons.buttons['settings']['settings'].connect('clicked()', self.xnatSettingsWindow.showWindow)
+        self.XnatButtons.buttons['settings']['settings'].connect('clicked()', self.XnatSettingsWindow.showWindow)
         #
         # Sort Button event.
         #
-        for key, button in self.treeViewSettings.buttons['sort'].iteritems():
+        for key, button in self.XnatTreeViewSettings.buttons['sort'].iteritems():
             button.connect('clicked()', self.onFilterButtonClicked)
         #
         # Test button event.
@@ -661,7 +661,7 @@ class XnatSlicerWidget:
         # Init XnatIo.
         #--------------------
         self.XnatIo.setup(MODULE = self, 
-                                    host = self.settingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
+                                    host = self.XnatSettingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText), 
                                     user = self.XnatLoginMenu.usernameLine.text, password=self.XnatLoginMenu.passwordLine.text)
 
         
@@ -855,7 +855,7 @@ class XnatSlicerWidget:
         #--------------------
         # Store the current username in settings
         #--------------------
-        self.settingsFile.setCurrUsername(self.XnatLoginMenu.hostDropdown.currentText, self.XnatLoginMenu.usernameLine.text)
+        self.XnatSettingsFile.setCurrUsername(self.XnatLoginMenu.hostDropdown.currentText, self.XnatLoginMenu.usernameLine.text)
 
         
         #--------------------
@@ -868,8 +868,8 @@ class XnatSlicerWidget:
         # Derive the XNAT host URL by mapping the current item in the host
         # dropdown to its value pair in the settings.  
         #--------------------
-        if self.settingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText):
-            self.currHostUrl = qt.QUrl(self.settingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText))
+        if self.XnatSettingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText):
+            self.currHostUrl = qt.QUrl(self.XnatSettingsFile.getAddress(self.XnatLoginMenu.hostDropdown.currentText))
             #
             # Call the 'beginXnat' function from the MODULE.
             #

@@ -276,10 +276,10 @@ class XnatMetadataManager(qt.QFrame):
         """
         for key, _button in self.editCustomButtons.iteritems():
             if button == _button:
-                self.MODULE.xnatSettingsWindow.setCurrentIndex(1) 
-                self.MODULE.metadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(True)
+                self.MODULE.XnatSettingsWindow.setCurrentIndex(1) 
+                self.MODULE.XnatMetadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(True)
             else:
-                self.MODULE.metadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(False)
+                self.MODULE.XnatMetadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(False)
 
         
 

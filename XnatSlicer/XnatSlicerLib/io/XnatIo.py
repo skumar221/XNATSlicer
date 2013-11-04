@@ -312,8 +312,8 @@ class XnatIo(object):
             will then read this download state, and cancel out.
         """
         print self.MODULE.utils.lf(), "Canceling download."
-        self.MODULE.downloadPopup.window.hide()
-        self.MODULE.downloadPopup.reset()
+        self.MODULE.XnatDownloadPopup.window.hide()
+        self.MODULE.XnatDownloadPopup.reset()
         self.downloadState = 0
         self.MODULE.XnatView.setEnabled(True)
         
@@ -408,9 +408,9 @@ class XnatIo(object):
                 #
                 # Reset popup
                 #
-                self.MODULE.downloadPopup.reset()
-                self.MODULE.downloadPopup.setDownloadFilename(xnatSrcUri) 
-                self.MODULE.downloadPopup.show()
+                self.MODULE.XnatDownloadPopup.reset()
+                self.MODULE.XnatDownloadPopup.setDownloadFilename(xnatSrcUri) 
+                self.MODULE.XnatDownloadPopup.show()
                 #
                 # Establish Credentials
                 #
@@ -459,7 +459,7 @@ class XnatIo(object):
                 # Enable the view widget.
                 #
                 self.MODULE.XnatView.setEnabled(True)
-                self.MODULE.downloadPopup.hide()
+                self.MODULE.XnatDownloadPopup.hide()
                 return
                 
             except Exception, e2:
@@ -501,23 +501,23 @@ class XnatIo(object):
 
             #-------------------- 
             # If a progress indicator is desired,
-            # set the parameters of self.MODULE.downloadPopup.
+            # set the parameters of self.MODULE.XnatDownloadPopup.
             #-------------------- 
             if showProgressIndicator:
                 #
                 # Reset popup
                 #
-                self.MODULE.downloadPopup.reset()
+                self.MODULE.XnatDownloadPopup.reset()
                 #
                 # Set filename
                 #
-                self.MODULE.downloadPopup.setDownloadFilename(fileDisplayName) 
-                self.MODULE.downloadPopup.show()
+                self.MODULE.XnatDownloadPopup.setDownloadFilename(fileDisplayName) 
+                self.MODULE.XnatDownloadPopup.show()
                 #
                 # Update the download popup file size
                 #
                 if self.downloadTracker['totalDownloadSize']['bytes']:
-                    self.MODULE.downloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
+                    self.MODULE.XnatDownloadPopup.setDownloadFileSize(self.downloadTracker['totalDownloadSize']['bytes'])
                     #
                     # Wait for threads to catch up 
                     #
@@ -549,8 +549,8 @@ class XnatIo(object):
                 #
                 buffer = response.read(buffer_size)
                 if not buffer: 
-                    if self.MODULE.downloadPopup:
-                        self.MODULE.downloadPopup.hide()
+                    if self.MODULE.XnatDownloadPopup:
+                        self.MODULE.XnatDownloadPopup.hide()
                         break 
                 #    
                 # Write buffer chunk to file
@@ -560,8 +560,8 @@ class XnatIo(object):
                 # Update progress indicators
                 #
                 self.downloadTracker['downloadedSize']['bytes'] += len(buffer)
-                if showProgressIndicator and self.MODULE.downloadPopup:
-                    self.MODULE.downloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
+                if showProgressIndicator and self.MODULE.XnatDownloadPopup:
+                    self.MODULE.XnatDownloadPopup.update(self.downloadTracker['downloadedSize']['bytes'])
                 #   
                 # Wait for threads to catch up      
                 #

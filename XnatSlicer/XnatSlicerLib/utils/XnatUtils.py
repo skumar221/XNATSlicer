@@ -1046,7 +1046,7 @@ class XnatUtils(object):
         button.setDefaultStyleSheet('border: 1px solid transparent; border-radius: 2px; background-color: transparent; margin-left: 5px; text-align: left; padding-left: 0px; ')
         button.setHoverStyleSheet('border: 1px solid rgb(150,150,150); border-radius: 2px; background-color: transparent; margin-left: 5px; text-align: left; padding-left: 0px;')
         def openSettings():
-            self.MODULE.xnatSettingsWindow.showWindow(XnatSetting.tabTitle)
+            self.MODULE.XnatSettingsWindow.showWindow(XnatSetting.tabTitle)
         button.connect('clicked()', openSettings)
         return button
 

@@ -35,7 +35,7 @@ class XnatNodeDetails(qt.QWidget):
         self.MODULE = MODULE
 
 
-        #self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.detailsSettings)
+        #self.settingsButton = self.MODULE.utils.makeSettingsButton(self.MODULE.XnatDetailsSettings)
 
 
 
@@ -100,8 +100,8 @@ class XnatNodeDetails(qt.QWidget):
         # tags.
         #--------------------     
         xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
-        metadataTag = self.MODULE.detailsSettings.ON_METADATA_CHECKED_TAGS['main'] + detailsDict['XNAT_LEVEL']
-        visibleTags = self.MODULE.settingsFile.getTagValues(xnatHost, metadataTag)
+        metadataTag = self.MODULE.XnatDetailsSettings.ON_METADATA_CHECKED_TAGS['main'] + detailsDict['XNAT_LEVEL']
+        visibleTags = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, metadataTag)
 
 
                     
