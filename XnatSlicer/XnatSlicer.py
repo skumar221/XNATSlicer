@@ -59,6 +59,7 @@ from XnatPopup import *
 from XnatDicomLoadWorkflow import *
 from XnatSceneLoadWorkflow import *
 from XnatFileLoadWorkflow import *
+from XnatAnalyzeLoadWorkflow import *
 from XnatFilter import *
 from XnatSlicerTest import *
 from XnatError import *
@@ -293,7 +294,7 @@ class XnatSlicerWidget:
         self.XnatSceneLoadWorkflow = XnatSceneLoadWorkflow(self)
         self.XnatFileLoadWorkflow = XnatFileLoadWorkflow(self)
         self.XnatDicomLoadWorkflow = XnatDicomLoadWorkflow(self)
-        
+        self.XnatAnalyzeLoadWorkflow = XnatAnalyzeLoadWorkflow(self)
         
         
         #--------------------------------

@@ -565,7 +565,7 @@ class XnatUtils(object):
         """    
         ext = "." + ext
         for val in extList:
-            if val.lower() in ext.lower(): 
+            if ext.lower().endswith(val.lower()): 
                 return True
         return False
 
@@ -576,6 +576,13 @@ class XnatUtils(object):
         """ As stated.
         """
         return self.isExtension(ext, self.MODULE.GLOBALS.DICOM_EXTENSIONS)
+
+
+
+    def isAnalyze(self, ext = None):
+        """ As stated.
+        """
+        return self.isExtension(ext, self.MODULE.GLOBALS.ANALYZE_EXTENSIONS)
 
 
 

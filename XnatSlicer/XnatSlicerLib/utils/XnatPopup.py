@@ -190,9 +190,11 @@ class XnatDownloadPopup(XnatPopup):
         #-------------------
         # Truncate filename
         #-------------------
-        filename = '...' + filename.split('/experiments')[1] if len(filename) > 33 else filename
-
-        
+        try:
+            filename = '...' + filename.split('/experiments')[1] if len(filename) > 33 else filename
+        except Exception, e:
+            filename = filename
+            
         #-------------------
         # Update Display
         #-------------------

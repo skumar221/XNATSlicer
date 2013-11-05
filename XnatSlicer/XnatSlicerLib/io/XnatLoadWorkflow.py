@@ -164,31 +164,43 @@ class XnatLoadWorkflow(object):
         #
         currItem = self.MODULE.XnatView.currentItem()
         pathObj = self.MODULE.XnatView.getXnatUriObject(currItem)
-        remoteURI = self.MODULE.XnatSettingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
+        remoteUri = self.MODULE.XnatSettingsFile.getAddress(self.MODULE.XnatLoginMenu.hostDropdown.currentText) + '/data' + pathObj['childQueryUris'][0]
         #    
         # Check path string if at the scan level -- adjust accordingly.
         #
-        if '/scans/' in remoteURI and not remoteURI.endswith('/files'):
-            remoteURI += '/files'
+        if '/scans/' in remoteUri and os.path.dirname(remoteUri).endswith('scans'):
+            print "DONT GET IN ERE"
+            remoteUri += '/files'
         #
         # Construct dst string (the local file to be downloaded).
         #
         dst = os.path.join(self.MODULE.GLOBALS.LOCAL_URIS['downloads'],  currItem.text(self.MODULE.XnatView.getColumn('MERGED_LABEL')))
             
 
-            
+        print "REMOTE URI", remoteUri, pathObj, pathObj['currUri']
+        print self.MODULE.utils.isAnalyze(remoteUri)
+        #return
         #------------------------
         # Determine loader based on the XnatView's currItem
         #------------------------
         #
         # Slicer files
         #
-        if (('files' in remoteURI and 'resources/Slicer' in remoteURI) and remoteURI.endswith(self.MODULE.utils.defaultPackageExtension)): 
+        if remoteUri.endswith(self.MODULE.utils.defaultPackageExtension): 
             loader = self.MODULE.XnatSceneLoadWorkflow
+
+        elif self.MODULE.utils.isAnalyze(pathObj['currUri']):
+            
+            remoteUri = pathObj['currUri']
+            print "ANALYze", remoteUri, dst
+            loader =  self.MODULE.XnatAnalyzeLoadWorkflow
+
+            
         #    
         # Other readable files
         #
-        elif ('files' in remoteURI and '/resources/' in remoteURI):
+        elif ('files' in remoteUri and '/resources/' in remoteUri):
+
             loader =  self.MODULE.XnatFileLoadWorkflow
         #    
         #  DICOMS
@@ -201,7 +213,7 @@ class XnatLoadWorkflow(object):
         #------------------------
         # Call load of subclass loader.
         #------------------------
-        args = {"xnatSrc": remoteURI, 
+        args = {"xnatSrc": remoteUri, 
                 "localDst":dst, 
                 "folderContents": None}
         loadSuccessful = loader.initLoad(args)  

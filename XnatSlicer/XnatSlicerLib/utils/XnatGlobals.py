@@ -67,6 +67,11 @@ class XnatGlobals(object):
         return [".dcm", ".ima", ".dicom"]
 
 
+
+    @property
+    def ANALYZE_EXTENSIONS(self):
+        return [".hdr", ".img"]
+
     
 
     @property
