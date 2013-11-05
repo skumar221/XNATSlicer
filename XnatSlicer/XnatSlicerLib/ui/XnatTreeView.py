@@ -551,15 +551,23 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             #
             if self.nodeCount > 0 and self.nodeCount == self.hiddenNodeCount and defaultFilterButton:
                 defaultFilterButton.click()
+
+
+            self.topLevelItem(0).setSelected(True)
+            self.setCurrentItem(self.topLevelItem(0))
             return True
 
-        
+
+
+
         
         #----------------------
         # If filter is 'accessed' (i.e. 'Last Accessed')
         #----------------------        
         elif filters[0] == 'accessed':
-            filter_accessed()
+            self.filter_accessed()
+            self.topLevelItem(0).setSelected(True)
+            self.setCurrentItem(self.topLevelItem(0))
             return True
 
 
@@ -568,11 +576,27 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # If filter is 'all'
         #----------------------        
         elif filters[0] == 'all':
-            filter_all()
+            self.filter_all()
+            self.topLevelItem(0).setSelected(True)
+            self.setCurrentItem(self.topLevelItem(0))
             return True
+
+        
+
         return True
 
-    
+
+
+
+    def getParentItemByXnatLevel(self, item, xnatLevel):
+        """
+        """
+        parentItem = item
+        while parentItem:
+            if parentItem.text(self.columns['XNAT_LEVEL']['location']) == xnatLevel:
+                return parentItem
+            parentItem = parentItem.parent()
+        
     
 
     def loopProjectNodes(self, callback):
@@ -1077,25 +1101,33 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # Break apart pathStr to its Xnat categories
         #------------------------
         pathDict = self.MODULE.utils.makeXnatUriDictionary(pathStr)
-
+        print "PATH DICT1", pathDict
 
         
         #------------------------
         # Reload projects if it can't find the project initially
         #------------------------
-        if not self.findItems(pathDict['projects'],1): 
-            self.loadProjects()
+        foundProjects = self.findItems(pathDict['projects'],1)
+        print foundProjects
+        if not self.findItems(pathDict['projects'],1) or len(foundProjects) == 0: 
+            print "IT SHOULD LOAD PROJECTS"
+            self.MODULE.XnatIo.projectCache = None
+            self.begin(skipAnim = True)
+            slicer.app.processEvents()
+            foundProjects = self.findItems(pathDict['projects'],1)
 
 
             
         #------------------------
         # Start by setting the current item at the project level, get its children
         #------------------------
-        self.setCurrentItem(self.findItems(pathDict['projects'],1)[0])
+        self.setCurrentItem(foundProjects[0])
+
+            
         self.onTreeItemExpanded(self.currentItem())
 
 
-        
+        print "PATH DICT2", pathDict
         #------------------------
         # Proceed accordingly to its lower levels
         #------------------------

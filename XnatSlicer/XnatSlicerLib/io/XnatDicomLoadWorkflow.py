@@ -51,6 +51,9 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         self.MODULE.XnatDownloadPopup.setText("Gathering download information...", '')
         self.MODULE.XnatDownloadPopup.show()
+        self.MODULE.XnatDownloadPopup.reset()
+   
+
 
 
         
@@ -342,9 +345,9 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #
         # Create and show a 'Processing DICOMs' QMessageBox.
         #
-        self.processingDicomsMessageBox = qt.QLabel("<b>Processing DICOMs...</b>")
-        self.processingDicomsMessageBox.setStyleSheet('margin: 40px')
-        self.processingDicomsMessageBox.setFixedSize(qt.QSize(200, 100))
+        self.processingDicomsMessageBox = qt.QMessageBox(1, "Processing", "ProcessingDicoms...")
+        self.processingDicomsMessageBox.setWindowModality(2)
+        self.processingDicomsMessageBox.setStandardButtons(0)
         self.processingDicomsMessageBox.show()
         self.MODULE.utils.repositionToMainSlicerWindow(self.processingDicomsMessageBox)
         

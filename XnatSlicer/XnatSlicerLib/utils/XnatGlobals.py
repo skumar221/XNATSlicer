@@ -178,6 +178,15 @@ class XnatGlobals(object):
     
 
 
+
+    @property
+    def XNAT_XSI_TYPES(self):
+        return {'MR Session': 'xnat:mrSessionData',
+                'PET Session': 'xnat:petSessionData',
+                'CT Session' : 'xnat:ctSessionData'
+                }
+
+        
     @property
     def DEFAULT_XNAT_METADATA(self):
         return {
@@ -194,7 +203,6 @@ class XnatGlobals(object):
             
         'projects' : [
             'last_accessed_497',
-            'id',
             'ID',
             'insert_user',
             'pi',

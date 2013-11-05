@@ -41,7 +41,7 @@ sys.path.append(os.path.join(LIB_PATH, 'io'))
 
 from XnatGlobals import *
 from XnatFileInfo import *
-from XnatAddProjEditor import *
+from XnatFolderMaker import *
 from XnatLoadWorkflow import *
 from XnatUtils import *
 from XnatScenePackager import *
@@ -234,7 +234,7 @@ class XnatSlicerWidget:
         # Xnat Filter
         #--------------------------------
         self.XnatFilter = XnatFilter(self)
-        
+
 
         
         #--------------------------------
@@ -296,6 +296,16 @@ class XnatSlicerWidget:
         self.XnatDicomLoadWorkflow = XnatDicomLoadWorkflow(self)
         self.XnatAnalyzeLoadWorkflow = XnatAnalyzeLoadWorkflow(self)
         
+
+
+
+        #--------------------------------
+        # Xnat Folder Maker
+        #--------------------------------
+        self.XnatFolderMaker = XnatFolderMaker(self.parent, self)
+
+
+
         
         #--------------------------------
         # Init gui
@@ -496,6 +506,7 @@ class XnatSlicerWidget:
         #
         self.collapsibles['details'].setWidget(self.XnatNodeDetails)
 
+
         
 
         
@@ -581,7 +592,7 @@ class XnatSlicerWidget:
         self.XnatButtons.buttons['io']['load'].connect('clicked()', self.onLoadClicked)
         self.XnatButtons.buttons['io']['save'].connect('clicked()', self.onSaveClicked)
         self.XnatButtons.buttons['io']['delete'].connect('clicked()', self.onDeleteClicked)
-        self.XnatButtons.buttons['io']['addProj'].connect('clicked()', self.onAddProjectClicked)
+        self.XnatButtons.buttons['io']['addProj'].connect('clicked()', self.XnatFolderMaker.show)
         self.XnatButtons.buttons['settings']['settings'].connect('clicked()', self.XnatSettingsWindow.showWindow)
         #
         # Sort Button event.
@@ -721,8 +732,13 @@ class XnatSlicerWidget:
                     widgetLength = geom.top()
 
 
-            targetHeights['details'] = widgetLength - targetGeometries['details'].top()
-            targetHeights['viewer'] = targetGeometries['viewer'].height()
+            #
+            # This parameter makes the viewer collapsible
+            # slightly larger in hieght
+            #        
+            viewerDifference = 75
+            targetHeights['details'] = widgetLength - targetGeometries['details'].top() - viewerDifference
+            targetHeights['viewer'] = targetGeometries['viewer'].height() + viewerDifference
 
 
             return targetHeights
@@ -773,6 +789,7 @@ class XnatSlicerWidget:
                 collapsible.setOnCollapse(None)
                 if key != 'tools' and key != 'login':
                     #collapsible.setMaxHeight(1000)
+                    collapsible.setFixedHeight(heights[key])
                     collapsible.setStretchHeight(1000)
                    
 
@@ -925,14 +942,6 @@ class XnatSlicerWidget:
         loader.beginWorkflow()
 
 
-            
-          
-    def onAddProjectClicked(self):
-        """ Adds a project folder to the server.
-        """
-
-        self.addProjEditor = XnatAddProjEditor(self, self, self.XnatIo)
-        self.addProjEditor.show()
 
 
 

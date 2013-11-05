@@ -46,6 +46,7 @@ class XnatNodeDetails(qt.QWidget):
 
 
         self._layout = qt.QGridLayout()
+        self._layout.setContentsMargins(0,0,0,0)
 
         
         #--------------------

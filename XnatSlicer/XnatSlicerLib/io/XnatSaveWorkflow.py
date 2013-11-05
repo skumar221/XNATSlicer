@@ -12,12 +12,15 @@ from XnatSaveDialog import *
 
 
 
+
 comment = """
 XnatSaveWorkflow manages all of the processes needed to upload
 a file to an XNAT.  Packaging scenes and uploaded are conducted here.
 
 TODO:
 """
+
+
 
     
 class XnatSaveWorkflow(object):
@@ -39,11 +42,9 @@ class XnatSaveWorkflow(object):
         self.waitWindow = qt.QMessageBox(1, "Uploading", "Please wait while file uploads...")
         self.waitWindow.setWindowModality(2)
 
-
-        
-        #------------------------
+        #
         # This removes the OK button.
-        #------------------------
+        #
         self.waitWindow.setStandardButtons(0)
 
 

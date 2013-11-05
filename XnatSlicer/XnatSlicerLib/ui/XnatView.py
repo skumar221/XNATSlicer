@@ -49,7 +49,7 @@ class XnatView(object):
 
     
     
-    def begin(self):
+    def begin(self, skipAnim = None):
         """ Begins the communication process with.  Shows
             an error modal if it fails.
         """
@@ -81,7 +81,8 @@ class XnatView(object):
         #----------------------
         projectsLoaded = self.loadProjects(filters = None, projectContents = projectContents)
         if projectsLoaded:
-            self.MODULE.onLoginSuccessful()
+            if not skipAnim:
+                self.MODULE.onLoginSuccessful()
             self.MODULE.XnatButtons.setEnabled(buttonKey='addProj', enabled=True) 
 
 

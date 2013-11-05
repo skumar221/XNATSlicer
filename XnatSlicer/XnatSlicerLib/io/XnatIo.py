@@ -411,6 +411,8 @@ class XnatIo(object):
                 self.MODULE.XnatDownloadPopup.reset()
                 self.MODULE.XnatDownloadPopup.setDownloadFilename(xnatSrcUri) 
                 self.MODULE.XnatDownloadPopup.show()
+                self.MODULE.XnatDownloadPopup.setDownloadFileSize(0)
+                self.MODULE.XnatDownloadPopup.update(0)
                 #
                 # Establish Credentials
                 #
@@ -513,6 +515,8 @@ class XnatIo(object):
                 #
                 self.MODULE.XnatDownloadPopup.setDownloadFilename(fileDisplayName) 
                 self.MODULE.XnatDownloadPopup.show()
+                self.MODULE.XnatDownloadPopup.setDownloadFileSize(0)
+                self.MODULE.XnatDownloadPopup.update(0)
                 #
                 # Update the download popup file size
                 #
@@ -752,6 +756,7 @@ class XnatIo(object):
             #
             if queryArguments:
                 newQueryUri = self.applyQueryArgumentsToUri(queryUri, queryArguments)
+                
             print "%s query path: %s"%(self.MODULE.utils.lf(), newQueryUri)
             #
             # Get the JSON
@@ -963,6 +968,52 @@ class XnatIo(object):
             
 
 
+
+    def makeFolder(self, remoteDstUri):
+        """ 
+        """
+        
+        #-------------------- 
+        # Clean 'remoteDstUri' string and endcode
+        #-------------------- 
+        if not remoteDstUri.startswith(self.host + '/data'):
+            remoteDstUri = self.host + '/data' + remoteDstUri
+        remoteDstUri = str(remoteDstUri).encode('ascii', 'ignore')
+
+
+        
+        #-------------------- 
+        # Get request and connection from XNAT host using
+        # the URIs provided and the methods of urllib2
+        #-------------------- 
+        req = urllib2.Request(remoteDstUri)
+        connection = httplib.HTTPSConnection (req.get_host())  
+
+
+
+        #-------------------- 
+        # Make the authentication header to 
+        # pass to the connection.
+        #-------------------- 
+        userAndPass = b64encode(b"%s:%s"%(self.user, self.password)).decode("ascii")       
+        header = { 'Authorization' : 'Basic %s' %  userAndPass, 'content-type': 'application/octet-stream'}    
+
+
+
+        #-------------------- 
+        # Do 'PUT' REST call, providing the file
+        # and the authentication header.
+        #-------------------- 
+        connection.request ('PUT', req.get_selector(), headers = header)
+
+
+
+        #-------------------- 
+        # Get and return the response from the connetion.
+        #-------------------- 
+        response = connection.getresponse()
+        print "MAKE FOLDER", response.read()
+        return response
 
 
 
