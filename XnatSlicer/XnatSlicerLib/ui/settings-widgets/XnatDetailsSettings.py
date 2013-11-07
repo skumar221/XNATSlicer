@@ -82,7 +82,7 @@ class XnatDetailsSettings(XnatSettings):
                 self.MODULE.XnatNodeDetails.changeFontSize(int(size))
                 self.MODULE.XnatSettingsFile.setTagValues(xnatHost, {self.fontSizeTag: [str(size)]})
             except Exception, e:
-                print self.MODULE.utils.lf(), str(e)
+                #print self.MODULE.utils.lf(), str(e)
                 pass
 
         currDropdown = self.fontDropdowns[-1]
