@@ -1084,8 +1084,17 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             to see if there is a string match for the childName
             argument based on the 'MERGED_LABEL' column.
         """
+
+        if isinstance(childName, list) and len(childName) == 1:
+            childName = childName[0]
+        else:
+            errorString = "Error: invalid 'childName' argument."  
+            errorString +="It should be an array of length 1 or a string."
+            raise Exception(self.MODULE.utils.lf() + errorString)
+
+        
         for i in range(0, item.childCount()):
-            if str(childName) in item.child(i).text(self.columns['MERGED_LABEL']['location']):
+            if str(childName) == item.child(i).text(self.columns['MERGED_LABEL']['location']):
                 if expanded:
                     self.onTreeItemExpanded(item.child(i))
                 return item.child(i)
@@ -1109,10 +1118,6 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # Reload projects if it can't find the project initially
         #------------------------
         foundProjects = self.findItems(pathDict['projects'], 0)
-        print "FOUND PROJECTS", foundProjects
-        for proj in foundProjects:
-            print "PROJ: ", proj.text(0)
-
             
         if not self.findItems(pathDict['projects'], 0) or len(foundProjects) == 0: 
             print "IT SHOULD LOAD PROJECTS"
@@ -1129,16 +1134,26 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
 
         self.setCurrentItem(foundProjects[0])
 
-        print "************", foundProjects[0].text(0), self.currentItem().text(0)
-        self.onTreeItemExpanded(self.currentItem())
 
-
+    
+        
         print "PATH DICT2", pathDict
         #------------------------
         # Proceed accordingly to its lower levels
         #------------------------
         if pathDict['subjects']:
             self.setCurrentItem(self.findChild(self.currentItem(), pathDict['subjects']))
+
+            #
+            # If the subject isn't there or the tree isn't 
+            # expanded, we recurse.
+            #
+            if self.currentItem() == None:
+                self.setCurrentItem(foundProjects[0])
+                self.onTreeItemExpanded(self.currentItem())
+                self.selectItem_byUri(pathStr)
+                return
+                
             if pathDict['experiments']:
                 self.setCurrentItem(self.findChild(self.currentItem(), pathDict['experiments']))
                 if pathDict['scans']:
@@ -1729,9 +1744,13 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                             subject.setHidden(False)
                             
                         #
-                        # Make 'experiment' as child of parent 'subject'.
+                        # Make 'experiment' as child of parent 'subject' 
+                        # if it doesn't exist.
                         #
-                        self.makeTreeItems(parentItem = subject, children = experimentName, metadata = metadata, expandible = [0]) 
+                        item = self.findChild(subject, experimentName)
+                        print "\t\t*************FIND CHILD: ", subject.text(0), experimentName, item
+                        if not item:
+                            self.makeTreeItems(parentItem = subject, children = experimentName, metadata = metadata, expandible = [0]) 
                         
                         #
                         # Expand the parent 'subject'.
