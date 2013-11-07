@@ -61,7 +61,8 @@ class XnatSaveWorkflow(object):
         #------------------------
         if self.MODULE.XnatView.sessionManager.sessionArgs:
             self.MODULE.XnatView.setEnabled(False)
-            FileSaveDialog(self.MODULE, self)
+            fileSaveDialog = XnatFileSaveDialog(self.MODULE, self)
+            fileSaveDialog.show()
             
 
 
@@ -78,7 +79,8 @@ class XnatSaveWorkflow(object):
             sessionArgs['sessionType'] = "scene upload - unlinked"
             self.MODULE.XnatView.sessionManager.startNewSession(sessionArgs)
             self.MODULE.XnatView.setEnabled(False)
-            FileSaveDialog(self.MODULE, self)
+            fileSaveDialog = XnatFileSaveDialog(self.MODULE, self)
+            fileSaveDialog.show()
 
 
 
@@ -138,7 +140,10 @@ class XnatSaveWorkflow(object):
         baseName = os.path.basename(packageFileName)
         self.MODULE.XnatView.sessionManager.sessionArgs['sessionType'] = "scene upload"
         self.MODULE.XnatView.startNewSession(self.MODULE.XnatView.sessionManager.sessionArgs)
-        self.MODULE.XnatView.setCurrItemToChild(item = None, childFileName = baseName)
+
+        treeUri = 'projects' + uploadStr.split('projects')[1]
+        print "TREE URI: ", treeUri
+        self.MODULE.XnatView.selectItem_byUri(treeUri)
         self.MODULE.XnatView.setEnabled(True)
         print "\nUpload of '%s' complete."%(baseName)
 

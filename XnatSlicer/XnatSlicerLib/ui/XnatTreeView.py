@@ -335,7 +335,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         infoMetadata = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.XnatTreeViewSettings.ON_METADATA_CHECKED_TAGS['info'] + widgetItem.text(xnatLevelColumnNumber))
 
 
-        print "MERGED INFO TEXT:", widgetItem.text(mergedInfoColumnNumber)
+        #print "MERGED INFO TEXT:", widgetItem.text(mergedInfoColumnNumber)
         #
         # Clear the text
         #
@@ -345,7 +345,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             printStr = ''
             for i in range(0, 40):
                 printStr += '\n\t' + self.headerItem().text(i) + ": " +  widgetItem.text(i)
-                print printStr
+                #print printStr
 
         #debugPrint()
 
@@ -361,7 +361,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 #print "COLUMN: ", self.columns
                 #print "KEY: ", self.columns[key]
                 value = widgetItem.text(self.columns[key]['location'])
-                print "VALUE: ", value
+                #print "VALUE: ", value
             except Exception, e:
                 value = '(Empty)'
                 #print self.MODULE.utils.lf(), str(e)
@@ -786,7 +786,8 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         self.manageTreeNode(item, 0)
         self.setCurrentItem(item)
 
-        if not 'files' in item.text(self.columns['XNAT_LEVEL']['location']):
+        if not 'files' in item.text(self.columns['XNAT_LEVEL']['location']) and \
+          not 'Slicer' in item.text(self.columns['XNAT_LEVEL']['location']):
             self.getChildren(item, expanded = True) 
         self.resizeColumns()
 
@@ -1107,9 +1108,13 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #------------------------
         # Reload projects if it can't find the project initially
         #------------------------
-        foundProjects = self.findItems(pathDict['projects'],1)
-        print foundProjects
-        if not self.findItems(pathDict['projects'],1) or len(foundProjects) == 0: 
+        foundProjects = self.findItems(pathDict['projects'], 0)
+        print "FOUND PROJECTS", foundProjects
+        for proj in foundProjects:
+            print "PROJ: ", proj.text(0)
+
+            
+        if not self.findItems(pathDict['projects'], 0) or len(foundProjects) == 0: 
             print "IT SHOULD LOAD PROJECTS"
             self.MODULE.XnatIo.projectCache = None
             self.begin(skipAnim = True)
@@ -1121,9 +1126,10 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #------------------------
         # Start by setting the current item at the project level, get its children
         #------------------------
+
         self.setCurrentItem(foundProjects[0])
 
-            
+        print "************", foundProjects[0].text(0), self.currentItem().text(0)
         self.onTreeItemExpanded(self.currentItem())
 
 
@@ -1131,16 +1137,21 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #------------------------
         # Proceed accordingly to its lower levels
         #------------------------
-        if (pathDict['subjects']):
+        if pathDict['subjects']:
             self.setCurrentItem(self.findChild(self.currentItem(), pathDict['subjects']))
-            if (pathDict['experiments']):
+            if pathDict['experiments']:
                 self.setCurrentItem(self.findChild(self.currentItem(), pathDict['experiments']))
-                if (pathDict['scans']):
+                if pathDict['scans']:
                     self.setCurrentItem(self.findChild(self.currentItem(), pathDict['scans']))
-        if (pathDict['resources']):
-            self.setCurrentItem(self.findChild(self.currentItem(), pathDict['resources']))
-            if (pathDict['files']):
-                self.setCurrentItem(self.findChild(self.currentItem(), pathDict['files']))
+
+                    
+        if pathDict['resources']:
+            if pathDict['resources'] == 'Slicer':
+                 self.setCurrentItem(self.findChild(self.currentItem(), pathDict['files']))
+            else:
+                self.setCurrentItem(self.findChild(self.currentItem(), pathDict['resources']))
+                if (pathDict['files']):
+                    self.setCurrentItem(self.findChild(self.currentItem(), pathDict['files']))
 
 
 

@@ -93,7 +93,7 @@ class XnatNodeDetails(qt.QWidget):
         detailsDict = detailsDict[0]
         detailsText = ''
 
-        print "\n\n\t\tDETAILS DICT", detailsDict, '\n\n\n'
+        #print "\n\n\t\tDETAILS DICT", detailsDict, '\n\n\n'
         
         
         #--------------------

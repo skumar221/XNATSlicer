@@ -15,8 +15,8 @@ from XnatTimer import *
 comment = """
 There are three classes within this file:
 XnatSaveDialog (parent class), 
-SaveUnlinkedDialog (sub-class), and 
-FileSaveDialog (sub0class).
+XnatSaveUnlinkedDialog (sub-class), and 
+XnatFileSaveDialog (sub0class).
 
 XnatSaveDialog is a parent class that manages various 
 dialogs related to saving Xnat files.  Dialogs occur
@@ -27,10 +27,10 @@ closing the dialogs, etc. The contents of the dialogs
 are specified in the 
 
 The classes that inherit from it are:
-1) SaveUnlinkedDialog
+1) XnatSaveUnlinkedDialog
 (For saving a scene that doesn't originate from an XNAT
 host.)
-2) FileSaveDialog
+2) XnatFileSaveDialog
 (Where user enters filename of the scene to save.)
 
 TODO:        
@@ -47,15 +47,14 @@ class XnatSaveDialog(object):
         """
 
         self.MODULE = MODULE
-        self.dialogs = []        
-        self.setup()
-        self.begin()         
+        self.dialogs = []               
         self.saveWorkflow = saveWorkflow;
 
 
 
+    
         
-    def begin(self):
+    def show(self):
         """ Shows the first dialog in a dialog sequence,
             and adjusts its position.
         """
@@ -143,11 +142,16 @@ class XnatSaveDialog(object):
     def onButtonClicked(self):
         pass
 
-        
+
+    
+    def setup(self):     
+        """ Descriptor
+        """      
+        pass
 
 
 
-class SaveUnlinkedDialog(XnatSaveDialog):
+class XnatSaveUnlinkedDialog(XnatSaveDialog):
      """ Dialog sequence for saving Slicer scenes
          to an XNAT host where the scene content is 
          detateched from the XNAT location.  The use-case
@@ -163,6 +167,7 @@ class SaveUnlinkedDialog(XnatSaveDialog):
         # Call parent class.
         #--------------------
         super(saveUnlinkedDialog, self).__init__(MODULE, saveWorkflow)
+        self.setup()
 
 
         
@@ -195,7 +200,7 @@ class SaveUnlinkedDialog(XnatSaveDialog):
          
      def buttonclicked(self,button):
         """ When a button on the dialog is clicked.  
-            Creates a FileSaveDialog once the user gives
+            Creates a XnatFileSaveDialog once the user gives
             the OK to save the scene to the XNAT host.  The
             user is prompted for this because XNATSlicer could
             not determine the origin XNAT host/location of the scene.
@@ -208,14 +213,14 @@ class SaveUnlinkedDialog(XnatSaveDialog):
             #
             # Call FileSave with updated sessionArgs.
             #
-            FileSaveDialog(self.MODULE, self.MODULE.XnatView.sessionManager.sessionArgs)
+            XnatFileSaveDialog(self.MODULE, self.MODULE.XnatView.sessionManager.sessionArgs)
 
 
             
 
 
             
-class FileSaveDialog(XnatSaveDialog):  
+class XnatFileSaveDialog(XnatSaveDialog):  
     """ Dialog sequence that allows the user
         to specify the filename to be written to 
         a given XNAT host.
@@ -227,6 +232,15 @@ class FileSaveDialog(XnatSaveDialog):
         """ Init function.
         """
 
+        
+        #--------------------
+        # Call parent.
+        #--------------------
+        super(XnatFileSaveDialog, self).__init__(MODULE, saveWorkflow)
+
+        self.MODULE = MODULE
+        
+        
         #--------------------
         # Determine filename.
         #--------------------
@@ -239,20 +253,7 @@ class FileSaveDialog(XnatSaveDialog):
         self.inputIndex = 0  
         self.noticeLabel = qt.QLabel("")
 
-
-        #--------------------
-        # Call parent.
-        #--------------------
-        super(FileSaveDialog, self).__init__(MODULE, saveWorkflow)
-        #print "%s"%(self.MODULE.utils.lf())
-        return
-
-
-
-    
-    def setup(self):     
-        """ Descriptor
-        """        
+  
 
         #--------------------
         # Window setup.   
@@ -324,7 +325,11 @@ class FileSaveDialog(XnatSaveDialog):
         # Set onClick connections.
         #--------------------  
         buttonRow.connect('clicked(QAbstractButton*)', self.onButtonClicked)
-        self.MODULE.XnatView.selectItem_byUri(self.MODULE.XnatView.sessionManager.sessionArgs['saveLevel'])
+        #self.MODULE.XnatView.selectItem_byUri(self.MODULE.XnatView.sessionManager.sessionArgs['saveLevel'])
+
+
+
+        #print "%s"%(self.MODULE.utils.lf())
 
 
 

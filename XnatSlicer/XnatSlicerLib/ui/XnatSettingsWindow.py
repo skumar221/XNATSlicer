@@ -97,6 +97,8 @@ class XnatSettingsWindow(FingerTabWidget):
         def restoreSettings():
             self.hide()
             self.MODULE.XnatSettingsFile.restorePreviousSettings()
+            self.updateSettingWidgets()
+            self.MODULE.XnatView.refreshColumns()
             
         self.cancelButton.connect('clicked()', restoreSettings)
 

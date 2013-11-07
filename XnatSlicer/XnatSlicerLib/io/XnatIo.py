@@ -103,7 +103,7 @@ class XnatIo(object):
         #-------------------------
         if fileOrFolder == "file":
             for src, dst in srcDstMap.iteritems():
-                print("%s file download\nsrc: '%s' \ndst: '%s'"%(self.MODULE.utils.lf(), src, dst))
+                #print("%s file download\nsrc: '%s' \ndst: '%s'"%(self.MODULE.utils.lf(), src, dst))
                 fName = os.path.basename(src)
                 fUri = "/projects/" + src.split("/projects/")[1]
                 self.get(src, dst)
@@ -145,7 +145,7 @@ class XnatIo(object):
                     # 
                     # Begin the download process.
                     #
-                    print("%s folder downloading %s to %s"%(self.MODULE.utils.lf(), src, dst))
+                    #print("%s folder downloading %s to %s"%(self.MODULE.utils.lf(), src, dst))
                     self.get(src, dst)
 
 
@@ -192,7 +192,7 @@ class XnatIo(object):
         #-------------------- 
         if delExisting:
             self.httpsRequest('DELETE', remoteDstUri, '')
-        print "%s Uploading\nsrc: '%s'\nremoteDstUri: '%s'"%(self.MODULE.utils.lf(), localSrcUri, remoteDstUri)
+        #print "%s Uploading\nsrc: '%s'\nremoteDstUri: '%s'"%(self.MODULE.utils.lf(), localSrcUri, remoteDstUri)
 
 
         
@@ -201,7 +201,7 @@ class XnatIo(object):
         #-------------------- 
         if not remoteDstUri.startswith(self.host + '/data'):
             remoteDstUri = self.host + '/data' + remoteDstUri
-        print remoteDstUri
+        #print remoteDstUri
         remoteDstUri = str(remoteDstUri).encode('ascii', 'ignore')
 
 
@@ -301,7 +301,7 @@ class XnatIo(object):
             based on the 'xnatUri' argument.  Calls on the internal
             'httpsRequest' RESTfully.
         """
-        print "%s deleting %s"%(self.MODULE.utils.lf(), xnatUri)
+        #print "%s deleting %s"%(self.MODULE.utils.lf(), xnatUri)
         self.httpsRequest('DELETE', xnatUri, '')
 
 
@@ -311,7 +311,7 @@ class XnatIo(object):
         """ Set's the download state to 0.  The open buffer in the 'GET' method
             will then read this download state, and cancel out.
         """
-        print self.MODULE.utils.lf(), "Canceling download."
+        #print self.MODULE.utils.lf(), "Canceling download."
         self.MODULE.XnatDownloadPopup.window.hide()
         self.MODULE.XnatDownloadPopup.reset()
         self.downloadState = 0
@@ -390,7 +390,7 @@ class XnatIo(object):
         #-------------------- 
         errorString = ""
         try:
-            print self.MODULE.utils.lf(), "xnatSrcUri: ", xnatSrcUri
+            #print self.MODULE.utils.lf(), "xnatSrcUri: ", xnatSrcUri
             response = urllib2.urlopen(xnatSrcUri)
 
         #
@@ -401,7 +401,7 @@ class XnatIo(object):
             errorString += str(e) + "\n"
  
             try:
-                print self.MODULE.utils.lf(), "urllib2 get failed.  Attempting httplib version."
+                #print self.MODULE.utils.lf(), "urllib2 get failed.  Attempting httplib version."
                 #------------
                 # HTTP LIB VERSION
                 #-----------
@@ -444,7 +444,7 @@ class XnatIo(object):
                 # Conduct the REST call.
                 #
                 connection.request (restMethod, req.get_selector (), body= '', headers=header)
-                print "%s Xnat request - %s %s"%(self.MODULE.utils.lf(), restMethod, url)
+                #print "%s Xnat request - %s %s"%(self.MODULE.utils.lf(), restMethod, url)
                 #
                 # Return response
                 #
@@ -602,8 +602,8 @@ class XnatIo(object):
         # Get the response from httpRequest
         #--------------------      
         response = self.httpsRequest('GET', xnatUri).read()
-        print "%s %s"%(self.MODULE.utils.lf(), xnatUri)
-        #print "Get JSON Response: %s"%(response)
+        #print "%s %s"%(self.MODULE.utils.lf(), xnatUri)
+        ##print "Get JSON Response: %s"%(response)
 
 
         
@@ -619,7 +619,7 @@ class XnatIo(object):
         # If that fails, kick back error...
         #-------------------- 
         except Exception, e:
-            print "%s login error to host '%s'!"%(self.MODULE.utils.lf(), self.host)
+            #print "%s login error to host '%s'!"%(self.MODULE.utils.lf(), self.host)
             return XnatError(self.host, self.user, response)
 
 
@@ -757,7 +757,7 @@ class XnatIo(object):
             if queryArguments:
                 newQueryUri = self.applyQueryArgumentsToUri(queryUri, queryArguments)
                 
-            print "%s query path: %s"%(self.MODULE.utils.lf(), newQueryUri)
+                #print "%s query path: %s"%(self.MODULE.utils.lf(), newQueryUri)
             #
             # Get the JSON
             #

@@ -998,8 +998,8 @@ class XnatUtils(object):
         uriDict = {"projects":None, "subjects":None, "experiments":None, "scans":None, "resources":None, "files":None}
         uriList = xnatUri.split("/")
         for i in range(0, len(uriList)):
-            for k, v in self.xnatDepthDict.iteritems():
-                if uriList[i] == v:
+            for k in uriDict:
+                if uriList[i].strip() == k:
                     if (i+1) < len(uriList):
                         uriDict[uriList[i]] = uriList[i+1]
         return uriDict
