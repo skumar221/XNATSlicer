@@ -1118,12 +1118,14 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             argument based on the 'MERGED_LABEL' column.
         """
 
+        print "childName:", childName
         if isinstance(childName, list) and len(childName) == 1:
             childName = childName[0]
-        else:
-            errorString = "Error: invalid 'childName' argument."  
+        elif isinstance(childName, list) and len(childName) > 1:
+            errorString = "Error: invalid 'childName' argument.  "  
             errorString +="It should be an array of length 1 or a string."
             raise Exception(self.MODULE.utils.lf() + errorString)
+            #print childName
 
         
         for i in range(0, item.childCount()):

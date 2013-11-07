@@ -260,7 +260,7 @@ class XnatFolderMaker(qt.QWidget):
         #--------------------
         self.populateSubjectDropdown(proj) 
         if currSubject:
-            self.dropdowns['subjects'].setCurrentIndex(self.dropdowns['subjects'].findText(s.text(self.MODULE.XnatView.column_name)))
+            self.dropdowns['subjects'].setCurrentIndex(self.dropdowns['subjects'].findText(currSubject.text(self.MODULE.XnatView.columns['MERGED_LABEL']['location'])))
 
             
 
