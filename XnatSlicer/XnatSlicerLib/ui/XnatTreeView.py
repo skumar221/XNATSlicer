@@ -394,7 +394,13 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
 
         self.changeFontColor(widgetItem, False, "black", self.columns['MERGED_LABEL']['location'])
         self.changeFontColor(widgetItem, False, "grey", self.columns['XNAT_LEVEL']['location'])
-        if 'Slicer' in self.columns['XNAT_LEVEL']['value'] or 'files' in self.columns['XNAT_LEVEL']['value']:
+
+
+        #
+        # Set the font color to green if slicer exists
+        #
+        if widgetItem.text(self.columns['XNAT_LEVEL']['location']) == 'Slicer' or \
+           widgetItem.text(self.columns['XNAT_LEVEL']['location']) == 'files':
             self.changeFontColor(widgetItem, False, "green", self.columns['MERGED_LABEL']['location'])
 
 
@@ -1356,7 +1362,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         """
         """
 
-        print self.MODULE.utils.lf(), "REFRESH COLUMNS"
+        #print self.MODULE.utils.lf(), "REFRESH COLUMNS"
         #--------------------
         # Reset the the 'currentItem' so that
         # the appropriate events can get called.
