@@ -40,7 +40,9 @@ class XnatNodeDetails(qt.QWidget):
 
 
         self.textEdit = qt.QTextEdit(self)
-        self.textEdit.setFont(self.MODULE.GLOBALS.LABEL_FONT)
+
+        self.currFont = self.MODULE.GLOBALS.LABEL_FONT
+        self.textEdit.setFont(self.currFont)
         self.textEdit.setReadOnly(True)
 
 
@@ -71,6 +73,15 @@ class XnatNodeDetails(qt.QWidget):
 
         
 
+
+    def changeFontSize(self, size):
+        """
+        """
+        print "NOTE CHANGE FONT SIZE"
+        
+        self.currFont.setPointSize(size)
+        self.textEdit.setFont(self.currFont)
+        
         
     def setColumnCount(self, num):
         """

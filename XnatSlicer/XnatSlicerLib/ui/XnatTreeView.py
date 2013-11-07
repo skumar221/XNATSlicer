@@ -52,10 +52,26 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         #----------------------
         # Fonts
         #----------------------
-        self.itemFont_folder = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 25, False)
-        self.itemFont_file = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 75, False)
-        self.itemFont_category = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 25, True)
-        self.itemFont_searchHighlighted = qt.QFont("Arial", self.MODULE.GLOBALS.FONT_SIZE, 25, False)
+        
+        #
+        # Acquire the saved font size from the
+        # settings file.
+        #
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
+        savedFontSize = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.XnatTreeViewSettings.fontSizeTag)
+        if len(savedFontSize) == 1:
+            self.currentFontSize = int(savedFontSize[0])
+            
+        #
+        # If no saved font, resort to default.
+        #
+        else:
+            self.currentFontSize = self.MODULE.GLOBALS.FONT_SIZE
+        self.itemFonts = {}
+        self.itemFonts['folders'] = qt.QFont("Arial", self.currentFontSize, 25, False)
+        self.itemFonts['file'] = qt.QFont("Arial", self.currentFontSize, 75, False)
+        self.itemFonts['category'] = qt.QFont("Arial", self.currentFontSize, 25, True)
+        self.itemFonts['searchHighlight'] = qt.QFont("Arial", self.currentFontSize, 25, False)
 
         
         
@@ -103,6 +119,17 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         self.verticalScrollBar().setStyleSheet('width: 15px')
 
 
+
+
+    def changeFontSize(self, size):
+        """
+        """
+        self.currentFontSize = size
+        for key, font in self.itemFonts.iteritems():
+            font.setPointSize(self.currentFontSize)
+        self.refreshColumns()
+
+        
         
 
     def initColumns(self):
@@ -378,7 +405,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 if key in self.MODULE.GLOBALS.DATE_TAGS:
                     value = self.MODULE.utils.makeDateReadable(value)
                 widgetItem.setText(mergedInfoColumnNumber, widgetItem.text(mergedInfoColumnNumber) + self.columns[key]['displayname'] + ': ' + value + ' ')
-                widgetItem.setFont(mergedInfoColumnNumber, self.itemFont_folder)  
+                widgetItem.setFont(mergedInfoColumnNumber, self.itemFonts['folders'])  
 
         
         
@@ -389,8 +416,8 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # De-bold font.
         #
 
-        widgetItem.setFont(self.columns['MERGED_LABEL']['location'], self.itemFont_folder) 
-        widgetItem.setFont(self.columns['XNAT_LEVEL']['location'], self.itemFont_category) 
+        widgetItem.setFont(self.columns['MERGED_LABEL']['location'], self.itemFonts['folders']) 
+        widgetItem.setFont(self.columns['XNAT_LEVEL']['location'], self.itemFonts['category']) 
 
         self.changeFontColor(widgetItem, False, "black", self.columns['MERGED_LABEL']['location'])
         self.changeFontColor(widgetItem, False, "grey", self.columns['XNAT_LEVEL']['location'])
@@ -1825,7 +1852,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                 #
                 # Make the tree node bold.
                 #                     
-                item.setFont(0, self.itemFont_searchHighlighted)
+                item.setFont(0, self.itemFonts['searchHighlight'])
                 self.changeFontColor(item, False, 'blue', 0)
                 #
                 # If the node his hidden...

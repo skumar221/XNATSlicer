@@ -163,8 +163,8 @@ class XnatSettingsFile:
       for tag, items in tagValueDict.iteritems(): 
           if len(items) > 0:
               for item in items:
-                  print item
-                  itemsStr += item + ','
+                  #print item
+                  itemsStr += str(item) + ','
               
               self.database.setValue(tag, itemsStr[:-1])
 

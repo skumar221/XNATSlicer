@@ -34,6 +34,9 @@ class XnatSettings(qt.QScrollArea):
         qt.QScrollArea.__init__(self)
 
 
+
+        self.sectionSpacing = 5
+
         self.setObjectName('xnatSetting')
         self.setStyleSheet('#xnatSetting {height: 100%; width: 100%; border: 1px solid gray;}')
         #--------------------
@@ -90,6 +93,7 @@ class XnatSettings(qt.QScrollArea):
 
     
 
+        self.sectionLabels = []
 
         
         
@@ -166,11 +170,29 @@ class XnatSettings(qt.QScrollArea):
 
         
 
+
+
+
+    def addSection(self, title, widgetOrLayout):
+        """
+        """
+        self.sectionLabels.append(qt.QLabel('<b>%s</b>'%(title), self))
+        self.masterLayout.addWidget(self.sectionLabels[-1])
+        self.masterLayout.addSpacing(self.sectionSpacing)
+
         
-    def addSpacing(self):
+        if 'layout' in widgetOrLayout.className().lower():
+            self.masterLayout.addLayout(widgetOrLayout)
+        else:
+            self.masterLayout.addWidget(widgetOrLayout)
+
+
+        
+        
+    def addSpacing(self, spacing = 10):
         """ As stated.
         """
-        self.masterLayout.addSpacing(15) 
+        self.masterLayout.addSpacing(spacing) 
         
 
         
@@ -191,3 +213,20 @@ class XnatSettings(qt.QScrollArea):
         """
         return self.label.text
 
+
+
+
+    def addFontDropdown(self, title = "Font Size:" ):
+        """
+        """
+        try:
+            self.fontDropdowns.append(qt.QComboBox())
+            self.fontDropdowns[-1].addItems([str(i) for i in range(8, 21)])
+            self.fontDropdowns[-1].setFixedWidth(100)
+            self.addSection(title, self.fontDropdowns[-1])
+
+            
+        except Exception, e:
+            #print self.MODULE.utils.lf(), str(e)
+            self.fontDropdowns = []
+            self.addFontDropdown(title)
