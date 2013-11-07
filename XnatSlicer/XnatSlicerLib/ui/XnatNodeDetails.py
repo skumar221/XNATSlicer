@@ -78,8 +78,14 @@ class XnatNodeDetails(qt.QWidget):
         
 
 
+    def setText(self, string):
+        """
+        """
+        self.textEdit.setText(string)
+
         
-    def setText(self, detailsDict):
+        
+    def setXnatNodeText(self, detailsDict):
         """ Sets the text of the widget based on a key-value pair
             styling method.
         """

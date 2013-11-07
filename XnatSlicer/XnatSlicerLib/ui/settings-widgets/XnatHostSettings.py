@@ -98,7 +98,7 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         self.loadHosts()
 
-        print "HOST SETTNS"
+        #print "HOST SETTNS"
 
 
 
@@ -119,7 +119,7 @@ class XnatHostSettings(XnatSettings):
         """ Enables / Disables button based upon the editable
         quality of the host.  Some hosts cannot be modified.
         """
-        print nameString, self.MODULE.XnatSettingsFile.isModifiable(nameString) 
+        #print nameString, self.MODULE.XnatSettingsFile.isModifiable(nameString) 
         if self.MODULE.XnatSettingsFile.isModifiable(nameString):
             self.deleteButton.setEnabled(True)
             self.editButton.setEnabled(True)
@@ -138,7 +138,7 @@ class XnatHostSettings(XnatSettings):
         # Get host dictionary from XnatSettings
         #--------------------
         hostDictionary = self.MODULE.XnatSettingsFile.getHostNameAddressDictionary()  
-        print "HOST DICT", hostDictionary
+        #print "HOST DICT", hostDictionary
         
         
         #--------------------
@@ -500,7 +500,7 @@ class HostTable(qt.QTableWidget):
  
 
         self.setSortingEnabled(False)
-        print self.trackedItems
+        #print self.trackedItems
         
         
         

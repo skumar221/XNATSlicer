@@ -106,7 +106,7 @@ class FingerTabWidget(qt.QWidget):
         self.tabUntoggledFont = qt.QFont('Arial', 12, 25, False)
 
 
-        print '\n\n\n**************%s\n'%(self.mainInnerLayout.count())
+        #print '\n\n\n**************%s\n'%(self.mainInnerLayout.count())
 
         self.mainInnerLayout.setCurrentIndex(1)
 
@@ -162,7 +162,7 @@ class FingerTabWidget(qt.QWidget):
     def setCurrentIndex(self, index):
         """ 
         """
-        print "\n\nSET CURRENT INDEX %s\n\n"%(index)
+        #print "\n\nSET CURRENT INDEX %s\n\n"%(index)
         self.currentIndex = index
         self.tabButtons[index].setChecked(True)
         self.tabClicked(self.tabButtons[index])

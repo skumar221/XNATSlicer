@@ -1748,7 +1748,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                         # if it doesn't exist.
                         #
                         item = self.findChild(subject, experimentName)
-                        print "\t\t*************FIND CHILD: ", subject.text(0), experimentName, item
+                        #print "\t\t*************FIND CHILD: ", subject.text(0), experimentName, item
                         if not item:
                             self.makeTreeItems(parentItem = subject, children = experimentName, metadata = metadata, expandible = [0]) 
                         
@@ -1762,7 +1762,20 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
         # Highlight all nodes that meet the search
         # criteria.
         #
-        self.searchAndShowExisting(searchString)
+        items = self.searchAndShowExisting(searchString)
+
+
+
+        #
+        # 
+        #       
+        if len(items) == 0:
+            self.MODULE.XnatViewer.noSearchResultsFound.setText("No results for '%s' found."%(searchString))
+            self.MODULE.XnatViewer.setNoResultsWidgetVisible(True)
+            
+
+
+            
         #
         # Reconnect the event listeners for expandning
         # the QTreeWidgetItems.
@@ -1826,7 +1839,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
                     parent.setExpanded(True)
                     parent = parent.parent()
 
-                        
+            
         self.resizeColumns()
         return items
         

@@ -269,7 +269,7 @@ class XnatSlicerWidget:
         #
         # Link a node click to populate XnatNodeDetails.
         #
-        self.XnatView.addNodeChangedCallback(self.XnatNodeDetails.setText)
+        self.XnatView.addNodeChangedCallback(self.XnatNodeDetails.setXnatNodeText)
 
 
         
@@ -492,8 +492,8 @@ class XnatSlicerWidget:
         #--------------------------------
         # Set VIEWER Group Box.
         #--------------------------------
-
-        self.collapsibles['viewer'].setWidget(XnatViewer(self))
+        self.XnatViewer = XnatViewer(self)
+        self.collapsibles['viewer'].setWidget(self.XnatViewer)
 
 
 
@@ -663,7 +663,7 @@ class XnatSlicerWidget:
         #--------------------
         except Exception, e:
             strs = "XnatSlicer cannot operate on this system as SSL is not installed."
-            print("XnatSlicer Module: %s"%(strs))
+            #print("XnatSlicer Module: %s"%(strs))
             qt.QMessageBox.warning(slicer.util.mainWindow(), "No SSL", "%s"%(strs))
             return
                 
@@ -725,7 +725,7 @@ class XnatSlicerWidget:
             widgetLength = 0
            
             for key, geom in targetGeometries.iteritems():
-                print "GO", key, geom, geom.top()
+                #aprint "GO", key, geom, geom.top()
                 targetHeights[key] = geom.height()
                 
                 if geom.top() > widgetLength:

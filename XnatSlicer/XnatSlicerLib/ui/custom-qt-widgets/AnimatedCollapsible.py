@@ -407,7 +407,7 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         #---------------- 
         self.onAnimateMain(qt.QSize(self.geometry.width(), self.geometry.height()))
 
-        print "onAnimationFinished", self.toggled
+        #print "onAnimationFinished", self.toggled
         
         #---------------- 
         # If the widget is toggled...
@@ -446,7 +446,7 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         # Otherwise...
         #---------------- 
         else:
-            print "ON COLLAPSE:", self.onCollapse                
+            #print "ON COLLAPSE:", self.onCollapse                
             #
             # Set the height
             #

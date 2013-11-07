@@ -94,7 +94,7 @@ class XnatMetadataEditor(qt.QFrame):
         """
 
 
-        print "\t\t(Meadata Editor) EDITOR SET ITEM TYPE", self.__class__.__name__
+        #print "\t\t(Meadata Editor) EDITOR SET ITEM TYPE", self.__class__.__name__
         #--------------------
         # Record the internal 'currItemType' variable
         #--------------------
@@ -135,7 +135,7 @@ class XnatMetadataEditor(qt.QFrame):
         """
         """
 
-        print "EDITOR SUPER UPDATE"
+        #print "EDITOR SUPER UPDATE"
         self.setItemType(self.currItemType)
         self.listWidget.connect('itemClicked(QListWidgetItem *)', self.onItemClicked)
 
@@ -369,29 +369,30 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         """
         """
 
-        print '\t\t\t(Metadata Editor|*******************CUSTOMTUPDATE'
+        #print '\t\t\t(Metadata Editor|*******************CUSTOMTUPDATE'
         
         try:
             xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
             customMetadataItems = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
-            print "\t\t\tUPDATE", customMetadataItems
+            #print "\t\t\tUPDATE", customMetadataItems
             self.listWidget.clear()
             self.listWidget.addItems(customMetadataItems)
             
         except Exception, e:
-            print self.MODULE.utils.lf(), str(e)
+            #print self.MODULE.utils.lf(), str(e)
+            pass
             
 
         super(XnatCustomMetadataEditor, self).update()
 
-        print "\t\t\tSELF CURR ITEM", self.currItemType
+        #print "\t\t\tSELF CURR ITEM", self.currItemType
         if self.currItemType == 'label':
-            print "\t\t\tLABEL"
+            #print "\t\t\tLABEL"
             self.itemFlags = 1 | 32
 
         for i in range(0, self.listWidget.count):
             self.listWidget.item(i).setFlags(self.itemFlags)
-            print '\t\t\t', self.listWidget.item(i).text(), self.listWidget.item(i).flags()
+            #print '\t\t\t', self.listWidget.item(i).text(), self.listWidget.item(i).flags()
             #print "FLAGS", self.listWidget.item(i).flags()
             #self.listWidget.item(i).setCheckState(0)
             

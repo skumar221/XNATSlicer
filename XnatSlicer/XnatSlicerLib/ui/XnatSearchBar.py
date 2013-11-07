@@ -165,7 +165,7 @@ class XnatSearchBar(qt.QFrame):
         """
 
 
-        print "SEARCH LINE FOCUSED"
+        #print "SEARCH LINE FOCUSED"
         #--------------------------------
         # Clear the default string in the searchLine
         # once the user clicks on the line
@@ -196,12 +196,15 @@ class XnatSearchBar(qt.QFrame):
         self.searchLine.setText(self.defaultSearchText)
         self.applyTextStyle('empty')
         self.prevText = None
+        
         try:
+            self.MODULE.XnatViewer.setNoResultsWidgetVisible(False)
             self.MODULE.XnatView.filter_all()
             self.MODULE.XnatView.defaultFilterFunction()
             self.MODULE.XnatView.refreshColumns()
         except Exception, e:
-            print str(e)
+            #print self.MODULE.utils.lf(), str(e)
+            pass
 
 
         
