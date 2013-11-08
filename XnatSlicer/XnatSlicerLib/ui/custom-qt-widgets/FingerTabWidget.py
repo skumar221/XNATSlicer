@@ -38,7 +38,7 @@ class FingerTabWidget(qt.QWidget):
         #--------------------
         # Tab column
         #--------------------  
-        self.tabColumn = qt.QFrame()
+        self.tabColumn = qt.QFrame(self)
         self.tabWidth = 120
         self.tabColumn.setFixedWidth(self.tabWidth)
         self.tabColumn.setObjectName('tabColumn')
@@ -63,7 +63,7 @@ class FingerTabWidget(qt.QWidget):
         # Stacked widgets
         #--------------------  
 
-        self.widgetStack = qt.QWidget()
+        self.widgetStack = qt.QWidget(self)
         
         self._widgetLayout = qt.QStackedLayout()
         
@@ -87,7 +87,7 @@ class FingerTabWidget(qt.QWidget):
         
         
 
-        self.buttonGroup = qt.QButtonGroup()
+        self.buttonGroup = qt.QButtonGroup(self)
         self.buttonGroup.connect('buttonClicked(QAbstractButton*)', self.tabClicked)
         
         self.tabButtons = []
@@ -174,7 +174,7 @@ class FingerTabWidget(qt.QWidget):
     def makeTabButton(self, tabName):
         """
         """
-        a = qt.QPushButton(tabName)
+        a = qt.QPushButton(tabName, self)
         a.setFixedWidth(self.tabWidth - self.marginVal)
         a.setFixedHeight(25)
         a.setObjectName(self.tabObjectName)

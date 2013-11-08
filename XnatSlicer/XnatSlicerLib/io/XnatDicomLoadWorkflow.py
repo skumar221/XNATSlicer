@@ -4,9 +4,11 @@ from XnatLoadWorkflow import *
 import DICOMScalarVolumePlugin 
 
 
+
+
 comment = """
 XnatDicomLoadWorkflow is the loader class for all DICOM input received
-from Xnat.  The high-level workflow of the download is as follows:
+from XNAT.  The high-level workflow of the download is as follows:
 
 1) Download a zip file of one scan or multiple scans in DICOM format.
 2) Unpack the zip file and cache accordingly.
@@ -20,6 +22,8 @@ TODO:
 """
 
 
+
+
 class XnatDicomLoadWorkflow(XnatLoadWorkflow):
     """ XnatDicomLoadWorkflow conducts the necessary steps
         to load DICOM files into Slicer.
@@ -27,7 +31,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
     
     def initLoad(self, args):
         """ Starter function for loading DICOMs into Slicer from
-            Xnat.  The function 'load' is its successor.  This function
+            XNAT.  The function 'load' is its successor.  This function
             determines if the user is downloading a single folder or multiple dicom
             folders.
         """
@@ -45,18 +49,8 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             m.moduleSelector().selectModule('DICOM')    
 
 
-            
-        #--------------------
-        # Open the download (popup for better UX)
-        #--------------------
-        self.MODULE.XnatDownloadPopup.setText("Gathering download information...", '')
-        self.MODULE.XnatDownloadPopup.show()
-        self.MODULE.XnatDownloadPopup.reset()
-   
 
 
-
-        
         #--------------------
         # Call parent class -- sets relevant public
         # variables.
@@ -85,12 +79,14 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Is the user downloading multiple folders?
         #---------------------
         if self.xnatSrc.endswith("files"):
+            
             #
             # If not, proceed with load at the current URI 
             # (contianed in 'args' argument)
             #
             self.load()
         else:
+            
             #
             # If so, then setup+show dialog asking user if they
             # want to proceed.
@@ -127,21 +123,25 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         # Loop through resources.
         #---------------------
         for resource in resources:
+            
             #
             # Construct the fileFolderUri.
             #
             fileFolderUri =  "%s/resources/%s/files"%(parentXnatUri, resource) 
+            
             #
             # Get the contentsof the fileFolderUri.
             #
             contents = self.MODULE.XnatIo.getFolderContents(fileFolderUri, metadataTags = ['Name', 'Size'])
             fileNames = contents['Name']
+            
             #
             # Check to see if the file extensions (contents) are valid.
             #
             for filename in fileNames:
+                
                 #
-                # If valud, add to "downloadables" if DICOM
+                # If valid, add to "downloadables" if DICOM
                 #
                 if self.MODULE.utils.isDICOM(filename.rsplit('.')[1]):
                     self.downloadables.append(fileFolderUri + "/" + filename)
@@ -153,13 +153,15 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
                 
     def load(self): 
         """ Main load function for downloading DICOM files
-            from an XNAT server and loading them into slicer. 
+            from an XNAT server and loading them into Slicer. 
             The general approach is as follows: 
             
             1) Clear existing download path
             2) Acquire downloadables depending on the XNAT level.  
                (Experiment is the minimum download level.)
-            3) Get the downloadables by zipped folder files.
+            2a) Check if downloadbles are chached in the slicer.dicomDatabase.  
+                Track all cached files.
+            3) Get the non-cached downloadables by zipped folder files.
             4) Conduct the necessary caching and file management of the download.
             5) Insert downloaded DICOMS into slicer.dicomDatabase
             6) Query the database for the recently downloaded DICOMs
@@ -181,9 +183,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
             self.MODULE.utils.removeFilesInDir(self.localDst)
         if not os.path.exists(self.localDst): 
             os.mkdir(self.localDst)
-
-
-        print(self.MODULE.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.") 
+        #print(self.MODULE.utils.lf(), "Downloading DICOMS in '%s'."%(self.xnatSrc),"Please wait.") 
   
 
         
@@ -231,10 +231,12 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         #--------------------
         elif self.XnatLevel == 'experiments':
             #print(self.MODULE.utils.lf(), "Retrieving experiment-level DICOMS.") 
+            
             #
             # First, get the downloadables at the current URI.
             #
             self.getDownloadables(os.path.dirname(self.xnatSrc)) 
+            
             #
             # Then, scan the folder contents of the 'scan' folders within
             # the experiment.  Get the downloadables accordingly.
@@ -313,7 +315,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
 
         
         #--------------------
-        # Cull any of the existing dicoms from the downloadDictionary,
+        # Cull any of the cached DICOMSs from the downloadDictionary,
         # adding them to the 'downloadedDicoms' array.
         #--------------------
         newDownloadDictionary = {}
@@ -334,9 +336,10 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         
         
         #--------------------
-        # DOWNLOAD: Download all uncached DICOMS as part of a zipped file.
+        # DOWNLOAD: Download all un-cached DICOMS as part of a zipped file.
         #--------------------  
         zipFolders = self.MODULE.XnatIo.getFiles(downloadDictionary)
+        
         #
         # Close the download popup, in case it's visible.
         #
@@ -368,15 +371,13 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         
         for zipFile in zipFolders:
             extractPath = zipFile.split(".")[0]
-
             
             #
-            # Remove existing extract path if it exists
+            # Remove existing zipfile extract path if it exists
             #
             if os.path.exists(extractPath): 
                 self.MODULE.utils.removeDirsAndFiles(extractPath)
 
-                
             #    
             # If the zipfile does not exist, then exit.
             # (This is the result of the Cancel button in 
@@ -386,12 +387,10 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
                 print "%s exiting workflow..."%(self.MODULE.utils.lf())  
                 return False
 
-
             #
             # Decompress zips.
             #
             self.MODULE.utils.decompressFile(zipFile, extractPath)
-
 
             #
             # Add to files in the decompressed destination 
@@ -411,6 +410,7 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         try:
             i.addListOfFiles(slicer.dicomDatabase, downloadedDicoms)
         except Exception, e:
+            
             #
             # If the database is uninitialized, then initialize it.
             #
@@ -421,6 +421,10 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
                 i.addListOfFiles(slicer.dicomDatabase, downloadedDicoms)
 
 
+
+        #--------------------
+        # Load the 'downloaded' DICOMS from Slicer's database.
+        #--------------------
         return self.loadDicomsFromDatabase(downloadedDicoms)
 
 
@@ -496,19 +500,28 @@ class XnatDicomLoadWorkflow(XnatLoadWorkflow):
         dicomScalarVolumePlugin.load(loadables[highestFileCountIndex])
                     
 
-
-        self.processingDicomsMessageBox.hide()
         
-        return True
+        #--------------------
+        # Hide the 'processing Dicoms' notification window.
+        #--------------------
+        self.processingDicomsMessageBox.hide()
 
+
+        
+        #--------------------
+        # Return true if login successful.
+        #--------------------        
+        return True
 
 
 
             
     def beginDICOMSession(self):
-        """ Once a DICOM folder has been downloaded, 
+        """ DEPRECATED: Once a DICOM folder has been downloaded, 
             track the origins of the files for Save/upload
             routines.
+
+            NOTE:
         """
         #print(self.MODULE.utils.lf(), "DICOMS successfully loaded.")
         sessionArgs = XnatSessionArgs(MODULE = self.MODULE, srcPath = self.xnatSrc)

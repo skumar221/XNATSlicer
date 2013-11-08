@@ -676,7 +676,7 @@ class XnatTreeView(XnatView, qt.QTreeWidget):
             of the current XNAT host.
         """     
         if self.sessionManager.sessionArgs:
-            self.MODULE.XnatIo.makeDir(os.path.dirname(self.sessionManager.sessionArgs['saveUri']))
+            self.MODULE.XnatIo.makeFolder(os.path.dirname(self.sessionManager.sessionArgs['saveUri']))
 
 
 

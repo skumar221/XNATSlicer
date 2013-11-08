@@ -1059,6 +1059,19 @@ class XnatUtils(object):
 
 
 
+
+    def makeDisplayableFileName(self, fileUri):
+        """ Makes a filename displayable but culling
+            a lot of the unnecessary file path characters.
+        """
+        fileUri = '/experiments' + fileUri.split('experiments')[1]
+
+        if '?' in fileUri:
+            return fileUri.split('?')[0]
+        return fileUri
+
+    
+        
     
     def makeDateReadable(self, dateString):
         """ Xnat Date metadata is generally long and not

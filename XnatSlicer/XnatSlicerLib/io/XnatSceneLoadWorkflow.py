@@ -2,27 +2,25 @@ from XnatLoadWorkflow import *
 
 
 
+
 comment = """
 XnatSceneLoadWorkflow is a subclass of the XnatLoadWorkflow class.
 It contains specific functions for downloadloading scenes from an XNAT server, 
-and loading them into Slicer.  This is in contrast with loading DICOM sets or 
-individual files.  
+and loading them into Slicer.  This is in contrast with loading DICOM sets, 
+individual files or analyze files.
 
 One of the unique aspects of loading scenes is the necessity to parse
-the scene MRML in order to convert all absolute paths to local paths.  This,
-in addition decompressing the scene, demands specific workflow class for 
-handling Slicer packages/scenes.
+the scene MRML in order to convert all absolute paths to local paths. 
 
 TODO:
 """
 
 
 
+
 class XnatSceneLoadWorkflow(XnatLoadWorkflow):
     """ Descriptor above.
     """
-
-
 
     def initLoad(self, args):
         """ As stated.
@@ -34,7 +32,10 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         
     def load(self, args):
         """ Main load function for downloading Slicer scenes
-            and loading them into Slicer.
+            and loading them into Slicer.  
+
+            Refers to a number of functions below (updateAbsoluteMrmlUrisToRelative, 
+            deconstructMrb, etc.) to load the mrml.
         """
 
         #-------------------------
@@ -64,11 +65,33 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
         
         #-------------------------
-        # Deconstruct bundle and prep scene for load (see below functions)
+        # To track relevant 'XnatFileInfo' object remote and local
+        # filepaths associated with the scene.
         #-------------------------
         fileInfo = XnatFileInfo(remoteURI = self.xnatSrc, localURI = self.localDst)
-        packageInfo = self.deconstructSlicerBundle(fileInfo) 
-        newMRMLFile = self.prepSelfContainedScene(packageInfo)
+
+
+        
+        #-------------------------
+        # Acquire the 'packageInfo' by calling on the 
+        # function 'deconstructMrb'
+        #-------------------------
+        packageInfo = self.deconstructMrb(fileInfo) 
+
+
+
+        #-------------------------
+        # Cache the scene. 
+        #-------------------------    
+        self.storeSceneLocally(packageInfo, False)   
+
+        
+        
+        #-------------------------
+        # Acquire the updated sceneMrml by calling on the function
+        # 'updateAbsoluteMrmlUrisToRelative'
+        #-------------------------        
+        newMRMLFile = self.updateAbsoluteMrmlUrisToRelative(packageInfo)
 
 
         
@@ -83,8 +106,8 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
 
     
-    def decompressSlicerBundle(self, packageFileName, destDir):
-        """ As stated.  Decompresses the '.zip' or '.mrb' Slicer file to 
+    def unzipMrb(self, packageFileName, destDir):
+        """ As stated.  Unzips the '.zip' or '.mrb' Slicer file to 
             the destination provided in the arguments.
         """
         fileURLs = []
@@ -92,7 +115,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
 
         #-------------------------
-        # Decompress scenes with a .zip extension
+        # Unzip scenes with a .zip extension
         #-------------------------
         if packageFileName.endswith('zip'):
             z = zipfile.ZipFile(packageFileName)
@@ -107,7 +130,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
                 
         #-------------------------
-        # Decompress scenes with a .mrb extension
+        # Unzip scenes with a .mrb extension
         #-------------------------
         elif packageFileName.endswith('mrb'):          
             logic = slicer.app.applicationLogic()
@@ -115,6 +138,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
                 os.makedirs(destDir)
             logic.Unzip(packageFileName, destDir)
             mrbDir = os.path.join(destDir, os.path.basename(packageFileName).split(".")[0])
+            
             #
             # MRB files decompress to a folder of the same name.  
             # Need to move all the files back to destDir.
@@ -125,17 +149,17 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
 
     
-    def deconstructSlicerBundle(self, currXnatFileInfo):
+    def deconstructMrb(self, currXnatFileInfo):
         """ Checks downloaded scene file for its contents.  
             Delegates how to handle it accordingly.
         """
         
         #-------------------------
-        # Decompress scene, get files
+        # Unzip scene, get files
         #-------------------------
         extractDir = self.MODULE.GLOBALS.LOCAL_URIS['downloads']
         tempUnpackDir = os.path.join(extractDir, currXnatFileInfo.basenameNoExtension)
-        fileList = self.decompressSlicerBundle(currXnatFileInfo.localURI, tempUnpackDir)
+        fileList = self.unzipMrb(currXnatFileInfo.localURI, tempUnpackDir)
 
 
 
@@ -151,18 +175,10 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
 
     
-    def prepSelfContainedScene(self, packageInfo):
-        """ Loads the scene package if the scene was created 
-            outside of the module's packaging workflow 
-            (XnatScenePacakger).
+    def updateAbsoluteMrmlUrisToRelative(self, packageInfo):
+        """ Converts any absolute file paths in 
+            the .mrml to relative file paths.  
         """
-
-        #-------------------------
-        # Cache the scene. 
-        #-------------------------    
-        self.storeSceneLocally(packageInfo, False)    
-
-
         
         #-------------------------
         # Init params.
@@ -310,7 +326,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
         """
 
         #-------------------------
-        # Call loadscene
+        # Call slicer's native 'loadscene' function.
         #-------------------------
         #print( "Loading '" + os.path.basename(self.xnatSrc) + "'")
         slicer.util.loadScene(fileName) 
@@ -328,7 +344,7 @@ class XnatSceneLoadWorkflow(XnatLoadWorkflow):
 
         
         #-------------------------
-        # Enable view in MODULE
+        # Enable the XnatView.
         #-------------------------
         self.MODULE.XnatView.setEnabled(True)
         return True

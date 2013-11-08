@@ -116,7 +116,7 @@ class XnatDownloadPopup(XnatPopup):
         #-------------------
         # Prog bar
         #-------------------
-        self.progBar = qt.QProgressBar()
+        self.progBar = qt.QProgressBar(self.window)
         self.progBar.setFixedHeight(17)
 
 
@@ -159,15 +159,34 @@ class XnatDownloadPopup(XnatPopup):
 
         
         
-    def reset(self):
+    def reset(self, animated = True):
         """ Resets tracked parameters such as 
             the progress bar and the labels.
         """
         self.lines[0].setText(self.textDisp[0])
         self.lines[1].setText(self.textDisp[1])
 
+
         self.progBar.setMinimum(0)
-        self.progBar.setMaximum(0)       
+
+        
+
+        #-------------------
+        # If we don't want it animated, we
+        # set the max to a very high number.
+        #-------------------
+        if animated == False:
+            self.progBar.setMaximum(100000000000000)
+
+
+            
+        #-------------------
+        # Otherise, the 
+        # prog bar animates if max and min are 0
+        #-------------------
+        else:
+            self.progBar.setMaximum(0)
+      
 
         self.downloadFileSize = 0
         self.downloadedBytes = 0
@@ -186,14 +205,6 @@ class XnatDownloadPopup(XnatPopup):
     def setDownloadFilename(self, filename):
         """ As stated.
         """
-        
-        #-------------------
-        # Truncate filename
-        #-------------------
-        try:
-            filename = '...' + filename.split('/experiments')[1] if len(filename) > 33 else filename
-        except Exception, e:
-            filename = filename
             
         #-------------------
         # Update Display

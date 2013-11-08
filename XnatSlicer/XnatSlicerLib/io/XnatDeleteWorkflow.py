@@ -8,7 +8,7 @@ import zipfile
 
 
 comment = """
-XnatDicomLoadWorkflow conducts the necessary steps to delete
+XnatDeletedWorkflow conducts the necessary steps to delete
 a folder or a file from a given XNAT host.  The ability to delete
 either depends on the user's priveleges determined both by the 
 projects and the XNAT host.

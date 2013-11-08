@@ -3,8 +3,8 @@ from XnatLoadWorkflow import *
 
 
 comment = """
-XnatAnalyzeLoadWorkflow contains the specific load method for single-file
-(non-Slicer scene) downloads from an XNAT host into Slicer.
+XnatAnalyzeLoadWorkflow contains the specific load methods for analyze 
+filetypes (.hdr and .img pairings) to be downloaded from an XNAT host into Slicer.  
 
 TODO:
 """
@@ -12,8 +12,8 @@ TODO:
 
 
 class XnatAnalyzeLoadWorkflow(XnatLoadWorkflow):
-        
-
+    """ Class description above.  Inherits from XnatLoadWorkflow.
+    """
 
 
     def initLoad(self, args):
@@ -24,9 +24,9 @@ class XnatAnalyzeLoadWorkflow(XnatLoadWorkflow):
         
         
     def load(self, args):
-        """ Downloads a file from an XNAT host, then attempts to load it
-            via the Slicer API's 'loadNodeFromFile' method, which returns
-            True or False if the load was successful.
+        """ Downloads an analyze file pair (.hdr and .img) from XNAT, 
+            then attempts to load it via the Slicer API's 'loadNodeFromFile' 
+            method, which returns True or False if the load was successful.
         """
 
         #--------------------    
@@ -37,14 +37,15 @@ class XnatAnalyzeLoadWorkflow(XnatLoadWorkflow):
 
         
         #-------------------- 
-        # Get the file from XNAT host.
+        # Construct the analyze file pair dictionary.
         #-------------------- 
-
-        #print "ANALYZE", self.xnatSrc, self.localDst
-
         downloadFiles = {'hdr': {'src': None, 'dst': None} , 'img': {'src': None, 'dst': None}}
 
 
+
+        #-------------------- 
+        # Construct the src-dst values in the dictionary.
+        #-------------------- 
         for key in downloadFiles:
             if self.xnatSrc.lower().endswith(key):
                 downloadFiles[key]['src'] = self.xnatSrc
@@ -57,30 +58,41 @@ class XnatAnalyzeLoadWorkflow(XnatLoadWorkflow):
                 downloadFiles[key]['src'] = self.xnatSrc.replace(replacer, key)
                 downloadFiles[key]['dst'] = self.localDst.replace(replacer, key)                
 
- 
 
+                
+        #-------------------- 
+        # Get the files from XNAT.  
+        #
+        # NOTE: If one of the file pairs is missing,
+        # it will still proceed to load without error.
+        #-------------------- 
         for key in downloadFiles:
             self.MODULE.XnatIo.getFile({downloadFiles[key]['src']: downloadFiles[key]['dst']})
 
 
 
         #-------------------- 
-        # Attempt to open file
+        # Create the coreIoManager
         #-------------------- 
-        a = slicer.app.coreIOManager()
+        coreIoManager = slicer.app.coreIOManager()
 
-        #
-        # Prioritize loading of header file first.
-        #
+
+        
+        #-------------------- 
+        # Try to load the header file first, if it exists.
+        #-------------------- 
         if downloadFiles['hdr']['dst'] != None:
-            t = a.fileType(downloadFiles['hdr']['dst'])
+            t = coreIoManager.fileType(downloadFiles['hdr']['dst'])
             fileSuccessfullyLoaded = slicer.util.loadNodeFromFile(downloadFiles['hdr']['dst'], t)
 
-        #
-        # If there's no header file, the open the .img.
-        #
+
+
+            
+        #-------------------- 
+        # Try to load the img file second, if it exists.
+        #-------------------- 
         else:
-            t = a.fileType(downloadFiles['img']['dst'])
+            t = coreIoManager.fileType(downloadFiles['img']['dst'])
             fileSuccessfullyLoaded = slicer.util.loadNodeFromFile(downloadFiles['img']['dst'], t)
 
             
@@ -108,6 +120,6 @@ class XnatAnalyzeLoadWorkflow(XnatLoadWorkflow):
 
             
         #-------------------- 
-        # Return the load success
+        # Return the load success.
         #-------------------- 
         return fileSuccessfullyLoaded

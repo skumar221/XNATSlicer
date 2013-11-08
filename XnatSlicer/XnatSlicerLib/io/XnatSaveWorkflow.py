@@ -15,7 +15,7 @@ from XnatSaveDialog import *
 
 comment = """
 XnatSaveWorkflow manages all of the processes needed to upload
-a file to an XNAT.  Packaging scenes and uploaded are conducted here.
+a file to an XNAT.  Packaging scenes are conducted here.
 
 TODO:
 """
@@ -32,9 +32,7 @@ class XnatSaveWorkflow(object):
         """
         
         self.MODULE = MODULE
-        self.scenePackager = XnatScenePackager(self.MODULE)
-
-
+        self.XnatScenePackager = XnatScenePackager(self.MODULE)
         
         #------------------------
         # Set wait window
@@ -43,7 +41,7 @@ class XnatSaveWorkflow(object):
         self.waitWindow.setWindowModality(2)
 
         #
-        # This removes the OK button.
+        # Remove the 'OK' button from the wait window.
         #
         self.waitWindow.setStandardButtons(0)
 
@@ -51,16 +49,21 @@ class XnatSaveWorkflow(object):
 
         
     def beginWorkflow(self):
-        """ As stated.  Conducts some prelimiary 
-            steps (see below) before uploading the scene to the 
-            XNAT host.
+        """ Conducts some prelimiary 
+            steps (i.e. origin identification) before uploading 
+            the scene to the XNAT host.
         """
 
         #------------------------
-        # If Scene originated from XNAT (i.e. the session manager is active)...
+        # If Scene originated from XNAT (i.e. the session manager is active), 
+        # we can go right to the 'save' dialog.
         #------------------------
         if self.MODULE.XnatView.sessionManager.sessionArgs:
             self.MODULE.XnatView.setEnabled(False)
+
+            #
+            # Show the fileSaveDialog
+            #
             fileSaveDialog = XnatFileSaveDialog(self.MODULE, self)
             fileSaveDialog.show()
             
@@ -70,6 +73,7 @@ class XnatSaveWorkflow(object):
         # If scene is local, or of non-XNAT origin
         #------------------------
         elif (not self.MODULE.XnatView.sessionManager.sessionArgs):
+            
             #
             # Construct new sessionArgs
             #
@@ -79,6 +83,10 @@ class XnatSaveWorkflow(object):
             sessionArgs['sessionType'] = "scene upload - unlinked"
             self.MODULE.XnatView.sessionManager.startNewSession(sessionArgs)
             self.MODULE.XnatView.setEnabled(False)
+
+            #
+            # Show the fileSaveDialog
+            #
             fileSaveDialog = XnatFileSaveDialog(self.MODULE, self)
             fileSaveDialog.show()
 
@@ -106,30 +114,68 @@ class XnatSaveWorkflow(object):
 
 
         #------------------------
-        # Package scene
+        # Save the scene locally via XnatScenePackager.saveSlicerScene
         #------------------------
-        package = self.scenePackager.bundleScene(self.MODULE.XnatView.sessionManager.sessionArgs)
-        projectDir =         package['path']
-        mrmlFile =           package['mrml']  
+        package = self.XnatScenePackager.saveSlicerScene(self.MODULE.XnatView.sessionManager.sessionArgs)
+
+
+        
+        #------------------------
+        # Get the appropriate file paths from 
+        # the locally saved scene above.
+        #------------------------
+        projectDir = package['path']
+        mrmlFile =  package['mrml']  
         
 
 
         #------------------------
-        # Zip package     
+        # Using the file paths above, 
+        # zip up the save directory...
         #------------------------ 
-        packageFileName = projectDir + self.MODULE.utils.defaultPackageExtension
-        if os.path.exists(packageFileName): 
-            self.MODULE.utils.removeFile(packageFileName) 
-        self.scenePackager.packageDir(packageFileName, projectDir)
+
+        #
+        # Construct the .mrb uri.
+        #
+        mrbUri = projectDir + self.MODULE.utils.defaultPackageExtension
+        
+        #
+        # Remove any mrb files with the same name, 
+        # if they exist.
+        #
+        if os.path.exists(mrbUri): 
+            self.MODULE.utils.removeFile(mrbUri) 
+
+        #
+        # Compress the save diectory to the mrb uri.
+        #
+        self.XnatScenePackager.convertDirectoryToZip(mrbUri, projectDir)
+
+        #
+        # Remove the uncompressed directory, as we
+        # don't need it any more. 
+        #       
         self.MODULE.utils.removeDirsAndFiles(projectDir)
 
 
 
         #------------------------
-        # Upload package  
-        #------------------------   
-        uploadStr = self.MODULE.XnatView.sessionManager.sessionArgs['saveUri'] + "/" + os.path.basename(packageFileName)    
-        self.MODULE.XnatIo.upload(packageFileName, uploadStr)
+        # Upload the mrb to XNAT.
+        #------------------------
+
+        #
+        # Construct the upload string.
+        #
+        uploadStr = self.MODULE.XnatView.sessionManager.sessionArgs['saveUri'] + "/" + os.path.basename(mrbUri)    
+
+        #
+        # Upload via XnatIo
+        #
+        self.MODULE.XnatIo.upload(mrbUri, uploadStr)
+
+        #
+        # Process events.
+        #
         slicer.app.processEvents()
   
 
@@ -137,15 +183,21 @@ class XnatSaveWorkflow(object):
         #------------------------
         # Update viewer
         #------------------------
-        baseName = os.path.basename(packageFileName)
+        baseName = os.path.basename(mrbUri)
+
+        #
+        # Create a new session
+        #
         self.MODULE.XnatView.sessionManager.sessionArgs['sessionType'] = "scene upload"
         self.MODULE.XnatView.startNewSession(self.MODULE.XnatView.sessionManager.sessionArgs)
 
+        #
+        # Select the newly saved object as a node in the viewer.
+        #
         treeUri = 'projects' + uploadStr.split('projects')[1]
-        print "TREE URI: ", treeUri
         self.MODULE.XnatView.selectItem_byUri(treeUri)
         self.MODULE.XnatView.setEnabled(True)
-        print "\nUpload of '%s' complete."%(baseName)
+        #print "\nUpload of '%s' complete."%(baseName)
 
 
 
@@ -153,71 +205,5 @@ class XnatSaveWorkflow(object):
         # Hide wait window
         #------------------------
         self.waitWindow.hide()
-
-
-        
-        
-    def determineSaveLocation(self, itemType, selectedDir, saveLevel = None):
-        """ Method goes through various steps to determine the optimal XNAT
-            location to save the current scene.
-        """
-
-        #------------------------
-        # Set variables
-        #------------------------
-        currDir = os.path.dirname(selectedDir)
-        saveUri = ""
-        
-        #
-        # NOTE: 'saveLevel' is the same as an XnatLevel.  (i.e. 
-        # 'projects', 'subjects', 'experiments', 'scans', 'resources')
-        #
-        
-        #------------------------
-        # If no 'saveLevel' specified, go to default level.
-        #------------------------
-        if not saveLevel:                                                                                                                 
-            saveLevel = self.MODULE.utils.defaultXnatSaveLevel               
-
-
-            
-        #------------------------    
-        # If 'saveLevel' is specificed, check save level validity.
-        #------------------------
-        else:
-            findCount = False
-            for key, value in self.MODULE.utils.xnatDepthDict.iteritems():
-                if value == saveLevel: 
-                    findCount = True
-            if not findCount:
-                print (self.MODULE.utils.lf() + 
-                       "Couldn't find save level '%s'. Resorting to default: %s"%(saveLevel, self.MODULE.utils.defaultXnatSaveLevel))
-                saveLevel = self.MODULE.utils.defaultXnatSaveLevel 
-
-
-                
-        #------------------------
-        # Look at the sessionManager, reconcile save dir based on that
-        # and XnatSaveLevel derived above.
-        #------------------------
-        if self.MODULE.XnatView.sessionManager.currSessionInfo:
-            saveUri = self.MODULE.utils.constructSlicerSaveUri(currUri = self.MODULE.XnatView.sessionManager.currSessionInfo['RemoteURI'], xnatLevel = saveLevel)
-        else:
-            return None            
-
-
-        
-        #------------------------
-        # DEPRECATED: for other saving schemes like share files
-        #------------------------
-        otherRequiredDirs = []
-        baseDir = saveUri.split(self.MODULE.utils.slicerFolderName)[0]
-        for folderName in self.MODULE.utils.requiredSlicerFolders:
-            otherRequiredDirs.append("%s%s/files/"%(baseDir, folderName))
-
-
-            
-        return {'saveUri': saveUri, 'others': otherRequiredDirs}
-
 
                     
