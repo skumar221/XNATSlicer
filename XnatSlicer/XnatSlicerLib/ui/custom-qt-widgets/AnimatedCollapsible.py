@@ -11,11 +11,13 @@ from HoverButton import *
 
 
 comment = """
-AnimatedCollapsible is a collapsible widget that animates
-itself when the user toggles it.  Much like other QT widgets, 
-the user can set a layout where the contents reside to allow
-for the animation.  It should be noted that the user should 
-provide the further...
+AnimatedCollapsible is a subclass of ctk.ctkExpandableWidget. 
+AnimatedCollapsible is designed around the premise of animating
+when the user clicks on its title button.
+
+Much like other QT widgets, the user can call 'setWidget'
+to apply contents to the inside of the widget.  Other parameters, 
+such as animation times and widgetsize, can also be set by the user.
 
 TODO:        
 """
@@ -36,10 +38,15 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         else:
             super(AnimatedCollapsible, self).__init__(self)
 
+            
 
-
+        #--------------------
+        # We want to grab the sizeGrip right off
+        # the bat so we can control its visibility.
+        #--------------------
         self.sizeGrip = self.children()[0]
         self.sizeGrip.hide()
+
 
         
         #--------------------
@@ -50,35 +57,61 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
 
 
         
-        #--------------------
-        # Set internal variables.
-        #--------------------        
+        #-------------------- 
+        # Set the arrow characters, 
+        # described accordingly.
+        #--------------------    
         self.rightArrowChar = u'\u25b8'
         self.downArrowChar = u'\u25be'
-        #
-        # Size
-        #
+
+
+        
+        #-------------------- 
+        # Set Collapsed Height
+        #-------------------- 
         self.collapsedHeight = 30
+
+
+
+        #-------------------- 
+        # Set the min/max heights.
+        #-------------------- 
         self.minHeight = minHeight
         self.maxHeight = maxHeight
 
-        
+
+
+        #-------------------- 
+        # Set the toggleButton's height and width
+        #-------------------- 
         self.toggleHeight = 16
         self.toggleWidth = 80
 
+
+
+        #-------------------- 
+        # Make sure the widget is 100% its parent's width.
+        #--------------------        
         self.setStyleSheet('width: 100%')
-        #
-        # Animation duration
-        #
+
+
+        
+        #-------------------- 
+        # Set the animation duration
+        #--------------------
         self.animDuration = 300
 
 
+        
+        #-------------------- 
+        # Set the size policy
+        #--------------------
         self.setSizePolicy(qt.QSizePolicy.Ignored, qt.QSizePolicy.MinimumExpanding)
 
 
         
         #----------------
-        # Set the easing curve.  See:
+        # Set the animation's easing curve.  See:
         # http://harmattan-dev.nokia.com/docs/library/html/qt4/qeasingcurve.html
         # for more options.
         #----------------
@@ -94,25 +127,24 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
 
         
         #----------------
-        # set  the Title
+        # set the Title
         #----------------       
         self.title = title
 
 
         
         #----------------
-        # Make button
+        # Make the toggle button
         #----------------
-        self.button = HoverButton(self)
-        self.button.hide()
-        self.button.setParent(self)
-        self.button.setFixedHeight(self.toggleHeight)
-        self.button.setCheckable(True)
-        self.button.setObjectName('acButton')
-        self.button.setDefaultStyleSheet('#acButton {border: 1px solid transparent; background-color: white; margin-left: 5px; text-align: left; padding-left: 5px;}')
-        self.button.setHoverStyleSheet('#acButton {border: 1px solid rgb(200,200,200); background-color: white; border-radius: 2px; margin-left: 5px; text-align: left; padding-left: 5px;}')
-        #self.button.setStyleSheet('#acButton:pressed {background-color: gray;}')
-        self.setButtonText(True)
+        self.toggleButton = HoverButton(self)
+        self.toggleButton.hide()
+        self.toggleButton.setParent(self)
+        self.toggleButton.setFixedHeight(self.toggleHeight)
+        self.toggleButton.setCheckable(True)
+        self.toggleButton.setObjectName('animatedCollapsibleToggleButton')
+        self.toggleButton.setDefaultStyleSheet('#animatedCollapsibleToggleButton {border: 1px solid transparent; background-color: white; margin-left: 5px; text-align: left; padding-left: 5px;}')
+        self.toggleButton.setHoverStyleSheet('#animatedCollapsibleToggleButton {border: 1px solid rgb(200,200,200); background-color: white; border-radius: 2px; margin-left: 5px; text-align: left; padding-left: 5px;}')
+        self.configureButton(True)
      
 
         
@@ -122,12 +154,12 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         #----------------
         self.frame = qt.QFrame(self)
         #
-        # To prevent style sheet inheritance
+        # Prevent style sheet inheritance from 
+        # inner contents
         #
-        self.frame.setObjectName('animFrame')
-        self.frame.setStyleSheet('#animFrame {margin-top: 9px; border: 2px solid lightgray; padding-top: 5px; padding-left: 2px; padding-right: 2px; padding-bottom: 2px}')
+        self.frame.setObjectName('animateCollapsibleFrame')
+        self.frame.setStyleSheet('#animateCollapsibleFrame {margin-top: 9px; border: 2px solid lightgray; padding-top: 5px; padding-left: 2px; padding-right: 2px; padding-bottom: 2px}')
 
-        
         
         
         #----------------
@@ -135,17 +167,14 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         # QStackedLayout
         #----------------
         self.stackedLayout = qt.QStackedLayout()
-
-        self.stackedLayout.addWidget(self.button)
+        self.stackedLayout.addWidget(self.toggleButton)
         self.stackedLayout.addWidget(self.frame)
         
-        
-        #self.stackedLayout.addWidget(self.button)
-        #self.stackedLayout.addWidget(self.settingsButton)
-        
-        #
+
+
+        #----------------
         # To make sure the button is on top.
-        #
+        #----------------
         self.stackedLayout.setCurrentIndex(0)
         self.stackedLayout.setStackingMode(1)
 
@@ -172,24 +201,41 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         #----------------
         # Set the default states after creation.
         #----------------
-        #self.button.setChecked(True)
-        self.button.connect('toggled(bool)', self.setChecked)
+        self.toggleButton.connect('toggled(bool)', self.setChecked)
         self.toggled = True
 
 
 
+        #----------------
+        # Set the stretch height.
+        #
+        # NOTE: This is different from the maximumHeight,
+        # it's a target height that the user sets so that
+        # the collapsible will stretch as far as self.stretchHeight
+        # dictates once its expanded.  If we didn't have this 
+        # variable, the the widget would have a sendentary height
+        # within a layout, not stretching to the layout's
+        # maximum extents.
+        #
+        #
+        # TODO: Ideally this parameter would be more of a percentage
+        # but setting stylesheet percentages is not possible, becase
+        # we are manipulating the .maximumHeight' property of the widget 
+        # during the animation.
+        # Need to determine a more elegant way of of setting the 'stretch'
+        # height to '100%' or equivalent.
+        #----------------
         self.stretchHeight = None
-
-
-
-
-
 
             
         
 
     def suspendAnimationDuration(self, suspend):
-        """ As stated.
+        """ Suspends the animation length by converting
+            the duration to 0, saving the previous state.
+            When the user sets the 'suspend' argument to 
+            'False' then the previous animation state is 
+            restored.
         """
         if suspend:
             self.originalAnimDuration = self.animDuration
@@ -204,49 +250,29 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         """ As stated.
         """
         self.animDuration = duration;
-
-
-        
-        
-    def setFrameLayout(self, layout):
-        """ Adds a layout to the internal frame
-            which will be the contents of the widget.
-        """
-        self.frame.setLayout(layout)
-
-
-        
-        #----------------
-        # Temporarily turn off the animation
-        # when adding contents.
-        #----------------
-        self.setChecked(True)
         
 
 
 
-    def setButtonText(self, toggled):
+    def configureButton(self, toggled):
         """ Modifies the arrow character of the button
             title to match the 'toggled' state and also
-            sets the following text.
+            sets its text to 'self.title.'
         """
         arrowChr = self.downArrowChar if toggled else self.rightArrowChar
-        self.button.setText(arrowChr + '  ' + self.title)
-        self.button.setFixedHeight(17)
-        self.button.setMinimumWidth(10)
-        self.button.setMaximumWidth(110)
-        #----------------
-        # Temporarily turn off the animation
-        # when adding contents.
-        #----------------  
-        #self.button.setFixedWidth(self.button.sizeHint.width())      
-        #self.button.setSizePolicy(qt.QSizePolicy.Minimum, qt.QSizePolicy.Minimum) 
+        self.toggleButton.setText(arrowChr + '  ' + self.title)
+        self.toggleButton.setFixedHeight(17)
+        self.toggleButton.setMinimumWidth(10)
+        self.toggleButton.setMaximumWidth(110)
+
   
 
         
 
     def setWidget(self, widget):
-        """
+        """ Similar to the 'setWidget' function
+            of a QWidget: sets the internal contents
+            of the collapsible.
         """
         self.ContentsWidgets = [widget]
         layout = qt.QHBoxLayout()
@@ -258,7 +284,8 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
             
         
     def setOnCollapse(self, callback):
-        """ As stated.
+        """ Sets the callback for AFTER widget
+            is collapsed.
         """
         self.onCollapse = callback
 
@@ -266,7 +293,8 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
 
         
     def setOnExpand(self, callback):
-        """ As stated.
+        """ Sets the callback for AFTER the 
+            widget's expansion.
         """
         self.onExpand = callback
 
@@ -274,84 +302,17 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
 
         
     def setOnAnimate(self, callback):
-        """ As stated.
+        """ Sets the callback for DURING the
+            widget's animation.
         """
         self.onAnimate = callback
-
-
-
-        
-    def addContentsWidgets(self, *args):
-        """ Adds contents widgets for tracking, so that
-            they can disappear when the collapsible closes.  If any of the 
-            arguments are not an array, convert them then add them to 
-            self.ContentsWidgets.
-        """
-
-        #--------------------
-        # Loop through all of the arguments
-        #--------------------
-        for arg in args:
-
-            
-            #
-            # Check if the argument is an list, if it isn't
-            # then make it one.
-            #
-            if not isinstance(arg, list):
-                arg = [arg]
-
-                
-            #
-            # Append to self.ContentsWidgets.
-            #
-            self.ContentsWidgets = self.ContentsWidgets + arg
-
-            
-
-
-    def removeContentsWidgets(self, *args):
-        """ 
-        """
-
-
-        newContentsWidgets = []
-
-        removeWidgets = []
-
-        
-        #--------------------
-        # Collect all the widgets to be removed
-        #--------------------
-        for arg in args:
-
-            
-            #
-            # Check if the argument is an list, if it isn't
-            # then make it one.
-            #
-            if not isinstance(arg, list):
-                arg = [arg]
-
-                
-            #
-            # Append to self.ContentsWidgets.
-            #
-
-            removeWidgets = removeWidgets + arg
-
-
-        
-        
-        self.ContentsWidgets = list(set(self.ContentsWidgets) - set(removeWidgets))
-
-
-        
+       
                 
 
 
     def setSizeGripVisible(self, visible):
-        """
+        """ Sets the size grip in the bottom-right
+            corner of the screen visible or hidden.
         """
         if not visible:
             self.sizeGrip.hide()
@@ -383,59 +344,55 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
             
     def onAnimateMain(self, variant):
         """ Function during main animation
-            sequence -- runs the 'onAnimate'
+            sequence.  Calls the user-inputted 'onAnimate'
             callback.
         """
         if self.onAnimate:
             self.onAnimate()
             self.setFixedHeight(variant.height())
-            #size = qt.QSize(variant.width(), variant.height())
-            #self.setBaseSize(size)
-            #geom = self.geometry
-            #self.setGeometry(geom.top(), geom.left(), geom.width(), variant.height())
+
+            
 
 
         
     def onAnimationFinished(self):
         """ Callback function when the animation
-            finishes.
+            finishes.  Also calls the user-inputted
+            'onExpand' callback or 'onCollapse' callbacks
+            depending on the toggle state of the widget.
         """
 
-
         #---------------- 
-        # Call the animate function.
+        # Call the animate function one last time.
         #---------------- 
         self.onAnimateMain(qt.QSize(self.geometry.width(), self.geometry.height()))
 
-        #print "onAnimationFinished", self.toggled
+
         
         #---------------- 
-        # If the widget is toggled...
+        # If the widget is in a 'toggled' state.
         #---------------- 
         if self.toggled:
-
             
             #
-            # Set the height
+            # Set its height to either 'stretchHeight'
+            # or 'maxHeight.  For an explanation of 'stretchHeight'
+            # see it's declaration in the __init__ function.
             #
-            
-
             if self.stretchHeight:
                 self.setMaximumHeight(self.stretchHeight)
             else:
                 self.setMaximumHeight(self.maxHeight)
                 
             self.setMinimumHeight(self.minHeight)
-
-            #if self.targetGeometry:
-            #    self.setGeometry(self.targetGeometry)
                 
             #
-            # Show contents
+            # Show the internal contents
             #
             self.showContentsWidgets()
+
             #
-            # Run callbacks, animate and end.
+            # Run the the 'onExpand' callback.
             #
             if self.onExpand:
                 self.onExpand()
@@ -443,14 +400,15 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
                 
 
         #---------------- 
-        # Otherwise...
+        # Otherwise if it is 'collapsed'
         #---------------- 
         else:
-            #print "ON COLLAPSE:", self.onCollapse                
+                        
             #
-            # Set the height
+            # Set the height to 'self.collapsedHeight'.
             #
             self.setFixedHeight(self.collapsedHeight)
+            
             #
             # Run callbacks
             #
@@ -461,27 +419,25 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
 
 
     def setMaxHeight(self, height):
-        """
+        """ As stated.
         """
         self.maxHeight = height
-        #self.setMaximumHeight(self.maxHeight)
-        #self.setMinimumHeight(self.minHeight)
 
 
         
 
     def setMinHeight(self, height):
-        """
+        """ As stated.
         """
         self.minHeight = height
-        #self.setMaximumHeight(self.maxHeight)
-        #self.setMinimumHeight(self.minHeight)
 
 
         
 
     def setStretchHeight(self, height):
-        """
+        """ As stated.  See declaration of 
+            self.stretchHeight in the __init__
+            function for explanation of that variable.
         """
         self.stretchHeight = height
         self.setMaximumHeight(height)
@@ -498,7 +454,7 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         # We need to set the button state in case
         # this method is programatically called.
         #----------------         
-        self.button.setChecked(toggled)
+        self.toggleButton.setChecked(toggled)
 
 
         
@@ -525,7 +481,8 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
 
 
         #---------------- 
-        # For safety...
+        # For safety, set the width of
+        # the widget to '100%'
         #----------------   
         self.setStyleSheet('width: 100%')
 
@@ -533,64 +490,75 @@ class AnimatedCollapsible(ctk.ctkExpandableWidget):
         
         #---------------- 
         # Modify button text to match the toggled
-        # state (down arrow) 
+        # state (down arrow or right arrow) 
         #----------------       
-        self.setButtonText(toggled)	
+        self.configureButton(toggled)	
 
 
-            
-        #---------------- 
-        # Construct top-level animation.
-        #----------------	
         
-        #
+        #----------------
         # Make the animation object
-        #
+        #----------------
         anim = qt.QPropertyAnimation(self, 'size')
+
+
         
-        #
+        #----------------
         # Set the duration
-        #
+        #----------------
         anim.setDuration(animDuration)	
 
-        #
+
+        
+        #----------------
         # Set the easing curve
-        #
+        #----------------
         anim.setEasingCurve(self.easingCurve)
 
-        #
+
+        
+        #----------------
         # Set the start/end values depending on
         # the toggle state.
-        #
+        #----------------
         if self.toggled:
-            
 
             #
-            # Establish the animation sizes
+            # Establish the 'toggled'/expanded animation sizes.
             #	
             startSize = qt.QSize(self.geometry.width(), self.collapsedHeight)
             endSize = qt.QSize(self.geometry.width(), self.maxHeight)  
-
             self.setMaximumHeight(self.collapsedHeight)
             self.setMinimumHeight(self.collapsedHeight)
 
 
         else:
 
+            #
+            # Establish the 'untoggled'/collapsed animation sizes.
+            #	
             startHeight = self.geometry.height()
             startSize = qt.QSize(self.geometry.width(), startHeight)
             endSize = qt.QSize(self.geometry.width(), self.collapsedHeight)  
-            
             self.setMaximumHeight(startHeight)
             self.setMinimumHeight(startHeight)
 
-   
+            #
+            # Hide the internal contents for better
+            # visual clarity.
+            #
             self.hideContentsWidgets()
             
-            
+
+
+        #---------------- 
+        # Set the start/end animation values.
+        #----------------            
         anim.setStartValue(startSize)
         anim.setEndValue(endSize)            
-       
+
+
+        
         #---------------- 
         # Set callback during animation.
         #----------------
