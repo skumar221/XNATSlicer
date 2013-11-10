@@ -99,7 +99,7 @@ class XnatSettings(qt.QScrollArea):
         
 
         
-    def setMetadataManagers(self, *args):
+    def createMetadataManagers(self, *args):
         """
         """
         for arg in args:
@@ -216,7 +216,7 @@ class XnatSettings(qt.QScrollArea):
 
 
 
-    def addFontDropdown(self, title = "Font Size:" ):
+    def addFontSizeDropdown(self, title = "Font Size:" ):
         """
         """
         try:
@@ -229,4 +229,4 @@ class XnatSettings(qt.QScrollArea):
         except Exception, e:
             #print self.MODULE.utils.lf(), str(e)
             self.fontDropdowns = []
-            self.addFontDropdown(title)
+            self.addFontSizeDropdown(title)

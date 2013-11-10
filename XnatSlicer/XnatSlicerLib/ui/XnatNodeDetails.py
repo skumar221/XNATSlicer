@@ -77,10 +77,10 @@ class XnatNodeDetails(qt.QWidget):
     def changeFontSize(self, size):
         """
         """
-        print "NOTE CHANGE FONT SIZE"
-        
         self.currFont.setPointSize(size)
         self.textEdit.setFont(self.currFont)
+
+
         
         
     def setColumnCount(self, num):

@@ -55,7 +55,7 @@ class XnatTreeViewSettings(XnatSettings):
         #--------------------
         # Add font dropdown
         #--------------------
-        self.addFontDropdown("Tree View Font Size:")
+        self.addFontSizeDropdown("Tree View Font Size:")
         self.addSpacing()
 
         
@@ -87,10 +87,10 @@ class XnatTreeViewSettings(XnatSettings):
 
 
 
-    def addFontDropdown(self, title = "Font Size:" ):
+    def addFontSizeDropdown(self, title = "Font Size:" ):
         """
         """
-        super(XnatTreeViewSettings, self).addFontDropdown(title)
+        super(XnatTreeViewSettings, self).addFontSizeDropdown(title)
 
         self.fontSizeTag = "TreeViewFontSize"
         
@@ -125,7 +125,7 @@ class XnatTreeViewSettings(XnatSettings):
         #--------------------
         # Set the metadata manager type.
         #--------------------        
-        self.setMetadataManagers('info')        
+        self.createMetadataManagers('info')        
         self.addSection("Info. Column Metadata", self.XnatMetadataManagers['info'])
 
         

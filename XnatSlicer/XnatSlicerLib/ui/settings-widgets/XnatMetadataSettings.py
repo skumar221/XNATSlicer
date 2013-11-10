@@ -68,7 +68,7 @@ class XnatMetadataSettings(XnatSettings):
 
         #self.setupMetadataManager()
         #self.XnatMetadataManager.setEditButtonsVisible(False)
-        self.setMetadataManagers('main')
+        self.createMetadataManagers('main')
         self.masterLayout.addWidget(self.XnatMetadataManagers['main'])
         self.XnatMetadataManagers['main'].setEditButtonsVisible(False)
 

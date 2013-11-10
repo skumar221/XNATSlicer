@@ -126,14 +126,14 @@ class XnatSettingsWindow(FingerTabWidget):
 
 
         
-        print "(Settings Window) SETTINGS WINDOW UPDATE:"
+        #print "(Settings Window) SETTINGS WINDOW UPDATE:"
         #--------------------
         # Remove the metadata editor from the previous settings.
         #--------------------       
         try:
             for i in range(0, len(self.tabButtons)):
                 for key, manager in self.settingsWidgets[i]['widget'].XnatMetadataManagers.iteritems(): 
-                    print "\n\tUpdating Manager for: ", key
+                    #print "\n\tUpdating Manager for: ", key
                     manager.update()
         except Exception, e:
             print self.MODULE.utils.lf(), "XnatMetadataManagerObject error."
@@ -194,7 +194,7 @@ class XnatSettingsWindow(FingerTabWidget):
             
         for i in range(0, len(self.settingsWidgets)):
             sDict = self.settingsWidgets[i]
-            print "***********", sDict, settingName
+            #print "***********", sDict, settingName
             if sDict['name'] == settingName:
                 self.setCurrentIndex(i)
                 return

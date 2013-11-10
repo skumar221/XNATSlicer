@@ -283,7 +283,7 @@ class XnatFolderMaker(qt.QWidget):
         subjs_raw = self.MODULE.XnatIo.getFolderContents('/projects/' + projectName + '/subjects', ['label'])
         subjs_name = []
 
-        print "\n\n*****************projectName: ", projectName
+        #print "\n\n*****************projectName: ", projectName
         print subjs_raw
 
         #--------------------
