@@ -1,6 +1,17 @@
 ![alt tag](https://raw.github.com/skumar221/XNATSlicer/master/XnatSlicer/Resources/Icons/XNATSlicer-MainIcon.png)
 
-<img src=https://raw.github.com/skumar221/XNATSlicer/master/XnatSlicer/Resources/Icons/XNATSlicer-MainIcon.png onclick="alert('CLICK!')"></img>
+
+<script>
+var images = document.getElementsByTagName("img");
+for(var i = 0; i < images.length; i++) {
+    var image = images[i];
+    image.onclick = function(event) {
+         alert("CLICK");
+    };
+}
+</script>
+
+<img src="https://raw.github.com/skumar221/XNATSlicer/master/XnatSlicer/Resources/Icons/XNATSlicer-MainIcon.png"></img>
 XNATSlicer is an open-source module for [3DSlicer](http://www.slicer.org/).  It's connects any remote [XNAT](http://www.xnat.org/) host for interaction and visualization within 3DSlicer.
 
 Features:
