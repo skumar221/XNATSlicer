@@ -1,5 +1,6 @@
 ![alt tag](https://raw.github.com/skumar221/XNATSlicer/master/XnatSlicer/Resources/Icons/XNATSlicer-MainIcon.png)
 
+<img src=https://raw.github.com/skumar221/XNATSlicer/master/XnatSlicer/Resources/Icons/XNATSlicer-MainIcon.png onclick="alert('CLICK!')"></img>
 XNATSlicer is an open-source module for [3DSlicer](http://www.slicer.org/).  It's connects any remote [XNAT](http://www.xnat.org/) host for interaction and visualization within 3DSlicer.
 
 Features:
@@ -25,16 +26,13 @@ Installation
 
 ##### From Slicer's Extension Manager:
 
-```sh
 coming soon!
-```
 
 
 ##### From GitHub:
 
-```sh
 coming soon!
-```
+
 
 Panels
 --------------
