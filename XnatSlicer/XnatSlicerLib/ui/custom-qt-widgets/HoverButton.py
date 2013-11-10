@@ -6,13 +6,12 @@ import shutil
 
 
 
+
 comment = """
 HoverButton is a customized qtWidget.
       
 """
 
-
-from CustomEventFilter import *
 
 
 
@@ -28,13 +27,6 @@ class HoverButton (qt.QPushButton):
             super(HoverButton, self).__init__(parent)
         else:    
             super(HoverButton, self).__init__(self)
-
-
-        #self.customEventFilter = CustomEventFilter()
-
-        #self.installEventFilter(self.customEventFilter)
-        #self.customEventFilter.addEventCallback(qt.QEvent.HoverEnter, self.onHoverEnter)
-        #self.customEventFilter.addEventCallback(qt.QEvent.HoverLeave, self.onHoverLeave) 
 
 
         self.installEventFilter(self)
@@ -61,7 +53,6 @@ class HoverButton (qt.QPushButton):
 
         
     def eventFilter(self, widget, event):
-
         """
         """
         if event.type() == qt.QEvent.Enter:

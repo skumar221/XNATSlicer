@@ -7,7 +7,6 @@ import re
 import urllib2
 
 from XnatUtils import *
-from CustomEventFilter import *
 
 
 
@@ -19,6 +18,7 @@ string inputs.
 
 TODO : 
 """
+
 
 
 
@@ -157,7 +157,6 @@ class XnatFolderMaker(qt.QWidget):
         
 
         
-        self.customEventFilter = CustomEventFilter()
         self.lineEdits['projects'].installEventFilter(self)
         self.lineEdits['subjects'].installEventFilter(self)
         self.lineEdits['experiments'].installEventFilter(self)
@@ -165,8 +164,6 @@ class XnatFolderMaker(qt.QWidget):
         self.dropdowns['projects'].installEventFilter(self)
         self.dropdowns['subjects'].installEventFilter(self)
 
-        
-        #self.customEventFilter.addEventCallback(qt.QEvent.FocusIn, self.disableDropdowns)
 
 
 

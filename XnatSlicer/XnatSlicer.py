@@ -197,10 +197,11 @@ class XnatSlicerWidget:
         self.XnatSettingsFile = XnatSettingsFile(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
 
         
+        
         #--------------------------------
         # Xnat xnatSettingsWindow
         #--------------------------------        
-        self.XnatSettingsWindow = XnatSettingsWindow(self)
+        self.XnatSettingsWindow = XnatSettingsWindow(parent = None, MODULE = self)
         #
         # Add XnatHostSettings (communicates to XnatSettings)
         # to xnatSettingsWindow

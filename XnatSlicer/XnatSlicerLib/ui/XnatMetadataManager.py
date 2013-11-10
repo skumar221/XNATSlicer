@@ -265,8 +265,7 @@ class XnatMetadataManager(qt.QFrame):
         for key, button in self.editCustomButtons.iteritems():
             if button:
                 button.setVisible(self.editButtonsVisible)
-                if not self.editButtonsVisible:
-                    self.collapsibles[key].removeContentsWidgets(button)
+
 
             
 

@@ -5,9 +5,6 @@ import sys
 import shutil
 
 
-from CustomEventFilter import *
-
-
 
 comment = """
 XnatSearchBar constructs the UI components for the search

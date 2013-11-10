@@ -6,7 +6,7 @@ import sys
 
 
 from VariableItemListWidget import *
-from CustomEventFilter import *
+
 
 
 comment = """
@@ -48,7 +48,6 @@ class XnatMetadataEditor(qt.QFrame):
         self.update()
 
 
-        self.customEventFilter = CustomEventFilter()
 
 
 
@@ -295,8 +294,6 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         self.deleteButton.setEnabled(False)
 
 
-        #self.customButtonGroup.addButton(self.addButton)
-        #self.customButtonGroup.addButton(self.deleteButton)
 
         self.lineLayout = qt.QHBoxLayout()
 
@@ -307,10 +304,18 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         super(XnatCustomMetadataEditor, self).__init__(MODULE, xnatLevel)
 
 
+        self.lineEdit.installEventFilter(self)
 
-        self.lineEdit.installEventFilter(self.customEventFilter)
-        self.customEventFilter.addEventCallback(qt.QEvent.FocusIn, self.onLineEditFocused)
 
+        
+
+    def eventFilter(self, widget, event):
+        """
+        """
+        if widget == self.lineEdit:
+            if event.type() == qt.QEvent.FocusIn:
+                self.onLineEditFocused()
+        
 
         
 

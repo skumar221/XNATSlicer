@@ -26,7 +26,7 @@ class XnatSettingsWindow(FingerTabWidget):
         such as host names and default users.
     """
     
-    def __init__(self, MODULE):  
+    def __init__(self, parent, MODULE):  
         """ Descriptor
         """      
 
@@ -35,7 +35,7 @@ class XnatSettingsWindow(FingerTabWidget):
         #--------------------
         # Call parent init.
         #--------------------
-        super(XnatSettingsWindow, self).__init__(self)
+        super(XnatSettingsWindow, self).__init__(parent)
 
         self.setWindowTitle("XNATSlicer Settings")
  
@@ -114,7 +114,7 @@ class XnatSettingsWindow(FingerTabWidget):
 
         
         doneButtonRow.setContentsMargins(5,5,5,5)
-        self.mainLayout.addLayout(doneButtonRow)
+        self.mainWidgetLayout.addLayout(doneButtonRow)
 
 
 
