@@ -8,18 +8,25 @@ from XnatSettings import *
 
 
 
+
 comment = """
-XnatHostSettings is a widget that fits within the XnatSettingsPopup
-that allows the user to edit the hosts that are stored in XnatSettings.
-As a result, this class also communicates directly with XnatSettings.
+XnatHostSettings is the XnatSettings pertaining to
+tracking and saving the various XnatHosts, and also
+saving these settings to the XnatSlicerFile.  
+
+
+All 'XnatSettings' subclasses
+are to be displaed in the 'XnatSettingsWindow' class.
+
 
 TODO:
 """
 
 
+
         
 class XnatHostSettings(XnatSettings):
-    """ Embedded within the settings popup.  Manages hosts.
+    """ Descriptor above.
     """
 
   
@@ -34,9 +41,9 @@ class XnatHostSettings(XnatSettings):
         
 
 
-        #
+        #--------------------
         # Add section Label
-        #
+        #--------------------
         bLabel = qt.QLabel('Manage Hosts')
         self.masterLayout.addWidget(bLabel)
         self.masterLayout.addSpacing(8)
@@ -44,27 +51,35 @@ class XnatHostSettings(XnatSettings):
         
         
         #--------------------
-        # Current popup opened by user
+        # The currModal variable 
+        # tracks the various input modals related
+        # to entering and deleting hosts.
         #--------------------
         self.currModal = None
         
         
         
         #--------------------
-        # Host lister
+        # Add Host table (class below)
         #--------------------      
         self.hostTable = HostTable(self.MODULE, clickCallback = self.hostRowClicked)
+
         
         
         #--------------------
-        # Shared popup objects
+        # Shared popup objects.
+        # The function that creates them
+        # are outside of the scope of the class
+        # and are made by a UI-making function below.
         #--------------------
         self.urlLine, self.nameLine, self.setDefault, self.usernameLine = makeSharedHostModalObjects(self)
         
         
         
         #--------------------
-        # Buttons
+        # Add Buttons and connect their events.
+        # Like the variables above, they are created in a 
+        # separate UI function.
         #--------------------
         self.addButton, self.editButton, self.deleteButton = makeButtons(self)
         self.addButton.connect('clicked()', self.showAddHostModal)     
@@ -74,7 +89,7 @@ class XnatHostSettings(XnatSettings):
 
         
         #--------------------
-        # Frame for setup window
+        # Make frame for setup window
         #--------------------
         self.makeFrame()
         
@@ -82,13 +97,11 @@ class XnatHostSettings(XnatSettings):
 
     
         #--------------------
-        # Layout for entire frame
+        # Set layout for entire frame and
+        # its aesthetics.
         #--------------------
-        #self.masterLayout.addStretch()
-        #self.frame.setSizePolicy(qt.QSizePolicy.Maximum, qt.QSizePolicy.Maximum)
         self.frame.setLayout(self.masterLayout)
         self.setWidget(self.frame)
-        #self.frame.setFixedWidth(520)
         self.frame.setMinimumWidth(600)
         self.frame.setMaximumWidth(10000)
         
@@ -98,29 +111,25 @@ class XnatHostSettings(XnatSettings):
         #--------------------
         self.loadHosts()
 
-        #print "HOST SETTNS"
-
-
-
-
         
         
         
     def hostRowClicked(self):
-        """ Callbcak for when a user clicks on a given item
-        within the host editor.
+        """ Callback for when a user clicks on a given item
+            within the host editor.
         """
         self.setButtonStates(self.hostTable.currentRowItems['name'])
         
         
         
         
-    def setButtonStates(self, nameString):   
+    def setButtonStates(self, hostName):   
         """ Enables / Disables button based upon the editable
-        quality of the host.  Some hosts cannot be modified.
+            quality of the host (provided by the 'hostName'
+            argument).  Some hosts cannot be modified.
         """
-        #print nameString, self.MODULE.XnatSettingsFile.isModifiable(nameString) 
-        if self.MODULE.XnatSettingsFile.isModifiable(nameString):
+        #print hostName, self.MODULE.XnatSettingsFile.isModifiable(hostName) 
+        if self.MODULE.XnatSettingsFile.isModifiable(hostName):
             self.deleteButton.setEnabled(True)
             self.editButton.setEnabled(True)
         else:
@@ -133,33 +142,35 @@ class XnatHostSettings(XnatSettings):
     def loadHosts(self):     
         """ Communicates with XnatSettings to load the stored hosts.
         """
+
+        #--------------------
+        # Empty host table in the editor.
+        #--------------------
+        self.hostTable.clear()
+
+
         
         #--------------------
         # Get host dictionary from XnatSettings
         #--------------------
         hostDictionary = self.MODULE.XnatSettingsFile.getHostNameAddressDictionary()  
-        #print "HOST DICT", hostDictionary
-        
-        
-        #--------------------
-        # Empty hostList in the editor.
-        #--------------------
-        self.hostTable.clear()
         
         
         
         #--------------------
-        # Iterate through dictionary and apply text to the hostList
+        # Iterate through dictionary and apply text to the host table.
         #--------------------
         for name in hostDictionary:
+            
             #
             # Apply style if default
             #
             setModfiable = [True, True]
             if not self.MODULE.XnatSettingsFile.isModifiable(name):
                 setModfiable = [False, False]
+                
             #
-            # Add name and URL to host list
+            # Add name and URL to host table.
             #
             self.hostTable.addNameAndUrl(name, hostDictionary[name], setModfiable)
 
@@ -167,8 +178,9 @@ class XnatHostSettings(XnatSettings):
             # Get curr username
             #
             currName = self.MODULE.XnatSettingsFile.getCurrUsername(name)
+            
             #
-            # If there's a username, add it....
+            # If there's a username, add it to the hostTable
             #
             if len(currName) > 0:
                 self.hostTable.addUsername(currName) 
@@ -178,7 +190,8 @@ class XnatHostSettings(XnatSettings):
 
     
     def rewriteHost(self):
-        """ As stated.  Calls on the internal "writeHost" function.
+        """ As stated.  Deletes the host then 
+            calls on the internal "writeHost" function.
         """
         self.MODULE.XnatSettingsFile.deleteHost(self.prevName)
         self.prevName = None
@@ -188,20 +201,23 @@ class XnatHostSettings(XnatSettings):
     
     
     def deleteHost(self):
-        """ As described
+        """ Removes the host from the settings file
+            and then reloads the HostTable, which
+            refers to the XnatSettingsFile.
         """
         
         #--------------------
         # Delete the selected host by
-        # applying the text to the settings, and removing from there.
+        # removing it from the settings.
         #--------------------
         hostStr = self.hostTable.currentRowItems
         deleted = self.MODULE.XnatSettingsFile.deleteHost(hostStr['name'])
         
 
-        print "DELETED?", deleted
+        
         #--------------------
-        # Reload everything
+        # Reload all hosts back into the table
+        # from the XnatSettingsFile.
         #--------------------
         if deleted: 
             self.loadHosts()
@@ -219,18 +235,21 @@ class XnatHostSettings(XnatSettings):
     
     
     def writeHost(self):
-        """ As described.  See below for details.
+        """ Writes the host both to the XnatSettingsFile,
+            then reloads the hosts from the file.
         """
 
         #--------------------
-        # Check if the nameLine is part of the defaut set
+        # Check if the nameLine's name is
+        # is modifiable as per the XnatSettingsFile.
         #--------------------
         modifiable = self.MODULE.XnatSettingsFile.isModifiable(self.nameLine.text.strip(""))
 
 
 
         #--------------------
-        # Determine if enetered host was set to default
+        # Determine if enetered host was set to default,
+        # which means it will be loaded up on startup.
         #--------------------
         modStr = str(modifiable)
         checkStr = str(self.setDefault.isChecked())
@@ -238,14 +257,19 @@ class XnatHostSettings(XnatSettings):
         
         
         #--------------------
-        # Save Host
+        # Save Host to XnatSettingsFile.
         #--------------------
-        self.MODULE.XnatSettingsFile.saveHost(self.nameLine.text, self.urlLine.text, isModifiable = modifiable, isDefault = self.setDefault.isChecked())
+        self.MODULE.XnatSettingsFile.saveHost(self.nameLine.text, 
+                                              self.urlLine.text, 
+                                              isModifiable = modifiable, 
+                                              isDefault = self.setDefault.isChecked())
 
         
 
         #--------------------
-        # Set default if checkbox is check
+        # Set host to default if checkbox is checked.
+        # 'Default' means it will be the host that is
+        # selected automatically on loadup.
         #--------------------
         if self.setDefault.isChecked():
             self.MODULE.XnatSettingsFile.setDefault(self.nameLine.text)   
@@ -253,7 +277,7 @@ class XnatHostSettings(XnatSettings):
 
 
         #--------------------
-        # Set default username
+        # Set hosts associated username accordingly.
         #--------------------
         if self.usernameLine.text != "":
             self.MODULE.XnatSettingsFile.setCurrUsername(self.nameLine.text, self.usernameLine.text)
@@ -261,7 +285,7 @@ class XnatHostSettings(XnatSettings):
 
 
         #--------------------
-        # Reload hosts
+        # Reload hosts from the XnatSettingsFile.
         #--------------------
         self.MODULE.XnatLoginMenu.loadDefaultHost()
         self.loadHosts() 
@@ -306,12 +330,10 @@ class XnatHostSettings(XnatSettings):
 
     
 
-
     def makeFrame(self):
-        """ As described.
+        """ Makes the widget frame.
         """
 
-        
         #--------------------
         # Layout for top part of frame (host list)
         #--------------------
@@ -334,14 +356,16 @@ class XnatHostSettings(XnatSettings):
 
                   
 class HostTable(qt.QTableWidget):
-    """ Inherits qt.QTextEdit to list the hosts in the 
-        SettingsModal
+    """ Inherits qt.QTableWidget to list the hosts in the 
+        SettingsModal in a table format.  QTableWidgets are
+        a bit quirky compared to other QListWidgets, some of 
+        those quirks are accommodated for below.
     """
 
     def __init__(self, MODULE, clickCallback = None): 
         """ Init function.
         """
-        qt.QTableWidget.__init__(self)
+        super(HostTable, self).__init__(self)
         self.MODULE = MODULE
         self.clickCallback = clickCallback
         self.setup()
@@ -351,39 +375,74 @@ class HostTable(qt.QTableWidget):
 
         
     def setup(self):
+        """ Setup function on __init__.
         """
-        """
+        
+        #--------------------
+        # Setup columns.
+        #--------------------
         self.columnNames = ['Name', 'Url', 'Stored Login']
         self.setSelectionBehavior(1)
         self.setColumnCount(len(self.columnNames))
-        self.setHorizontalHeaderLabels(self.columnNames)
+        self.setHorizontalHeaderLabels(self.columnNames)     
         self.setColumnWidth(0, 150)
         self.setColumnWidth(1, 200)
         self.setColumnWidth(2, 150)
+
+
         
+        #--------------------
+        # Set aesthetics.
+        #--------------------       
         self.setShowGrid(False)
         self.verticalHeader().hide()
-
         self.currentRowNumber = None
         self.currentRowItems = None      
 
+
+
+        #--------------------
+        # Tracked items tracks all of the contents
+        # within the table.  
+        #
+        # NOTE: The reason this exists is because QTableWidget
+        # takes ownership of the items that are fed into it, 
+        # making the items disappear afterwards.  As a result,
+        # the items need to be tracked and stored within the class
+        # that utilizes the QTableWidget.
+        #
+        # See here for more information:
+        # http://www.qtcentre.org/threads/12499-QTableWidget-set-items-disappear-after-new-insertion
+        #--------------------     
         self.trackedItems = {}
+
+
         
+        #--------------------
+        # Connect interaction event.
+        #--------------------   
         self.connect('currentCellChanged(int, int, int, int)', self.onCurrentCellChanged)
 
+        
 
 
     def printAll(self):
+        """ Prints the row/column count of the hostTable.
         """
-        """
-        print "PRINT ALL", self.rowCount, self.columnCount 
+        print self.MODULE.utils.lf(), "PRINT ALL:", self.rowCount, self.columnCount 
 
 
         
 
     def getRowItems(self, rowNumber = None):
+        """ Returns a dictionary of the row items
+            with a key-value pairing of column name
+            to value.
         """
-        """
+
+        #--------------------
+        # Determine the current row number.
+        #--------------------
         if not rowNumber:
             rowNumber = self.currentRowNumber
 
@@ -399,8 +458,11 @@ class HostTable(qt.QTableWidget):
 
 
         #--------------------
-        # This happens after a clear and 
-        # reinstantiation of rows.
+        # If the row number's items are tracked (they should be)
+        # then construct and return the row dictionary.
+        #
+        # For more information on why 'trackedItems' exists,
+        # see __init__ function.
         #--------------------
         if self.trackedItems[rowNumber]:
             returner = {}
@@ -409,7 +471,8 @@ class HostTable(qt.QTableWidget):
                 
             return returner
 
-    
+
+        
 
     def clear(self):
         """ Clears the table of all values, then reapplies
@@ -423,18 +486,21 @@ class HostTable(qt.QTableWidget):
         del self.trackedItems
         self.trackedItems = {}
         self.setRowCount(0)
-        #self.setup()
-        
+
             
     
 
             
     def onCurrentCellChanged(self, rowNum, colNum, oldRow, oldCol):
+        """  Callback when the cell changes.
         """
-        """
+
+        #--------------------
+        # Set the current row number and
+        # currentRowItems accordingly.
+        #--------------------
         self.currentRowNumber = rowNum
         self.currentRowItems = self.getRowItems()
-        #print "onCurrentCellChanged", self.currentRowItems
         self.clickCallback()
 
 
@@ -458,7 +524,9 @@ class HostTable(qt.QTableWidget):
         """
 
         #--------------------
-        # 
+        # Create the modifiable flags corresponding with
+        # the 'setModifiable' argument for
+        # feeding into the XnatSettingsFile.
         #--------------------
         flags = []
         for state in setModfiable:
@@ -466,60 +534,91 @@ class HostTable(qt.QTableWidget):
                 flags.append(None)
             else:
                 flags.append(1)
-        
-        nameItem = qt.QTableWidgetItem(name)
+
+                
+
+        #--------------------
+        # Add the hostName and hostUrl items
+        # accordingly.
+        #--------------------                
+        hostNameItem = qt.QTableWidgetItem(name)
         if flags[0]:
-            nameItem.setFlags(flags[0])
+            hostNameItem.setFlags(flags[0])
         
-        urlItem = qt.QTableWidgetItem(url)
+        hostUrlItem = qt.QTableWidgetItem(url)
         if flags[1]:
-            urlItem.setFlags(flags[1])
-        
+            hostUrlItem.setFlags(flags[1])
+
+
+            
+        #--------------------
+        # Add the username item.
+        #--------------------    
         usernameItem = qt.QTableWidgetItem('No username stored.')
 
+
+        
+        #--------------------
+        # Turn sorting off.
+        #--------------------         
         self.setSortingEnabled(False)
+
+
+        
+        #--------------------
+        # NOTE: QTableWiget quirk: we have to 
+        # set the rowcount of the table beforehand.
+        #--------------------     
         self.setRowCount(self.rowCount + 1)
     
 
 
         #--------------------
-        # 
+        # Add the new items to the 'trackedItems'
+        # variable otherwise the table will destroy them
+        # and the items will disappear immediately on
+        # add.
         #--------------------
         self.trackedItems[self.rowCount-1] = {}
-        self.trackedItems[self.rowCount-1]['name'] = nameItem
-        self.trackedItems[self.rowCount-1]['url'] = urlItem
+        self.trackedItems[self.rowCount-1]['name'] = hostNameItem
+        self.trackedItems[self.rowCount-1]['url'] = hostUrlItem
         self.trackedItems[self.rowCount-1]['stored login'] = usernameItem
 
+
+
+        #--------------------
+        # Set the added items' aeshetics.
+        #--------------------
         for key, item in self.trackedItems[self.rowCount-1].iteritems():
             item.setFont(self.MODULE.GLOBALS.LABEL_FONT)
 
-        
-        self.setItem(self.rowCount-1, self.getColumn('name'), nameItem)
-        self.setItem(self.rowCount-1, self.getColumn('url'), urlItem)
+
+
+        #--------------------
+        # Call on the QTableWidget 'setItem' function.
+        #--------------------
+        self.setItem(self.rowCount-1, self.getColumn('name'), hostNameItem)
+        self.setItem(self.rowCount-1, self.getColumn('url'), hostUrlItem)
         self.setItem(self.rowCount-1, self.getColumn('stored login'), usernameItem)
  
 
+
+        #--------------------
+        # Again, turn sorting off.
+        #--------------------  
         self.setSortingEnabled(False)
-        #print self.trackedItems
         
-        
-        
-    def applyIsDefaultStyle(self):
-        """ Stylistic display.
-        """
-        #self.setFontItalic(True)
-        #self.setTextColor(qt.QColor(0,0,225))
-        #self.insertPlainText("default")
 
 
         
         
     def addUsername(self, username):
-        """ Stylistic adding of username.
+        """ Adds username to row, storing within the class
+            'trackedItems' and adding it to the table.
+            
+            For more information on 'trackedItems' please
+            see its declaration in the __init__ function.
         """
-        #self.setFontItalic(True)
-        #self.setTextColor(qt.QColor(20,20,20))
-        #self.insertPlainText("\t(stored login): " + username + "\n")
         self.trackedItems[self.rowCount-1]['stored login'].setText(username)
         self.setItem(self.rowCount-1, self.getColumn('stored login'), self.trackedItems[self.rowCount-1]['stored login'])
 
@@ -527,7 +626,17 @@ class HostTable(qt.QTableWidget):
 
 
 
-
+        
+###########################################################################################################
+#
+#                UI FUNCTIONS
+#
+# These exist because the tend to clutter up
+# __init__ functions.  They deal primarily with 
+# setting up, aesthetics of various QWidgets and modals needed
+# for adding hosts.
+#
+###########################################################################################################
 
 def makeAddHostModal(hostEditor):
     """ As stated. 

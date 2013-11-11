@@ -15,8 +15,11 @@ XnatDetailsSettings is the XnatSettings pertaining to
 the 'XnatNodeDetails' class.  This class specifically
 deals with toggling the visible metadata key-value pairs
 in the 'XnatNodeDetails' window when a user clicks on a 
-note in the XnatView.  All 'XnatSettings' subclasses
-are to be displaed in the 'XnatSettingsWindow' class,
+note in the XnatView, and the subsequent saving of these
+settings into the XnatSettingsFile..
+
+All 'XnatSettings' subclasses
+are to be displaed in the 'XnatSettingsWindow' class.
 
 TODO:
 """

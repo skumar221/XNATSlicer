@@ -9,8 +9,24 @@ from XnatMetadataManager import *
 
 
 
+
 comment = """
-XnatTreeViewSettings
+XnatTreeViewSettings is the XnatSettings pertaining to
+the 'XnatTreeView' class.  This class specifically
+deals with the following:
+
+1) Toggling the visible metadata key-value pairs
+in the 'Info' column of the TreeView and saving this
+in the XnatSettingsFile.
+
+2) Setting the font size of the tree view.
+
+3) Filtering the tree view nodes by column values
+(LastAccessed).
+
+
+All 'XnatSettings' subclasses
+are to be displaed in the 'XnatSettingsWindow' class.
 
 TODO:
 """
@@ -30,7 +46,7 @@ for key in infoMetadataTags:
     
         
 class XnatTreeViewSettings(XnatSettings):
-    """ Embedded within the settings popup.  Manages hosts.
+    """ Descriptor above.
     """
   
     def __init__(self, title, MODULE):
@@ -88,22 +104,54 @@ class XnatTreeViewSettings(XnatSettings):
 
 
     def addFontSizeDropdown(self, title = "Font Size:" ):
+        """ As stated.  Creates the fontSizeDropdown by referring
+            to the parent class function of the same name.  After
+            the dropdown is created, it allocates the change events
+            of the dropdown to update the treeView node's fonts.
         """
-        """
+
+        #--------------------
+        # Call parent class function of same name
+        # to create the dropdown.
+        #--------------------  
         super(XnatTreeViewSettings, self).addFontSizeDropdown(title)
 
-        self.fontSizeTag = "TreeViewFontSize"
+
         
+        #--------------------
+        # Try to retrieve any saved fronts from
+        # the settings file that pertains to the current host.
+        #-------------------- 
+        self.fontSizeTag = "TreeViewFontSize"
         xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
         font = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.fontSizeTag)
 
 
+
+        #--------------------
+        # If there are no saved fonts,
+        # refer to XnatGlobals to set and save 
+        # the font back to the XnatSettingsFile.
+        #-------------------- 
         if len(font) == 0:
             currSize = self.MODULE.GLOBALS.FONT_SIZE
             self.MODULE.XnatSettingsFile.setTagValues(xnatHost, {self.fontSizeTag: [str(currSize)]})
+
+
+            
+        #--------------------
+        # Otherwise, just refer to the
+        # saved font.
+        #-------------------- 
         else:
             currSize = font[0]
-        
+
+
+
+        #--------------------
+        # Callback function for when the dropdown
+        # is changed.
+        #-------------------- 
         def changeFontSize(size):
             try:
                 self.MODULE.XnatView.changeFontSize(int(size))
@@ -112,6 +160,12 @@ class XnatTreeViewSettings(XnatSettings):
                 #print self.MODULE.utils.lf(), str(e)
                 pass
 
+
+            
+        #--------------------
+        # Tie the dropdown change event
+        # to the callback function above.
+        #-------------------- 
         currDropdown = self.fontDropdowns[-1]
         currDropdown.connect('currentIndexChanged(const QString&)', changeFontSize)
         currDropdown.setCurrentIndex(currDropdown.findText(currSize))
@@ -120,15 +174,24 @@ class XnatTreeViewSettings(XnatSettings):
 
 
     def addMetadataManager(self):
+        """ Add metadata manager function specific to 
+            the XnatTreeViewSettings.  This refers to the
+            'createMetadataManagers' function for the purpose
+            and then adjusts it accordingly.  This basically 
+            exists to reduce clutter in the __init__ function.
         """
-        """
+        
         #--------------------
-        # Set the metadata manager type.
+        # Create the metadata manager type.
         #--------------------        
         self.createMetadataManagers('info')        
         self.addSection("Info. Column Metadata", self.XnatMetadataManagers['info'])
 
-        
+
+
+        #--------------------
+        # Set the default selected metadata.
+        #--------------------  
         self.setDefaultSelectedMetadata('info',  {
             'projects' : [
                 'last_accessed_497',
@@ -163,7 +226,11 @@ class XnatTreeViewSettings(XnatSettings):
         })
 
 
-        
+
+        #--------------------
+        # Hide metadataManager's custom edit
+        # widgets and make sure it's a checkbox.
+        #--------------------  
         for key, manager in self.XnatMetadataManagers.iteritems():
             manager.setCustomEditVisible(False)
             manager.setItemType('checkbox')
@@ -173,8 +240,11 @@ class XnatTreeViewSettings(XnatSettings):
 
 
     def addSortAndFilterButtons(self):
+        """  Adds the sort/filter buttons
+             to the settings widgets and
+             connects their click events accordingly.
         """
-        """
+        
         #--------------------
         # Create buttons
         #--------------------
@@ -185,20 +255,31 @@ class XnatTreeViewSettings(XnatSettings):
                                                                                font = self.MODULE.GLOBALS.LABEL_FONT,
                                                                                size = qt.QSize(90, 20), 
                                                                                enabled = True)}
+      
+        self.buttons['sort']['accessed'].setCheckable(True)
+        self.buttons['sort']['accessed'].setChecked(False)
+
 
         
         #--------------------
-        # Connect the filter button
+        # Callback for when the filter
+        # button is clicked.
         #--------------------
-        self.buttons['sort']['accessed'].setCheckable(True)
-        self.buttons['sort']['accessed'].setChecked(False)
         def accessedToggled(toggled):
             if toggled:
                 self.MODULE.XnatView.filter_accessed()
             else:
                 self.MODULE.XnatView.filter_all()
-        
+
+
+
+        #--------------------
+        # Connect the filter button to
+        # the button click.
+        #--------------------
         self.buttons['sort']['accessed'].connect('toggled(bool)', accessedToggled)
+
+
 
         #--------------------
         # Make the button layout
