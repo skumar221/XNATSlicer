@@ -26,7 +26,14 @@ coming soon!
 
 ##### From GitHub:
 
-coming soon!
+1. Download and install [Slicer 4.3+](http://download.slicer.org).
+2. From this repo click on download the 'Download ZIP' button.  (Or you can just click [here](https://github.com/skumar221/XNATSlicer/archive/master.zip).)
+3. Unzip the folder to the preferred location of choice.
+4. Open Slicer.  Go to Edit->Application Settings->Modules->'Additional Module Paths'
+5. Click on the double-chevron to the right.  Then click add.
+6. Locate the decomressed XnatSlicer source code and navigate to the folder where XnatSlicer.py resides (i.e. ./DownloadedXnatSlicer/XnatSlicer/).
+7. Hit 'Choose'.  Slicer will prompt a restart.
+8. The module is now installed.  You can find it in the 'Modules' dropdown near the top left corner of the Slicer application.
 
 
 Panels
