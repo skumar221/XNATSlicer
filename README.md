@@ -21,15 +21,18 @@ Installation
 
 [From GitHub](https://github.com/skumar221/XNATSlicer/wiki/Installing-XnatSlicer-from-GitHub).
 
-From Slicer's Extension Manager - Coming Soon!
+From Slicer's Extension Manager: Coming Soon!
 
 
-
-
-
-Panel Descriptions.
+Tutorials
 --------------
-[For users.](https://github.com/skumar221/XNATSlicer/wiki/Panel-descriptions:-For-Users)
+
+Coming Soon!
+
+
+Panel Descriptions
+--------------
+[For users.](https://github.com/skumar221/XNATSlicer/wiki/Panels:-for-Users)
 
 [For developers.]()
 
