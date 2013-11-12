@@ -16,13 +16,9 @@ Features
 Installation
 --------------
 
-##### From Slicer's Extension Manager:
+[From Slicer's Extension Manager]()
 
-coming soon!
-
-
-##### From GitHub:
-Click [here](https://github.com/skumar221/XNATSlicer.wiki.git).
+[From GitHub.](https://github.com/skumar221/XNATSlicer/wiki/Installing-XnatSlicer-from-GitHub).
 
 
 
