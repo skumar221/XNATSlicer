@@ -29,7 +29,7 @@ From Slicer's Extension Manager - Coming Soon!
 
 Panel Descriptions.
 --------------
-[For users.]()
+[For users.](https://github.com/skumar221/XNATSlicer/wiki/Panel-descriptions:-For-Users)
 
 [For developers.]()
 
