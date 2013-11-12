@@ -123,7 +123,7 @@ class XnatTreeViewSettings(XnatSettings):
         # the settings file that pertains to the current host.
         #-------------------- 
         self.fontSizeTag = "TreeViewFontSize"
-        xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
         font = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.fontSizeTag)
 
 

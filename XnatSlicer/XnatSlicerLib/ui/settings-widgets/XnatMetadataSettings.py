@@ -10,7 +10,17 @@ from XnatMetadataManager import *
 
 
 comment = """
-XnatMetadataSettings 
+XnatMetadataSettings is the XnatSettings pertaining to
+the adding and removing custom metadata within a given
+XNAT instance.  While the other XnatSettings widgets
+allow the user to toggle (check) the type of metadata 
+viewable within the tools that display it, this settings
+allows the viewer to add and remove specific metadata
+pertaining to an xnat level (projects, subjects, 
+experiments, files, slicer).
+
+All 'XnatSettings' subclasses
+are to be displaed in the 'XnatSettingsWindow' class.
 
 TODO:
 """
@@ -19,7 +29,7 @@ TODO:
 
         
 class XnatMetadataSettings(XnatSettings):
-    """ Embedded within the settings popup.  Manages hosts.
+    """ Descriptor above.
     """
 
   
@@ -32,52 +42,26 @@ class XnatMetadataSettings(XnatSettings):
         #--------------------
         super(XnatMetadataSettings, self).__init__(title, MODULE)
 
-
         
         #--------------------
-        # Add Metadata Label and Manager.
+        # Add the metadata manager.
         #--------------------
-        mLabel = qt.QLabel('<b>Metadata for</b>')
-        self.hostDropdown = qt.QComboBox()
-        self.hostDropdown.setFixedHeight(20)
-
-
-        
-        #--------------------
-        # Get the dictionary from settings and the key to 
-        # the dropdown widget.
-        #--------------------
-        hostDict = self.MODULE.XnatSettingsFile.getHostNameAddressDictionary()
-        for name in hostDict:     
-            self.hostDropdown.addItem(name)  
-        labelLayout = qt.QHBoxLayout()
-        labelLayout.addWidget(mLabel)
-        labelLayout.addWidget(self.hostDropdown)
-        labelLayout.addStretch()
-
-
-        
-        
-        self.masterLayout.addLayout(labelLayout)
-        self.masterLayout.addSpacing(15)
-
-
-        #--------------------
-        # Hide metadata manager buttons
-        #--------------------
-
-        #self.setupMetadataManager()
-        #self.XnatMetadataManager.setEditButtonsVisible(False)
         self.createMetadataManagers('main')
         self.masterLayout.addWidget(self.XnatMetadataManagers['main'])
+        
+        #
+        # We hide these because the edit buttons in the other
+        # settings widgets will lead to the XnatMetadataSettings
+        #
         self.XnatMetadataManagers['main'].setEditButtonsVisible(False)
-
-        self.masterLayout.addWidget(self.XnatMetadataManagers['main'])
-
-
         for key, manager in self.XnatMetadataManagers.iteritems():
             manager.setItemType('label')
 
+
+
+        #--------------------
+        # Call parent 'complete.'
+        #--------------------
         self.complete()
 
 

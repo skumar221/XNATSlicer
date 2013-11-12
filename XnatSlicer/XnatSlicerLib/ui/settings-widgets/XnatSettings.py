@@ -156,7 +156,7 @@ class XnatSettings(qt.QScrollArea):
         # and query the XnatSettingsFile for metadata
         # objects that are defined there.
         #--------------------
-        xnatHosts = [self.MODULE.XnatMetadataSettings.hostDropdown.itemText(ind) for ind in range(0, self.MODULE.XnatMetadataSettings.hostDropdown.count)]
+        xnatHosts = [self.MODULE.XnatLoginMenu.hostDropdown.itemText(ind) for ind in range(0, self.MODULE.XnatLoginMenu.hostDropdown.count)]
         for xnatHost in xnatHosts:
 
             #

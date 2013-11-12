@@ -196,7 +196,18 @@ class XnatSlicerWidget:
         #--------------------------------
         self.XnatSettingsFile = XnatSettingsFile(slicer.qMRMLWidget(), self.GLOBALS.LOCAL_URIS['settings'], self)
 
+
         
+        #--------------------------------
+        # Login Menu
+        #--------------------------------
+        self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, MODULE = self)
+        self.XnatLoginMenu.loadDefaultHost()   
+        def showHost(*arg):
+            self.XnatSettingsWindow.showWindow(self.XnatHostSettings.tabTitle)
+        self.XnatLoginMenu.setOnManageHostsButtonClicked(showHost)
+
+
         
         #--------------------------------
         # Xnat xnatSettingsWindow
@@ -238,14 +249,7 @@ class XnatSlicerWidget:
 
 
         
-        #--------------------------------
-        # Login Menu
-        #--------------------------------
-        self.XnatLoginMenu = XnatLoginMenu(parent = self.parent, MODULE = self)
-        self.XnatLoginMenu.loadDefaultHost()   
-        def showHost(*arg):
-            self.XnatSettingsWindow.showWindow(self.XnatHostSettings.tabTitle)
-        self.XnatLoginMenu.setOnManageHostsButtonClicked(showHost)
+
 
 
 

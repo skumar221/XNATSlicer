@@ -252,7 +252,7 @@ class XnatMetadataEditor(qt.QFrame):
                 # Get the current host from the hostDropdown
                 # as part of the login menu.
                 #
-                xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
+                xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
 
                 #
                 # Query the XnatSettings file for any stored value, by host.
@@ -284,7 +284,7 @@ class XnatMetadataEditor(qt.QFrame):
         # section metadata.
         #--------------------
         #print "item clicked", item.text(), item.flags()
-        xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
 
 
         
@@ -504,7 +504,7 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         # Retrieve the custom metadata elements
         # stored in the XnatSettingsFile.
         #--------------------  
-        xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
         customMetadataItems = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
 
 
@@ -553,7 +553,7 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         # then reset the listWidget, adding the saved items.
         #--------------------
         try:
-            xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
+            xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
             customMetadataItems = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
             self.listWidget.clear()
             self.listWidget.addItems(customMetadataItems)
@@ -601,7 +601,7 @@ class XnatCustomMetadataEditor(XnatMetadataEditor):
         # Merge the lineEdit text with the saved
         # metadata.
         #-------------------- 
-        xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
         customMetadataItems = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel))
 
         tagDict = {self.MODULE.GLOBALS.makeCustomMetadataTag(self.xnatLevel) : [lineText] + customMetadataItems}

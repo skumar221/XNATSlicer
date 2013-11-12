@@ -120,7 +120,7 @@ class XnatDetailsSettings(XnatSettings):
         # See if there's a stored font in the 
         # settings file first.
         #-------------------- 
-        xnatHost = self.MODULE.XnatMetadataSettings.hostDropdown.currentText
+        xnatHost = self.MODULE.XnatLoginMenu.hostDropdown.currentText
         font = self.MODULE.XnatSettingsFile.getTagValues(xnatHost, self.fontSizeTag)
 
 
