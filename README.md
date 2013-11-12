@@ -6,12 +6,13 @@ XNATSlicer is an open-source module for [3DSlicer](http://www.slicer.org/) [4.3+
 
 Features
 ----
-* Visualize most XNAT stored images in Slicer.
+* Visualize XNAT hosted images in Slicer.
 * Create, modify and save Slicer scenes directly from/to XNAT.
 * Toggle and customize XNAT metadata.
 * Create new projects, subjects and experiments on the fly.
 * Search projects, subjects and experiments.
 * Fluid interaction between Slicer and XNAT.
+* Secure login and host management.
 
 
 
