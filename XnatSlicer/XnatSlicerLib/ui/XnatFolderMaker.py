@@ -12,9 +12,10 @@ from XnatUtils import *
 
 
 comment = """
-XnatFolderMaker is used for creating new projects/folders within a given
-Xnat host.  It manages talking to a given XnatIo and its associated
-string inputs. 
+XnatFolderMaker is used for creating new folders 
+within XNAT (projects, subjects, experiments).  
+It utilizes the class 'XnatIo' to create the folders 
+within XNAT.
 
 TODO : 
 """
@@ -30,414 +31,444 @@ class XnatFolderMaker(qt.QWidget):
         """ Init function.
         """
 
-        super(XnatFolderMaker, self).__init__()
-        self.hide()
-        self.setFixedWidth(500)
-        
-        #--------------------
-        # Public vars.
-        #--------------------        
         self.MODULE = MODULE
 
-        
-
-        self.dropdowns = {}
-        self.lineEdits = {}
-        self.errorLines = {}
 
         
         #--------------------
-        # Make 'projects' dropdown
-        #--------------------        
-        self.projLabel = qt.QLabel("Project")
-        self.dropdowns['projects'] = qt.QComboBox()
-
-      
-        self.dropdowns['projects'].connect("currentIndexChanged(QString)", self.populateSubjectDropdown)
-
-
-        
-        #--------------------
-        # Make project lineEdit for foldername entry
-        #-------------------- 
-        self.lineEdits['projects'] = qt.QLineEdit()
-        self.lineEdits['projects'].connect("textEdited(QString)", self.onProjectLineEdited)
-        self.errorLines['projects'] = qt.QLabel()
-        self.errorLines['projects'].setTextFormat(1)
-
-
-        
-        #--------------------
-        # Make subject dropdown
-        #--------------------         
-        self.subjLabel = qt.QLabel("Subject")
-        self.dropdowns['subjects'] = qt.QComboBox()
-
-
-        
-        #--------------------
-        # Make subject lineEdit for foldername entry
-        #--------------------  
-        self.lineEdits['subjects'] = qt.QLineEdit()
-        self.lineEdits['subjects'].connect("textEdited(const QString&)", self.onSubjectLineEdited)
-
-
-        
-        #--------------------
-        # Make subject errorLabel
-        #--------------------          
-        self.errorLines['subjects'] = qt.QLabel()
-        self.errorLines['subjects'].setTextFormat(1)
-
-
-
-        #--------------------
-        # Make experiment label, lineEdit and Error
+        # Call parent init.
         #--------------------   
-        self.exptLabel = qt.QLabel("Experiment")
-        self.lineEdits['experiments'] = qt.QLineEdit()
-        self.errorLines['experiments'] = qt.QLabel()
-        self.errorLines['experiments'].setTextFormat(1)
+        super(XnatFolderMaker, self).__init__()
 
 
 
         #--------------------
-        # Construct the layout for the modal
+        # Adjust window features.
         #--------------------
-        self._layout = qt.QGridLayout()
-        existingCol = qt.QLabel("Existing")
-        newCol = qt.QLabel("Add New")
+        self.setWindowTitle("Add Folder to Xnat")
+        self.setWindowModality(2)
 
 
 
+        #--------------------
+        # Hide the widget initially.
+        #--------------------   
+        self.hide()
+
+
+
+        #--------------------
+        # Set fixed width.
+        #--------------------   
+        self.setFixedWidth(500)
+        self.setFixedHeight(250)
+
+
+
+        #--------------------
+        # Make the xsiList for experiment
+        # creation.
+        #--------------------
         self.xsiList = qt.QComboBox()
         self.xsiList.addItems([key for key, value in self.MODULE.GLOBALS.XNAT_XSI_TYPES.iteritems()])
-        
-
-
-        #--------------------
-        # Add all of the widgets.
-        #--------------------
-        self._layout.addWidget(existingCol, 0, 1)
-        self._layout.addWidget(newCol, 0, 2)
-        self._layout.addWidget(self.projLabel, 1, 0)
-        self._layout.addWidget(self.dropdowns['projects'], 1, 1)
-        self._layout.addWidget(self.lineEdits['projects'], 1, 2)
-        self._layout.addWidget(self.errorLines['projects'], 2, 2)
-        self._layout.addWidget(self.subjLabel, 3, 0)
-        self._layout.addWidget(self.dropdowns['subjects'], 3, 1)
-        self._layout.addWidget(self.lineEdits['subjects'], 3, 2)
-        self._layout.addWidget(self.errorLines['subjects'], 4, 2)
-        self._layout.addWidget(self.exptLabel, 5, 0)
-        self._layout.addWidget(self.lineEdits['experiments'], 5, 2)
-        self._layout.addWidget(self.errorLines['experiments'], 6, 2)
-        self._layout.addWidget(self.xsiList, 5, 1)
-
 
 
         
         #--------------------
-        # Create the necessary buttons.
+        # Displayable wigets.
+        #--------------------  
+        self.levelLabels = {}
+        self.nameLabels = {}
+        self.lineEdits = {}
+        self.errorLines = {}
+        self.levelLayouts = {}
+        self.labelLineStacks = {}
+        self.levelRows = {}
+
+
+        
         #--------------------
-        self.createButton = qt.QPushButton()
-        self.createButton.setText("Create")
+        # Make the buttons: 
+        # create, cancel,
+        # etc.
+        #--------------------
+        self.addButton = qt.QPushButton()
+        self.addButton.setText("Add")
+        self.addButton.setEnabled(False)
         self.cancelButton = qt.QPushButton()
         self.cancelButton.setText("Cancel")
         buttonRow = qt.QDialogButtonBox()
         buttonRow.addButton(self.cancelButton, 2)
-        buttonRow.addButton(self.createButton, 0)
-
-        buttonRow.connect('clicked(QAbstractButton*)', self.onCreateButtonClicked)
-        self._layout.addWidget(buttonRow, 7, 2)
-        
-        self.setLayout(self._layout)
-        
-        self.setWindowTitle("Add Folder to Xnat")
-        self.setWindowModality(2)
-        
-
-        
-        self.lineEdits['projects'].installEventFilter(self)
-        self.lineEdits['subjects'].installEventFilter(self)
-        self.lineEdits['experiments'].installEventFilter(self)
-
-        self.dropdowns['projects'].installEventFilter(self)
-        self.dropdowns['subjects'].installEventFilter(self)
-
-
+        buttonRow.addButton(self.addButton, 0)
 
 
         
-    def eventFilter(self, ob, event):
+        #-------------------
+        # Create the keys in the displayable widgets.
+        #--------------------
+        self.addFolderXnatLevels = ['projects', 'subjects', 'experiments']
+        for level in self.addFolderXnatLevels:
+
+            #
+            # Labels (name and level)
+            #
+            self.levelLabels[level] = qt.QLabel(self)
+            self.levelLabels[level].setFixedHeight(25)
+            self.nameLabels[level] = qt.QLabel(self)
+            self.nameLabels[level].setFixedHeight(25)
+
+            #
+            # Line edits
+            #
+            self.lineEdits[level] = qt.QLineEdit(self)
+            self.lineEdits[level].installEventFilter(self)
+            self.lineEdits[level].setFixedHeight(25)
+            
+            #
+            # Error lines
+            #
+            self.errorLines[level] = qt.QLabel(self)
+            self.errorLines[level].setTextFormat(1)
+            self.errorLines[level].setFixedHeight(25)
+
+            #
+            # Make the label-line stacks, adjusting
+            # for 'experiments' as necessary.
+            #
+            self.labelLineStacks[level] = qt.QStackedLayout()
+            if level == 'experiments':
+                experimentRow = qt.QHBoxLayout()
+                experimentRow.addWidget(self.xsiList)
+                experimentRow.addWidget(self.lineEdits[level])
+                experimentWidget = qt.QWidget()
+                experimentWidget.setLayout(experimentRow)
+                self.labelLineStacks[level].addWidget(experimentWidget)
+            else:
+                self.labelLineStacks[level].addWidget(self.nameLabels[level])
+                self.labelLineStacks[level].addWidget(self.lineEdits[level])                
+
+            #
+            # make row widgets
+            #
+            self.levelRows[level] = qt.QWidget(self)
+            levelRowLayout = qt.QGridLayout()
+            levelRowLayout.addWidget(self.levelLabels[level], 0,0) 
+            levelRowLayout.addLayout(self.labelLineStacks[level], 0, 1)
+            levelRowLayout.addWidget(self.errorLines[level], 1, 1) 
+            self.levelRows[level].setLayout(levelRowLayout)
+
+
+        
+        #--------------------
+        # Connect button click events.
+        #--------------------
+        buttonRow.connect('clicked(QAbstractButton*)', self.onAddButtonClicked)
+
+
+
+        #--------------------
+        # Make the mainLayout and add all widgets.
+        #--------------------
+        self.mainLayout = qt.QVBoxLayout()
+        for level in self.addFolderXnatLevels:
+            self.mainLayout.addWidget(self.levelRows[level])
+        self.mainLayout.addStretch()
+        self.mainLayout.addWidget(buttonRow)
+        self.setLayout(self.mainLayout)
+
+
+
+        
+    def eventFilter(self, widget, event):
+        """ Filter for dropdown interaction
+            and line edit interaction.  
+
+            Right now this only applies to line edits: 
+            making sure there are no invalid characters
+            or the name in the line edit isn't taken.
         """
-        """
-        if ob == self.dropdowns['projects']:
-  
-            if event.type() == qt.QEvent.MouseButtonRelease:
-                self.lineEdits['projects'].clear()
-                #
-                # Removes the focus box.  For good UX.
-                #
-                self.setLineEditsEnabled(False)
-                self.setLineEditsEnabled(True)
-                self.setDropdownsEnabled(True)
-
                 
-        elif ob == self.dropdowns['subjects']:
-            if event.type() == qt.QEvent.MouseButtonRelease:
-                self.lineEdits['subjects'].clear()
-                #
-                # Removes the focus box.  For good UX.
-                #
-                self.setLineEditsEnabled(False)
-                self.setLineEditsEnabled(True)
-                self.setDropdownsEnabled(True)
-
-
-        elif ob == self.lineEdits['projects']:
-            if event.type() == qt.QEvent.FocusIn:
-                self.setDropdownsEnabled(False)
-
-                
-        elif ob == self.lineEdits['subjects']:
-            if event.type() == qt.QEvent.FocusIn:
-                self.setDropdownsEnabled(False, ['subjects'])
-                if len(self.lineEdits['projects'].text) == 0:
-                    self.setLineEditsEnabled(True)
-
-
-
-        elif ob == self.lineEdits['experiments']:
-            if event.type() == qt.QEvent.FocusIn:
-                return
-            #print "EXDPERIMENT FOCUSED"
-            #   self.setDropdownsEnabled(True)
-            #   self.setLineEditsEnabled(True)
+        #--------------------
+        # Callback for the lineEdit.
+        #--------------------
+        for level, lineEdit in self.lineEdits.iteritems():
+            if widget == lineEdit:
+                self.onLineEditTextChanged(level, lineEdit.text)
 
                 
 
             
     def show(self):
-        """
+        """ Display the XnatFolderMaker widget.
         """
 
-
+        #--------------------
+        # Clear the window's items.
+        #--------------------
         for key, widget in self.lineEdits.iteritems():
             widget.clear()
 
-            
 
-        qt.QWidget.show(self)
-        self.projectList = []
+
+        #--------------------
+        # Get the current XNAT level of 
+        # the selected node in the viewer.
+        #
+        # If no node is selected, we just 
+        # assume it's projects
+        #--------------------
+        try:
+            selectedXnatLevel = self.MODULE.XnatView.currentItem().text(self.MODULE.XnatView.columns['XNAT_LEVEL']['location'])
+        except Exception, e:
+            selectedXnatLevel = 'projects'
+
+
+            
+        #--------------------
+        # Get all of the existing values
+        # in the current selected XnatLevel
+        #--------------------        
+        self.levelList = []
         def addToList(item):
-            self.projectList.append(item.text(0))            
-        self.MODULE.XnatView.loopProjectNodes(addToList)
+            self.levelList.append(item.text(self.MODULE.XnatView.columns['MERGED_LABEL']['location']))
 
-        
-        #--------------------
-        # Use the currently selected View item to 
-        # derive the project dropdowns.
-        #--------------------           
-        currProject = None
-        currSubject = None
-        proj = ""
-        if (self.MODULE.XnatView.currentItem() != None):
-            currProject = self.MODULE.XnatView.getParentItemByXnatLevel(self.MODULE.XnatView.currentItem(), "projects")
-            currSubject = self.MODULE.XnatView.getParentItemByXnatLevel(self.MODULE.XnatView.currentItem(), "subjects")
-            proj = currProject.text(self.MODULE.XnatView.columns['MERGED_LABEL']['location'])
-            self.dropdowns['projects'].setCurrentIndex(self.dropdowns['projects'].findText(proj))
+        if selectedXnatLevel == 'projects':
+            self.MODULE.XnatView.loopProjectNodes(addToList)
         else:
-            proj = self.dropdowns['projects'].currentText 
+            self.MODULE.XnatView.loopChildNodes(self.MODULE.XnatView.currentItem().parent(), addToList)
 
 
-            
+
         #--------------------
-        # Populate the subject dropdown and set 
-        # the index on the subject dropdown accordingly.
+        # If the selected level is deeper than
+        # 'experiments' we default back to 'experiments.'
         #--------------------
-        self.populateSubjectDropdown(proj) 
-        if currSubject:
-            self.dropdowns['subjects'].setCurrentIndex(self.dropdowns['subjects'].findText(currSubject.text(self.MODULE.XnatView.columns['MERGED_LABEL']['location'])))
-
+        if not selectedXnatLevel in self.addFolderXnatLevels:
+            selectedXnatLevel = 'experiments'
             
-
-        print self.projectList
-        self.dropdowns['projects'].clear()
-        self.dropdowns['projects'].addItems(self.projectList) 
-
         
 
+        #--------------------
+        # Show all levelRows that pertain to adding
+        # a folder at the current level.
+        #
+        # For instance, if the selected XnatView node
+        # is at 'projects' then we hide the lineRows
+        # pertaining to 'subjects' and 'experiments.'
+        #-------------------- 
+        selectedLevelIndex = self.addFolderXnatLevels.index(selectedXnatLevel)
 
+        #
+        # Adjust the window height depending on the
+        # selectedLevelIndex
+        #
+        self.setFixedHeight(100 + 80 * selectedLevelIndex)
         
+        for level, levelRow in self.levelRows.iteritems():
+
+            #
+            # Hide the error lines at first.
+            #
+            self.errorLines[level].setText('')
+
             
-    def populateSubjectDropdown(self, projectName):
-        """ Utilizes 'XnatIo' to query for the subjects within a given
-            project, provided by the argument.
-        """
+            #
+            # Show the lineEdit if the selectedLevel matches
+            # the level.
+            #
+            if self.addFolderXnatLevels.index(level) == selectedLevelIndex:
+                levelRow.show()
 
-        if not projectName or len(projectName) == 0:
-            return
+                #
+                # Shows the lineEdit
+                #
+                self.labelLineStacks[level].setCurrentIndex(1)
+
+                #
+                # Set the relevant text.
+                #
+                self.nameLabels[level].setText('')
+                self.levelLabels[level].setText('Add <i>%s</i>:     '%(level[:-1]))
+                
+
+            #
+            # Show the label level if less than the selectedLevelIndex
+            #
+            elif self.addFolderXnatLevels.index(level) < selectedLevelIndex:
+                levelRow.show()
+
+                #
+                # Shows the nameLabel
+                #
+                self.labelLineStacks[level].setCurrentIndex(0)
+                self.lineEdits[level].setText('')
+                
+                #
+                # Set the nameLabel text value by getting the XnatView's
+                # current item, and then matching the parents with the
+                # 'level'
+                #
+                itemParents = self.MODULE.XnatView.getParents(self.MODULE.XnatView.currentItem())
+                for item in itemParents:
+                    if level == item.text(self.MODULE.XnatView.columns['XNAT_LEVEL']['location']):
+                        self.nameLabels[level].setText('<b>%s</b>'%(item.text(self.MODULE.XnatView.columns['MERGED_LABEL']['location'])))
+                self.levelLabels[level].setText('<i>%s</i>:      '%(level[:-1].title()))
+                
+
+            #
+            # Otherwise hide the levelRow.
+            #
+            else:
+                levelRow.hide()
+
+
+                
         #--------------------
-        # Get the raw subjects
+        # Show the widget window.
         #--------------------
-        subjs_raw = self.MODULE.XnatIo.getFolderContents('/projects/' + projectName + '/subjects', ['label'])
-        subjs_name = []
-
-        #print "\n\n*****************projectName: ", projectName
-        print subjs_raw
-
-        #--------------------
-        # Add subjects to dropdown
-        #--------------------
-        for r in subjs_raw['label']:
-            subjs_name.append(self.MODULE.XnatIo.getItemValue('/projects/' + projectName + '/subjects/' + str(urllib2.quote(r)), 'label'))
-        self.dropdowns['subjects'].clear()
-        self.dropdowns['subjects'].addItems(subjs_name)
+        qt.QWidget.show(self)
+            
 
 
 
-    
-
-
-
-
-
-    def onCreateButtonClicked(self,button):
+    def onAddButtonClicked(self, button):
         """ Callback if the create button is clicked. Communicates with
             XNAT to create a folder. Details below.  
         """
         
         #--------------------
-        # If OK is clicked....
+        # If add is clicked....
         #--------------------
-        if 'create' in button.text.lower():
+        if 'add' in button.text.lower():
 
-            #--------------------
-            # Clear errors
-            #--------------------
-            self.errorLines['experiments'].setText("")
-            self.errorLines['subjects'].setText("")
-            self.errorLines['projects'].setText("")
+            #
+            # Clear error lines
+            #
+            for key, errorLine in self.errorLines.iteritems():
+                errorLine.setText('')            
 
-            
-
-            #--------------------
+            #
             # Construct URI based on XNAT rules.
-            #--------------------
-            xnatUri = "/projects/"
-            if len(self.lineEdits['projects'].text)>0:
-                xnatUri += self.lineEdits['projects'].text
-                if len(self.lineEdits['subjects'].text)>0:
-                    xnatUri += "/subjects/" + self.lineEdits['subjects'].text
-                    if len(self.lineEdits['experiments'].text)>0:
-                        xnatUri += "/experiments/" + self.lineEdits['experiments'].text
-            else:
-                xnatUri += self.dropdowns['projects'].currentText
-                if len(self.lineEdits['subjects'].text)>0:
-                    xnatUri += "/subjects/" + self.lineEdits['subjects'].text
-                    if len(self.lineEdits['experiments'].text)>0:
-                        xnatUri += "/experiments/" + self.lineEdits['experiments'].text
-                else:
-                    xnatUri += "/subjects/" + self.dropdowns['subjects'].currentText
-                    if len(self.lineEdits['experiments'].text)>0:
-                        xnatUri += "/experiments/" + self.lineEdits['experiments'].text
-                        #
-                        # IMPORTANT: Add the xsi for experiments
-                        #
+            #
+            xnatUri = ''
+            for level in self.addFolderXnatLevels:
+                if not self.levelRows[level].isHidden():
+                    xnatUri += '/' + level + '/'
+
+                    #
+                    # Get the plainText values of the nameLine
+                    # and the lineEdit associated with the level.
+                    #
+                    nameText = self.MODULE.utils.toPlainText(self.nameLabels[level].text)
+                    lineText = self.MODULE.utils.toPlainText(self.lineEdits[level].text)
+                    
+                    #
+                    # Choose the text that does not have
+                    # a zero length.
+                    #
+                    if len(nameText) != 0:
+                        xnatUri += nameText 
+                    else:
+                        xnatUri += lineText
+
+                    #
+                    # Special case for experiments
+                    #
+                    if level == 'experiments':
                         xnatUri += '?xsiType=' + self.MODULE.GLOBALS.XNAT_XSI_TYPES[self.xsiList.currentText]
+                    
+                else:
+                    break
+                #
+                # IMPORTANT: Add the xsi for experiments
+                #
+                #xnatUri += '?xsiType=' + self.MODULE.GLOBALS.XNAT_XSI_TYPES[self.xsiList.currentText]
 
-
-
-            print self.MODULE.utils.lf(), xnatUri
-
+            #
+            # Make folder in XnatIo, processEvents
+            #
+            print ("%s creating %s "%(self.MODULE.utils.lf(), xnatUri))
             self.MODULE.XnatIo.makeFolder(xnatUri)
             slicer.app.processEvents()
+            
+            #
+            # Close window
+            #
             self.close()
+
+            #
+            # Select new folder in XnatView
+            #
             self.MODULE.XnatView.selectItem_byUri(xnatUri.split('?')[0])
             
-            
-            print ("%s creating %s "%(self.MODULE.utils.lf(), xnatUri))
-            
-            
 
-                
+
+        #--------------------
+        # Close window if 'cancel' pressed.
+        #--------------------        
         elif 'cancel' in button.text.lower():
             self.close()
 
 
+            
+            
+    def onLineEditTextChanged(self, level, text):
+        """ Validates the line edit text for the folder
+            to add:
+            -Checks for invalid characters.
+            -Checks if the name is already taken.
+        """
 
 
-    def setLineEditsEnabled(self, enabled = True, keys = None):
-        if keys == None:
-            for key, lineEdit in self.lineEdits.iteritems():
-                lineEdit.setEnabled(enabled)
-        else:
-            for key in keys:
-                self.lineEdits[key].setEnabled(enabled)
+        #--------------------
+        # Begin validation of text.
+        #--------------------
+        if len(text.strip(" ")) > 0:
+
+            #
+            # Show error if there are invalid characters
+            #
+            invalidMsg = self.checkForInvalidCharacters(text)
+            if invalidMsg != None:
+                self.errorLines[level].show()
+                self.errorLines[level].setText('<font color=\"red\">%s</font>'%(invalidMsg))
+                self.addButton.setEnabled(False)
+                return
+            else:
+                self.errorLines[level].setText('')
                 
+            #
+            # Show error if the lineEdit.text 
+            # is an already taken name
+            #
+            try:
+                for itemText in self.levelList:
+                    if text.lower() == itemText.lower():
+                        self.errorLines[level].show()
+                        self.errorLines[level].setText("<font color=\"red\">The %s name '%s' is already taken.</font>"%(level[:-1].title(), text))
+                        self.addButton.setEnabled(False)
+                        return
+                else:
+                    self.errorLines[level].setText('')
+            except Exception, e:
+                pass
 
-
-    def setDropdownsEnabled(self, enabled = True, keys = None):
-        if keys == None:
-            for key, dropdown in self.dropdowns.iteritems():
-                dropdown.setEnabled(enabled)
         else:
-            for key in keys:
-                self.dropdowns[key].setEnabled(enabled)
-
-
-        
-        
+            self.addButton.setEnabled(False)
             
-    def onProjectLineEdited(self, text):
-        """ Removes whitespaces from project line and
-            enables/disables accordingly.
-        """
-        if len(text.strip(" ")) > 0:
-            ind = self.dropdowns['projects'].findText(text.strip(), 8)
-            if ind > -1:
-                self.errorLines['projects'].setText("<font color=\"red\">*Project '%s' already exists.</font>"%(text))
-                self.createButton.setEnabled(False)
-                return
-            else:
-                invalidMsg = self.checkForInvalidCharacters(text)
-                if invalidMsg != None:
-                    self.errorLines['projects'].setText('<font color=\"red\">%s</font>'%(invalidMsg))
-                    self.createButton.setEnabled(True)
-                    return
-
-        self.errorLines['projects'].setText('')
-        self.createButton.setEnabled(True)
-
+        #--------------------
+        # If no errors, enable the add button.
+        #--------------------
+        self.addButton.setEnabled(True)
             
-
-            
-    def onSubjectLineEdited(self, text):
-        """ Removes whitepsaces from experiment line
-            and enables/disables accordingly.
-        """
-        if len(text.strip(" ")) > 0:
-            ind = self.dropdowns['subjects'].findText(text.strip(), 8)
-            if ind > -1:
-                self.errorLines['subjects'].setText("<font color=\"red\">*Subject '%s' already exists.</font>"%(text))
-                self.createButton.setEnabled(False)
-                return
-            else:
-                invalidMsg = self.checkForInvalidCharacters(text)
-                if invalidMsg != None:
-                    self.errorLines['subjects'].setText('<font color=\"red\">%s</font>'%(invalidMsg))
-                    self.createButton.setEnabled(True)
-                    return
-                    
-        self.errorLines['subjects'].setText('')
-        self.createButton.setEnabled(True)
-
                 
 
 
     def checkForInvalidCharacters(self, text):
-        """
-           From: http://stackoverflow.com/questions/5698267/efficient-way-to-search-for-invalid-characters-in-python
+        """ Removes the invalid name characters from
+            a given string.
+        
+            From: http://stackoverflow.com/questions/5698267/efficient-way-to-search-for-invalid-characters-in-python
         """
 
         invalidChars = " .;:[<>/{}[\]~`]"

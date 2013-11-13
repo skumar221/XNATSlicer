@@ -1089,4 +1089,14 @@ class XnatUtils(object):
         day_string = d.strftime('%A %d, %B %Y')
         day_string = d.strftime('%c')
         return day_string
+
+
+    
+
+    def toPlainText(self, text):
+        """ Converts a string to plain text.
+        """
+        doc = qt.QTextDocument()
+        doc.setHtml(text)
+        return doc.toPlainText()
         

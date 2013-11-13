@@ -60,7 +60,6 @@ from XnatDicomLoadWorkflow import *
 from XnatSceneLoadWorkflow import *
 from XnatFileLoadWorkflow import *
 from XnatAnalyzeLoadWorkflow import *
-from XnatFilter import *
 from XnatSlicerTest import *
 from XnatError import *
 from XnatSettings import *
@@ -75,6 +74,7 @@ from VariableItemListWidget import *
 
 
 
+
 comment = """
 XnatSlicer.py contains the central classes for managing 
 all of the XnatSlicer functions and abilities.  XnatSlicer.py
@@ -84,6 +84,7 @@ XnatSlicerLib classes and methods come together.
 
 TODO:
 """
+
 
 
 
@@ -124,6 +125,7 @@ class XnatSlicer:
       def runTest(self):
           tester = XnatSlicerTest()
           tester.runTest()
+
 
 
           
@@ -213,43 +215,34 @@ class XnatSlicerWidget:
         # Xnat xnatSettingsWindow
         #--------------------------------        
         self.XnatSettingsWindow = XnatSettingsWindow(parent = None, MODULE = self)
+        
         #
         # Add XnatHostSettings (communicates to XnatSettings)
         # to xnatSettingsWindow
         #
         self.XnatHostSettings = XnatHostSettings('XNAT Hosts', self)
         self.XnatSettingsWindow.addSetting(self.XnatHostSettings.title, widget = self.XnatHostSettings)
+        
         #
         # Add XnatMetadataSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
         self.XnatMetadataSettings = XnatMetadataSettings('XNAT Metadata', self)
         self.XnatSettingsWindow.addSetting(self.XnatMetadataSettings.title, widget = self.XnatMetadataSettings)
+        
         #
         # Add XnatTreeViewSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
         self.XnatTreeViewSettings = XnatTreeViewSettings('Tree View Settings', self)
         self.XnatSettingsWindow.addSetting(self.XnatTreeViewSettings.title, widget = self.XnatTreeViewSettings)
+        
         #
         # Add XnatDetailsSettings (communicates to XnatTreeView)
         # to xnatSettingsWindow
         #
         self.XnatDetailsSettings = XnatDetailsSettings('Details Settings', self)
         self.XnatSettingsWindow.addSetting(self.XnatDetailsSettings.title, widget = self.XnatDetailsSettings)
-
-
-        
-
-      
-        #--------------------------------
-        # Xnat Filter
-        #--------------------------------
-        self.XnatFilter = XnatFilter(self)
-
-
-        
-
 
 
 
@@ -271,6 +264,7 @@ class XnatSlicerWidget:
         # Node Details
         #--------------------------------
         self.XnatNodeDetails = XnatNodeDetails(MODULE = self) 
+        
         #
         # Link a node click to populate XnatNodeDetails.
         #
@@ -350,6 +344,7 @@ class XnatSlicerWidget:
       
       widgetName = moduleName + "Widget"
 
+      
 
       #--------------------------------
       # Reload the source code:
@@ -492,14 +487,12 @@ class XnatSlicerWidget:
         self.collapsibles['login'].setWidget(self.XnatLoginMenu)
 
 
-
         
         #--------------------------------
         # Set VIEWER Group Box.
         #--------------------------------
         self.XnatViewer = XnatViewer(self)
         self.collapsibles['viewer'].setWidget(self.XnatViewer)
-
 
 
 

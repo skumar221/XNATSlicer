@@ -37,6 +37,9 @@ class XnatMetadataManager(qt.QFrame):
         """ Init function.
         """
 
+        #--------------------
+        # Call parent init.
+        #--------------------
         super(XnatMetadataManager, self).__init__(self)
 
 
@@ -64,11 +67,11 @@ class XnatMetadataManager(qt.QFrame):
 
         
         #--------------------
-        # The _layout that eventually becomes 
+        # The mainLayout eventually becomes 
         # the layout of the XnatMetadataManager via
         # the '.setLayout' function
         #--------------------       
-        self._layout = qt.QVBoxLayout()
+        self.mainLayout = qt.QVBoxLayout()
 
 
 
@@ -88,11 +91,16 @@ class XnatMetadataManager(qt.QFrame):
 
 
         #--------------------
-        # We set this to true so the layout can anticipate
-        # the size of the scroll area.
+        # Construct the manager
         #--------------------
-
         self.constructManager()
+
+
+        
+        #--------------------
+        # Set the default states of the 
+        # collapsibles.
+        #--------------------       
         for key, collapsible in self.collapsibles.iteritems():
             collapsible.suspendAnimationDuration(True)
             collapsible.show()
@@ -100,6 +108,7 @@ class XnatMetadataManager(qt.QFrame):
             collapsible.suspendAnimationDuration(False)
 
 
+            
         
     def constructManager(self):
         """ Constructs the XnatMetadataManager widget.
@@ -172,11 +181,11 @@ class XnatMetadataManager(qt.QFrame):
             
 
             #
-            # Put all of the widgets into an
-            # AnimatedCollapsible.
+            # Put all of the widgets into first, a contentsWidget.
+            # Then set the widget of the AnimatedCollapsible to the
+            # contentsWidget.
             #
             self.collapsibles[xnatLevel] = AnimatedCollapsible(self, xnatLevel.title(), 250, 250)
-
             contentsWidget = qt.QWidget()
             contentsWidget.setLayout(self.collapsibleLayouts[xnatLevel])
             self.collapsibles[xnatLevel].setWidget(contentsWidget)
@@ -184,10 +193,10 @@ class XnatMetadataManager(qt.QFrame):
 
 
             #
-            # Add collapsible to self._layout.
+            # Add collapsible to self.mainLayout.
             #
-            self._layout.addWidget(self.collapsibles[xnatLevel])
-            self._layout.addSpacing(10)
+            self.mainLayout.addWidget(self.collapsibles[xnatLevel])
+            self.mainLayout.addSpacing(10)
 
 
 
@@ -201,48 +210,40 @@ class XnatMetadataManager(qt.QFrame):
 
             
         #--------------------
-        # Set _layout to the master layout.
+        # Set mainLayout to the master layout.
         #--------------------
-        self._layout.addStretch()
-        self.setLayout(self._layout)
+        self.mainLayout.addStretch()
+        self.setLayout(self.mainLayout)
 
 
 
         #--------------------
-        #self.currItemType = 'label'
+        # Set the current item tyype to label.
+        # The user can change it to 'checkbox' 
+        # later.
         #--------------------
         self.setItemType('label')
-
-
-
-        
-
-
-
 
             
 
 
     def updateLayout(self):
-        """
+        """ As stated.
         """
 
         self.layout().update()
 
 
-                
-
 
                         
     def setItemType(self, itemType):
-        """ 
+        """ Sets the item type provided by the 'itemType'
+            argument within the XnatMetadataEditors.
         """
         #print "\t (Metadata Manager) METADATA SET ITEM TYPE", itemType
         self.currItemType = itemType
-        
         for key, metadataEditor in self.defaultMetadataEditors.iteritems():
             metadataEditor.setItemType(itemType)
-
         for key, metadataEditor in self.customMetadataEditors.iteritems():
             metadataEditor.setItemType(itemType)
 
@@ -252,16 +253,14 @@ class XnatMetadataManager(qt.QFrame):
 
 
     def setEditButtonsVisible(self, visible = None):
-        """
+        """ Hides or shows the 'edit' metadata buttons
+            that reside at the top of every collapsible
+            content widge.
         """
 
-        #print "                 \n\n\nSET EDIT BUTTONS VISIBLE"
         if visible != None:
             self.editButtonsVisible = visible
 
-        #--------------------
-        # Hide the 'editCustom' buttons
-        #--------------------
         for key, button in self.editCustomButtons.iteritems():
             if button:
                 button.setVisible(self.editButtonsVisible)
@@ -271,24 +270,32 @@ class XnatMetadataManager(qt.QFrame):
 
 
     def editCustomClicked(self, button):
+        """ Callback when any of the 'editCustomButtons'
+            are clicked.  Descriptors below.
         """
-        """
-        for key, _button in self.editCustomButtons.iteritems():
+        for xnatLevel, _button in self.editCustomButtons.iteritems():
             if button == _button:
+
+                #--------------------
+                # Show the XnatMetadataEditor settings window.
+                #--------------------
                 self.MODULE.XnatSettingsWindow.setCurrentIndex(1) 
-                self.MODULE.XnatMetadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(True)
+
+                #--------------------
+                # Expand the collapsible that had the same
+                # XnatLevel as the button that called this function.
+                #--------------------
+                self.MODULE.XnatMetadataSettings.XnatMetadataManagers['main'].collapsibles[xnatLevel].setChecked(True)
             else:
-                self.MODULE.XnatMetadataSettings.XnatMetadataManagers['main'].collapsibles[key].setChecked(False)
+                self.MODULE.XnatMetadataSettings.XnatMetadataManagers['main'].collapsibles[xnatLevel].setChecked(False)
 
         
 
                 
     def setCustomEditVisible(self, visible):
+        """ Sets the 'editLine' of every XnatMetadataEditor 
+            visible.
         """
-        """
-        #
-        # Custom
-        #
         for key, metadataEditor in self.customMetadataEditors.iteritems():
             metadataEditor.setEditLineVisible(visible)
 
@@ -296,9 +303,26 @@ class XnatMetadataManager(qt.QFrame):
                 
                    
     def update(self):
+        """ Updates the XnatMetadataEditor's contents,
+            namely through calling the 'update' function
+            of every XnatMetadataEditor contained in the 
+            XnatMetadataManager.
         """
-        """
+
+        #--------------------
+        # Updates the layout.
+        #--------------------
         self.updateLayout()
+
+
+        #--------------------
+        # Clear the customMetadataEdtiors and
+        # then update them, which will reload the
+        # stored metadata values.
+        #
+        # Run a simple 'update' on the default
+        # metadata edtiors.
+        #--------------------
         for key in self.customMetadataEditors:
             self.customMetadataEditors[key].clear() 
 
