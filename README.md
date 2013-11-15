@@ -34,7 +34,7 @@ Panel Descriptions
 --------------
 [For users.](https://github.com/skumar221/XNATSlicer/wiki/Panels:-for-Users)
 
-[For developers.]()
+[For developers.](https://github.com/skumar221/XNATSlicer/wiki/Panels:-For-Developers)
 
 
 License
