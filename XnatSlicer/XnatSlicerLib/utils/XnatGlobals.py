@@ -152,7 +152,7 @@ class XnatGlobals(object):
     
     @property
     def FONT_SIZE(self):
-        return 12
+        return 10
 
 
     
