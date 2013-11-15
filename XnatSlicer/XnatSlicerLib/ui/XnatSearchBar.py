@@ -26,18 +26,19 @@ class XnatSearchBar(qt.QFrame):
         """ Init function.
         """
 
+        #--------------------------------
+        # Call parent __init__
+        #--------------------------------       
+        super(XnatSearchBar, self).__init__(self)
 
 
 
-        
+        #--------------------------------
+        # Class vars.
+        #--------------------------------        
         self.MODULE = MODULE
         self.prevText = None
         self.defaultSearchText = 'Search projects, subjects and experiments...'
-
-
-
-        
-        super(XnatSearchBar, self).__init__(self)
 
 
         
@@ -46,9 +47,6 @@ class XnatSearchBar(qt.QFrame):
         #--------------------------------
         self.searchLine = qt.QLineEdit()
         
-        
-
-
 
         
         #--------------------------------
@@ -72,7 +70,7 @@ class XnatSearchBar(qt.QFrame):
 
 
         #--------------------------------
-        # The Search Widget
+        # Set the layout.
         #--------------------------------       
         self.setLayout(self.searchLayout)
 
@@ -103,23 +101,33 @@ class XnatSearchBar(qt.QFrame):
         
 
         #--------------------------------
-        # Apply the default text and style
+        # Event filter (for clearing and 
+        # inputting default text).
         #--------------------------------
-
-
         self.searchLine.installEventFilter(self)
 
-  
+
+
+        #--------------------------------
+        # Clear the search line at first.
+        #--------------------------------
         self.onClearButtonClicked()
 
 
         
     def eventFilter(self, ob, event):
-
-        """
+        """ Event filter to for searchLine events.
         """
         if event.type() == qt.QEvent.FocusIn:
             self.onSearchLineFocused()
+
+
+            
+        #--------------------------------
+        # If we focus out of the the 
+        # search line, and there's no text,
+        # we apply the 'clear' method.
+        #--------------------------------
         elif event.type() == qt.QEvent.FocusOut:
             if len(self.searchLine.text.strip(' ')) == 0:
                 self.onClearButtonClicked()

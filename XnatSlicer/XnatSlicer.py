@@ -1,7 +1,5 @@
 import imp, os, inspect, sys, slicer
 
-
-
 #
 # Widget path needs to be globally recognized by Python.
 # Appending to global path.
@@ -36,7 +34,6 @@ sys.path.append(os.path.join(LIB_PATH, 'utils'))
 # Include io folder.
 #
 sys.path.append(os.path.join(LIB_PATH, 'io'))
-
 
 
 from XnatGlobals import *
@@ -80,7 +77,7 @@ XnatSlicer.py contains the central classes for managing
 all of the XnatSlicer functions and abilities.  XnatSlicer.py
 is the point where the module talks to Slicer, arranges the gui, and
 registers it to the Slicer modules list.  It is where all of the 
-XnatSlicerLib classes and methods come together.
+XnatSlicerLib classes and methods converge.
 
 TODO:
 """
@@ -426,7 +423,7 @@ class XnatSlicerWidget:
     def sceneImportedListener(self, caller, event): 
         """Actions for when the user imports a scene from the GUI.
            NOTE: This technically is not used, as the user must refer to files from an 
-           Xnat location. Nonetheless, it is implemented in the event that it is needed.
+           XNAT location. Nonetheless, it is implemented in the event that it is needed.
         """
         if self.XnatView.lastButtonClicked == None:
             #print("'Import Data' called. Resetting Xnat session data.")
@@ -448,24 +445,18 @@ class XnatSlicerWidget:
 
         
         #--------------------------------
-        # Make Collapsible boxes
+        # Make Collapsible boxes: login, tools, viewer, details.
         #--------------------------------
         self.collapsibles = {}
         self.collapsibles['login'] = AnimatedCollapsible(self.parent, 'Login', 60, 60)
-
-        
         self.collapsibles['tools'] = AnimatedCollapsible(self.parent, 'Tools', 60, 60)
-
-        
         self.collapsibles['viewer'] = AnimatedCollapsible(self.parent, 'Viewer')
         self.collapsibles['viewer'].setSizeGripVisible(True)
-
-        
         self.collapsibles['details'] = AnimatedCollapsible(self.parent, 'Details')
-
         
         #
-        # Set callback to Update XNATSlicer's layout when animating.
+        # Set collapsibles onAnimate callback to Update XNATSlicer's 
+        # layout when they are animating.
         #
         def onAnimatedCollapsibleAnimate():
             self.mainLayout.update()
@@ -543,15 +534,6 @@ class XnatSlicerWidget:
         #--------------------------------
         for key, collapsible in self.collapsibles.iteritems():
             collapsible.suspendAnimationDuration(True)
-            #collapsible.setChecked(True)
-
-            #
-            # Remember its expanded size so it knows
-            # what size to animate to.
-            #
-            #collapsible.setCurrentGeometryToTargetSize()
-            #collapsible.setChecked(False)
-            
             if key == 'login':
                 for child in collapsible.ContentsWidgets:
                     child.hide()
@@ -568,9 +550,11 @@ class XnatSlicerWidget:
         # to Slicer.
         #--------------------------------
         self.layout.addWidget(mainCollapsibleButton)
+        
         #
         # NOTE: Showing the collapsibles beforehhand creates flickering 
-        # when opening Slicer, hence we show them here to avoid that.
+        # when opening Slicer, hence we show them only
+        # after they have been added to the layout.
         #
         for key, collapsible in self.collapsibles.iteritems():
             collapsible.show()
@@ -686,29 +670,44 @@ class XnatSlicerWidget:
 
 
     def calculateCollapsibleTargetHeights(self, state):
-        """
+        """ Determines the target heights for the various
+            collapsibles to animate to by quickly expanding
+            the collapsibles, recording their geometries, then
+            quickly compressing them.  The user should not 
+            notice this calculation.
         """
 
-
+        #--------------------
+        # Expand the collapsibles 
+        # if the login to XNAT was successful.
+        #--------------------
         targetHeights = {}
-
-        
         if state == 'onLoginSuccessful':
             
             targetGeometries = {}
+
+            #
+            # Expand the collapsibles except 'login',
+            # supending the animation length.
+            #
             for key, collapsible in self.collapsibles.iteritems():
                 collapsible.suspendAnimationDuration(True)
-                
                 if key != 'login':
                     collapsible.setChecked(True)
                 else:
                     collapsible.setChecked(False)
-        
-        
+
+            #
+            # Record the geometries of the collapsibles.
+            #
             for key, collapsible in self.collapsibles.iteritems():
                 targetGeometries[key] = collapsible.geometry
 
 
+            #
+            # Compress the collapsibles, but expand 'login'.
+            # Make sure animations are suspendedn.
+            #
             for key, collapsible in self.collapsibles.iteritems():
                 collapsible.hide()
                 if key != 'login':
@@ -720,19 +719,22 @@ class XnatSlicerWidget:
                 collapsible.show()
             
 
-            widgetLength = 0
-           
+            #
+            # Get the total height of the XnatSlicer
+            # widget.
+            #
+            widgetLength = 0           
             for key, geom in targetGeometries.iteritems():
                 #aprint "GO", key, geom, geom.top()
                 targetHeights[key] = geom.height()
-                
                 if geom.top() > widgetLength:
                     widgetLength = geom.top()
 
 
             #
-            # This parameter makes the viewer collapsible
-            # slightly larger in hieght
+            # Modify some of the target geometries:
+            # we want the Viewer collapsible to be 
+            # slightly larger than the Details collapsible.
             #        
             viewerDifference = 75
             targetHeights['details'] = widgetLength - targetGeometries['details'].top() - viewerDifference
@@ -753,8 +755,7 @@ class XnatSlicerWidget:
 
         
         #--------------------
-        # Maximize and enable the others.
-        # Create an animation chain.
+        # Creat animation chain callbacks.
         #-------------------- 
         def expandViewer():
             self.collapsibles[ 'viewer' ].setMaxHeight(heights['viewer'])
@@ -773,13 +774,11 @@ class XnatSlicerWidget:
             self.collapsibles[ 'tools' ].setChecked(True)
             self.collapsibles[ 'tools' ].setEnabled(True)
 
-            
-
-
-
+      
             
         #--------------------
-        # Clear the animation Chain when finished
+        # Callback: Clear the animation Chain when
+        # the animation chain is finished.
         #--------------------
         def clearChain(): 
             for key, collapsible in self.collapsibles.iteritems():
@@ -792,8 +791,9 @@ class XnatSlicerWidget:
                    
 
 
-                        
-                
+        #--------------------
+        # Apply the callbacks to the collapsibles.
+        #--------------------               
         self.collapsibles['viewer'].setOnExpand(expandDetails)
         self.collapsibles['details'].setOnExpand(expandTools)                
         self.collapsibles['tools'].setOnExpand(clearChain)
@@ -802,14 +802,10 @@ class XnatSlicerWidget:
             
         
         #--------------------
-        # Minimize the login group box.
-        # Fires off a chain of animations.
-        #--------------------      
-
-        #
-        # This is the hook
-        #
-        
+        # Fire off the animation chain,
+        # first by compressing the 'Login'
+        # collapsible.
+        #--------------------              
         self.collapsibles['login'].setChecked(False)
 
 
