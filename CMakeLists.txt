@@ -18,7 +18,7 @@ if(NOT Slicer_SOURCE_DIR)
 endif()
 
 #-----------------------------------------------------------------------------
-add_subdirectory(XnatSlicer)
+add_subdirectory(XNATSlicer)
 
 #-----------------------------------------------------------------------------
 if(NOT Slicer_SOURCE_DIR)
