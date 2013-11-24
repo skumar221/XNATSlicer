@@ -46,12 +46,6 @@ set(MODULE_PYTHON_SCRIPTS
   )
 
 set(MODULE_PYTHON_RESOURCES
-  XnatSlicerLib/icons/addproj.jpg
-  XnatSlicerLib/icons/delete.jpg
-  XnatSlicerLib/icons/load.jpg
-  XnatSlicerLib/icons/save.jpg
-  XnatSlicerLib/icons/update.jpg
-  XnatSlicerLib/icons/wrench.png
   Resources/Icons/addproj.png
   Resources/Icons/delete.png
   Resources/Icons/eye.png
