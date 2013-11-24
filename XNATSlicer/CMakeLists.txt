@@ -3,56 +3,55 @@ set(MODULE_NAME XNATSlicer)
 
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS
-  ${MODULE_NAME}.py
-  ${MODULE_NAME}Lib/io/XnatAnalyzeLoadWorkflow.py
-  ${MODULE_NAME}Lib/io/XnatDeleteWorkflow.py
-  ${MODULE_NAME}Lib/io/XnatDicomLoadWorkflow.py
-  ${MODULE_NAME}Lib/io/XnatFileLoadWorkflow.py
-  ${MODULE_NAME}Lib/io/XnatIo.py
-  ${MODULE_NAME}Lib/io/XnatLoadWorkflow.py
-  ${MODULE_NAME}Lib/io/XnatSaveWorkflow.py
-  ${MODULE_NAME}Lib/io/XnatSceneLoadWorkflow.py
-  ${MODULE_NAME}Lib/ui/custom-qt-widgets/AnimatedCollapsible.py
-  ${MODULE_NAME}Lib/ui/custom-qt-widgets/FingerTabWidget.py
-  ${MODULE_NAME}Lib/ui/custom-qt-widgets/HoverButton.py
-  ${MODULE_NAME}Lib/ui/custom-qt-widgets/VariableItemListWidget.py
-  ${MODULE_NAME}Lib/ui/settings-widgets/XnatDetailsSettings.py
-  ${MODULE_NAME}Lib/ui/settings-widgets/XnatHostSettings.py
-  ${MODULE_NAME}Lib/ui/settings-widgets/XnatMetadataEditor.py
-  ${MODULE_NAME}Lib/ui/settings-widgets/XnatMetadataSettings.py
-  ${MODULE_NAME}Lib/ui/settings-widgets/XnatSettings.py
-  ${MODULE_NAME}Lib/ui/settings-widgets/XnatTreeViewSettings.py
-  ${MODULE_NAME}Lib/ui/XnatButtons.py
-  ${MODULE_NAME}Lib/ui/XnatFolderMaker.py
-  ${MODULE_NAME}Lib/ui/XnatLoginMenu.py
-  ${MODULE_NAME}Lib/ui/XnatMetadataManager.py
-  ${MODULE_NAME}Lib/ui/XnatNodeDetails.py
-  ${MODULE_NAME}Lib/ui/XnatSaveDialog.py
-  ${MODULE_NAME}Lib/ui/XnatSearchBar.py
-  ${MODULE_NAME}Lib/ui/XnatSettingsWindow.py
-  ${MODULE_NAME}Lib/ui/XnatTreeView.py
-  ${MODULE_NAME}Lib/ui/XnatView.py
-  ${MODULE_NAME}Lib/ui/XnatViewer.py
-  ${MODULE_NAME}Lib/utils/XnatError.py
-  ${MODULE_NAME}Lib/utils/XnatFileInfo.py
-  ${MODULE_NAME}Lib/utils/XnatGlobals.py
-  ${MODULE_NAME}Lib/utils/XnatMrmlParser.py
-  ${MODULE_NAME}Lib/utils/XnatPopup.py
-  ${MODULE_NAME}Lib/utils/XnatScenePackager.py
-  ${MODULE_NAME}Lib/utils/XnatSessionManager.py
-  ${MODULE_NAME}Lib/utils/XnatSettingsFile.py
-  ${MODULE_NAME}Lib/utils/XnatTimer.py
-  ${MODULE_NAME}Lib/utils/XnatUtils.py
+  XnatSlicer.py
+  XnatSlicerLib/io/XnatAnalyzeLoadWorkflow.py
+  XnatSlicerLib/io/XnatDeleteWorkflow.py
+  XnatSlicerLib/io/XnatDicomLoadWorkflow.py
+  XnatSlicerLib/io/XnatFileLoadWorkflow.py
+  XnatSlicerLib/io/XnatIo.py
+  XnatSlicerLib/io/XnatLoadWorkflow.py
+  XnatSlicerLib/io/XnatSaveWorkflow.py
+  XnatSlicerLib/io/XnatSceneLoadWorkflow.py
+  XnatSlicerLib/ui/custom-qt-widgets/AnimatedCollapsible.py
+  XnatSlicerLib/ui/custom-qt-widgets/FingerTabWidget.py
+  XnatSlicerLib/ui/custom-qt-widgets/HoverButton.py
+  XnatSlicerLib/ui/custom-qt-widgets/VariableItemListWidget.py
+  XnatSlicerLib/ui/settings-widgets/XnatDetailsSettings.py
+  XnatSlicerLib/ui/settings-widgets/XnatHostSettings.py
+  XnatSlicerLib/ui/settings-widgets/XnatMetadataEditor.py
+  XnatSlicerLib/ui/settings-widgets/XnatMetadataSettings.py
+  XnatSlicerLib/ui/settings-widgets/XnatSettings.py
+  XnatSlicerLib/ui/settings-widgets/XnatTreeViewSettings.py
+  XnatSlicerLib/ui/XnatButtons.py
+  XnatSlicerLib/ui/XnatFolderMaker.py
+  XnatSlicerLib/ui/XnatLoginMenu.py
+  XnatSlicerLib/ui/XnatMetadataManager.py
+  XnatSlicerLib/ui/XnatNodeDetails.py
+  XnatSlicerLib/ui/XnatSaveDialog.py
+  XnatSlicerLib/ui/XnatSearchBar.py
+  XnatSlicerLib/ui/XnatSettingsWindow.py
+  XnatSlicerLib/ui/XnatTreeView.py
+  XnatSlicerLib/ui/XnatView.py
+  XnatSlicerLib/ui/XnatViewer.py
+  XnatSlicerLib/utils/XnatError.py
+  XnatSlicerLib/utils/XnatFileInfo.py
+  XnatSlicerLib/utils/XnatGlobals.py
+  XnatSlicerLib/utils/XnatMrmlParser.py
+  XnatSlicerLib/utils/XnatPopup.py
+  XnatSlicerLib/utils/XnatScenePackager.py
+  XnatSlicerLib/utils/XnatSessionManager.py
+  XnatSlicerLib/utils/XnatSettingsFile.py
+  XnatSlicerLib/utils/XnatTimer.py
+  XnatSlicerLib/utils/XnatUtils.py
   )
 
 set(MODULE_PYTHON_RESOURCES
-  Resources/Icons/${MODULE_NAME}.png
-  ${MODULE_NAME}Lib/icons/addproj.jpg
-  ${MODULE_NAME}Lib/icons/delete.jpg
-  ${MODULE_NAME}Lib/icons/load.jpg
-  ${MODULE_NAME}Lib/icons/save.jpg
-  ${MODULE_NAME}Lib/icons/update.jpg
-  ${MODULE_NAME}Lib/icons/wrench.png
+  XnatSlicerLib/icons/addproj.jpg
+  XnatSlicerLib/icons/delete.jpg
+  XnatSlicerLib/icons/load.jpg
+  XnatSlicerLib/icons/save.jpg
+  XnatSlicerLib/icons/update.jpg
+  XnatSlicerLib/icons/wrench.png
   Resources/Icons/addproj.png
   Resources/Icons/delete.png
   Resources/Icons/eye.png
@@ -67,7 +66,7 @@ set(MODULE_PYTHON_RESOURCES
   Resources/Images/DeveloperDesc_MainPanel.png
   Resources/Images/UserDesc_MainPanel.png
   Resources/Images/XNATSlicer-MainIcon.png
-  ${MODULE_NAME}Lib/ui/custom-qt-widgets/wrench.png
+  XnatSlicerLib/ui/custom-qt-widgets/wrench.png
   )
 
 #-----------------------------------------------------------------------------
