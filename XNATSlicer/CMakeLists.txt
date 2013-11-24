@@ -60,7 +60,6 @@ set(MODULE_PYTHON_RESOURCES
   Resources/Images/DeveloperDesc_MainPanel.png
   Resources/Images/UserDesc_MainPanel.png
   Resources/Images/XNATSlicer-MainIcon.png
-  XnatSlicerLib/ui/custom-qt-widgets/wrench.png
   )
 
 #-----------------------------------------------------------------------------
