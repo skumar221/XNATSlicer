@@ -584,7 +584,11 @@ class XnatSlicerWidget:
         #
         # Test button event.
         #
-        self.XnatButtons.buttons['io']['test'].connect('clicked(boolean*)', self.onTestClicked)
+        # NOTE: Disabling this for now.
+        # TODO: Implement a testing suite.
+        #
+        #self.XnatButtons.buttons['io']['test'].connect('clicked(boolean*)', self.onTestClicked)
+        self.XnatButtons.buttons['io']['test'].setEnabled(False)
         #
         # Search Bar event.
         #

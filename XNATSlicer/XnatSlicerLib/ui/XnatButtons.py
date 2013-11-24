@@ -68,8 +68,6 @@ class XnatButtons(object):
 
 
 
-
-
         #--------------------
         # Make Load / Save Button Layout.
         #--------------------
@@ -91,12 +89,17 @@ class XnatButtons(object):
         self.toolsLayout.addStretch()
 
 
+
+        #--------------------
+        # Add the settings button.
+        #--------------------
         self.buttons['settings'] = {}
         self.buttons['settings']['settings'] = self.MODULE.utils.generateButton(iconOrLabel = 'gear.png', 
                                                                                 toolTip = "Open settings window.", 
                                                                                 font = self.MODULE.GLOBALS.LABEL_FONT,
                                                                                 size = self.MODULE.GLOBALS.BUTTON_SIZE_SMALL, 
                                                                                 enabled = True)
+        self.buttons['settings']['settings'].setToolTip('Open XNATSlicer settings.')
         self.toolsLayout.addWidget(self.buttons['settings']['settings'])
 
 
@@ -185,6 +188,8 @@ def makeButtons_io(XnatButtons):
                                                               font = XnatButtons.MODULE.GLOBALS.LABEL_FONT,
                                                               size = XnatButtons.MODULE.GLOBALS.BUTTON_SIZE_SMALL, 
                                                               enabled = False)
+    buttons['load'].setToolTip('Load folder or file from XNAT instance.')
+
 
     
     buttons['save'] = XnatButtons.MODULE.utils.generateButton(iconOrLabel = 'save.png', 
@@ -192,26 +197,36 @@ def makeButtons_io(XnatButtons):
                                                               font = XnatButtons.MODULE.GLOBALS.LABEL_FONT,
                                                               size = XnatButtons.MODULE.GLOBALS.BUTTON_SIZE_SMALL,
                                                               enabled = False)
+    buttons['save'].setToolTip('Save scene to XNAT instance.')
+
+    
     
     buttons['delete'] = XnatButtons.MODULE.utils.generateButton(iconOrLabel = 'delete.png', 
                                                                 toolTip = "Delete Xnat file or folder.", 
                                                                 font = XnatButtons.MODULE.GLOBALS.LABEL_FONT,
                                                                 size = XnatButtons.MODULE.GLOBALS.BUTTON_SIZE_SMALL, 
                                                                 enabled = False)
+    buttons['delete'].setToolTip('Delete file from XNAT instance.')
+    
+
     
     buttons['addProj'] = XnatButtons.MODULE.utils.generateButton(iconOrLabel = 'addproj.png', 
                                                                  toolTip = "Add Project, Subject, or Experiment to Xnat.", 
                                                                  font = XnatButtons.MODULE.GLOBALS.LABEL_FONT,
                                                                  size = XnatButtons.MODULE.GLOBALS.BUTTON_SIZE_SMALL, 
                                                                  enabled = False)
+    buttons['addProj'].setToolTip('Add project, subject or experiment to XNAT instance.')
 
+    
 
     buttons['test'] = XnatButtons.MODULE.utils.generateButton(iconOrLabel = 'test.png', 
                                                               toolTip = "Run XNATSlicer tests...", 
                                                               font = XnatButtons.MODULE.GLOBALS.LABEL_FONT,
                                                               size = XnatButtons.MODULE.GLOBALS.BUTTON_SIZE_SMALL, 
                                                               enabled = False)
-
+    buttons['test'].setToolTip('Run testing suite (COMING SOON).')
+    
+    
     return buttons
 
 
